@@ -14,13 +14,13 @@
 
 #### 1.2 发展演变
 
-![image-20220129231551683](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220129231551683.png)
+![image-20220129231551683](img\image-20220129231551683.png)
 
 **单一应用架构**
 
 当网站流量很小时，只需一个应用，将所有功能都部署在一起，以减少部署节点和成本。此时，用于简化增删改查工作量的数据访问框架 (ORM) 是关键。
 
-![image-20220129231559329](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220129231559329.png)
+![image-20220129231559329](img\image-20220129231559329.png)
 
 适用于小型网站，小型管理系统，将所有功能都部署到一个功能里，简单易用。
 
@@ -34,7 +34,7 @@
 
 当访问量逐渐增大，单一应用增加机器带来的加速度越来越小，将应用拆成互不相干的几个应用，以提升效率。此时，用于加速前端页面开发的 Web 框架 (MVC) 是关键。
 
-![image-20220129231612515](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220129231612515.png)
+![image-20220129231612515](img\image-20220129231612515.png)
 
 通过切分业务来实现各个模块独立部署，降低了维护和部署的难度，团队各司其职更易管理，性能扩展也更方便，更有针对性。
 
@@ -46,13 +46,13 @@
 
 ​    当垂直应用越来越多，应用之间交互不可避免，将核心业务抽取出来，作为独立的服务，逐渐形成稳定的服务中心，使前端应用能更快速的响应多变的市场需求。此时，用于提高业务复用及整合的分布式服务框架 (RPC) 是关键。
 
-![image-20220129231635193](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220129231635193.png)
+![image-20220129231635193](img\image-20220129231635193.png)
 
 **流动计算架构**
 
 ​    当服务越来越多，容量的评估，小服务资源的浪费等问题逐渐显现，此时需增加一个调度中心基于访问压力实时管理集群容量，提高集群利用率。此时，用于提高机器利用率的资源调度和治理中心(SOA)[Service Oriented Architecture] 是关键。
 
-![image-20220129231640958](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220129231640958.png)
+![image-20220129231640958](img\image-20220129231640958.png)
 
 #### 1.3 RPC
 
@@ -62,9 +62,9 @@
 
 #### RPC 基本原理
 
-![image-20220129231653103](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220129231653103.png)
+![image-20220129231653103](img\image-20220129231653103.png)
 
-![image-20220129231705255](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220129231705255.png)
+![image-20220129231705255](img\image-20220129231705255.png)
 
 RPC 两个核心模块：
 
@@ -81,7 +81,7 @@ Apache Dubbo (incubating) |ˈdʌbəʊ| 是一款高性能、轻量级的开源 J
 
 #### 2.2 基本概念
 
-![image-20220129231537961](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220129231537961.png)
+![image-20220129231537961](img\image-20220129231537961.png)
 
 **服务提供者（Provider**）：暴露服务的服务提供方，服务提供者在启动时，向注册中心注册自己提供的服务。
 
@@ -116,11 +116,11 @@ dubbo 本身并不是一个服务软件。它其实就是一个 jar 包能够帮
 
 但是为了让用户更好的管理监控众多的 dubbo 服务，官方提供了一个可视化的监控程序，不过这个监控即使不装也不影响使用。
 
-| 1、下载dubbo-admin  https://github.com/apache/incubator-dubbo-ops <br />![image-20220129232129444](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220129232129444.png) |
+| 1、下载dubbo-admin  https://github.com/apache/incubator-dubbo-ops <br />![image-20220129232129444](img\image-20220129232129444.png) |
 | ------------------------------------------------------------ |
 | 2、进入目录，修改 dubbo-admin 配置 <br />修改 src\main\resources\application.properties  指定zookeeper地址 |
 | 3、打包 dubbo-admin <br />mvn clean package -Dmaven.test.skip=true |
-| 4、运行dubbo-admin<br />java -jar dubbo-admin-0.0.1-SNAPSHOT.jar<br />**注意：【有可能控制台看着启动了，但是网页打不开，需要在控制台按下ctrl+c**即可】<br />默认使用 root/root 登陆<br />![image-20220129232208689](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220129232208689.png) |
+| 4、运行dubbo-admin<br />java -jar dubbo-admin-0.0.1-SNAPSHOT.jar<br />**注意：【有可能控制台看着启动了，但是网页打不开，需要在控制台按下ctrl+c**即可】<br />默认使用 root/root 登陆<br />![image-20220129232208689](img\image-20220129232208689.png) |
 
 #### 3.3 【linux】- 安装zookeeper
 
@@ -128,16 +128,16 @@ dubbo 本身并不是一个服务软件。它其实就是一个 jar 包能够帮
 
   | 1、下载jdk  http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html <br />不要使用 wget 命令获取 jdk 链接，这是默认不同意，导致下载来的 jdk 压缩内容错误 |
   | ------------------------------------------------------------ |
-  | 2、上传到服务器并解压<br />![image-20220129232346897](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220129232346897.png) |
-  | 3、设置环境变量<br />/usr/local/java/jdk1.8.0_171<br />![image-20220129232402465](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220129232402465.png)<br />文件末尾加入下面配置<br />export JAVA_HOME=/usr/local/java/jdk1.8.0_171<br />export JRE_HOME=\${JAVA_HOME}/jre<br />export CLASSPATH=.:${JAVA_HOME}/lib:\${JRE_HOME}/lib<br />export PATH=\${JAVA_HOME}/bin:\$PATH<br />![image-20220129232546196](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220129232546196.png) |
-  | 4、使环境变量生效&测试 JDK<br />![image-20220129232553295](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220129232553295.png) |
+  | 2、上传到服务器并解压<br />![image-20220129232346897](img\image-20220129232346897.png) |
+  | 3、设置环境变量<br />/usr/local/java/jdk1.8.0_171<br />![image-20220129232402465](img\image-20220129232402465.png)<br />文件末尾加入下面配置<br />export JAVA_HOME=/usr/local/java/jdk1.8.0_171<br />export JRE_HOME=\${JAVA_HOME}/jre<br />export CLASSPATH=.:${JAVA_HOME}/lib:\${JRE_HOME}/lib<br />export PATH=\${JAVA_HOME}/bin:\$PATH<br />![image-20220129232546196](img\image-20220129232546196.png) |
+  | 4、使环境变量生效&测试 JDK<br />![image-20220129232553295](img\image-20220129232553295.png) |
 
 - 安装zookeeper
 
   | 1、下载zookeeper<br />网址 https://archive.apache.org/dist/zookeeper/zookeeper-3.4.11/<br />wget https://archive.apache.org/dist/zookeeper/zookeeper-3.4.11/zookeeper-3.4.11.tar.gz |
   | ------------------------------------------------------------ |
-  | 2、解压<br />![image-20220129232613992](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220129232613992.png) |
-  | 3、移动到指定位置并改名为 zookeeper<br />![image-20220129232619342](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220129232619342.png)<br />![image-20220129232628936](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220129232628936.png) |
+  | 2、解压<br />![image-20220129232613992](img\image-20220129232613992.png) |
+  | 3、移动到指定位置并改名为 zookeeper<br />![image-20220129232619342](img\image-20220129232619342.png)<br />![image-20220129232628936](img\image-20220129232628936.png) |
 
 - 开机启动 zookeeper
 
@@ -159,15 +159,15 @@ dubbo 本身并不是一个服务软件。它其实就是一个 jar 包能够帮
   esac
   ```
 
-  ![image-20220129232900137](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220129232900137.png)
+  ![image-20220129232900137](img\image-20220129232900137.png)
 
    **把脚本注册为 Service**
 
-  ![image-20220129232912748](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220129232912748.png)
+  ![image-20220129232912748](img\image-20220129232912748.png)
 
   **增加权限**
 
-  ![image-20220129232919860](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220129232919860.png)
+  ![image-20220129232919860](img\image-20220129232919860.png)
 
 - 配置 zookeeper
 
@@ -177,11 +177,11 @@ dubbo 本身并不是一个服务软件。它其实就是一个 jar 包能够帮
 
     到同一个目录下改个名字叫 zoo.cfg
 
-    ![image-20220129232958692](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220129232958692.png)
+    ![image-20220129232958692](img\image-20220129232958692.png)
 
   - 启动 zookeeper
 
-    ![image-20220129233009395](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220129233009395.png)
+    ![image-20220129233009395](img\image-20220129233009395.png)
 
 #### 3.4 【linux】- 安装 dubbo-admin 管理控制台
 
@@ -195,11 +195,11 @@ dubbo 本身并不是一个服务软件。它其实就是一个 jar 包能够帮
 
   - 解压移动到指定位置
 
-    ![image-20220129233141819](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220129233141819.png)
+    ![image-20220129233141819](img\image-20220129233141819.png)
 
   - 开机启动 tomcat8
 
-    ![image-20220129233150281](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220129233150281.png)
+    ![image-20220129233150281](img\image-20220129233150281.png)
 
     复制如下脚本
 
@@ -235,15 +235,15 @@ dubbo 本身并不是一个服务软件。它其实就是一个 jar 包能够帮
 
   - 注册服务&添加权限
 
-    ![image-20220129233243716](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220129233243716.png)
+    ![image-20220129233243716](img\image-20220129233243716.png)
 
-    ![image-20220129233246308](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220129233246308.png)
+    ![image-20220129233246308](img\image-20220129233246308.png)
 
   - 启动服务&访问 tomcat 测试
 
-    ![image-20220129233254193](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220129233254193.png)
+    ![image-20220129233254193](img\image-20220129233254193.png)
 
-    ![image-20220129233256892](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220129233256892.png)
+    ![image-20220129233256892](img\image-20220129233256892.png)
 
 - **安装 dubbo-admin**
 
@@ -255,13 +255,13 @@ dubbo 本身并不是一个服务软件。它其实就是一个 jar 包能够帮
 
     https://github.com/apache/incubator-dubbo-ops
 
-    ![image-20220129233405226](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220129233405226.png)
+    ![image-20220129233405226](img\image-20220129233405226.png)
 
   - 进入目录，修改 dubbo-admin 配置
 
     修改 dubbo-admin-server/src/main/resources/application.properties 指定 zookeeper 地址
 
-    ![image-20220129233416519](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220129233416519.png)
+    ![image-20220129233416519](img\image-20220129233416519.png)
 
   - 打包 dubbo-admin
 
@@ -273,7 +273,7 @@ dubbo 本身并不是一个服务软件。它其实就是一个 jar 包能够帮
 
     默认使用 root/root 登陆
 
-    ![image-20220129233444220](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220129233444220.png)
+    ![image-20220129233444220](img\image-20220129233444220.png)
 
 ### 4.dubbo-helloworld
 
@@ -310,7 +310,7 @@ dubbo 本身并不是一个服务软件。它其实就是一个 jar 包能够帮
 
   不建议使用过于抽象的通用接口，如：Map query(Map)，这样的接口没有明确语义，会给后期维护带来不便。
 
-![image-20220129233620818](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220129233620818.png)
+![image-20220129233620818](img\image-20220129233620818.png)
 
 #### 4.3 创建模块
 
@@ -339,7 +339,7 @@ dubbo 本身并不是一个服务软件。它其实就是一个 jar 包能够帮
     }
     ```
 
-  ![image-20220129233737114](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220129233737114.png)
+  ![image-20220129233737114](img\image-20220129233737114.png)
 
 - gmall-user：用户模块（对用户接口的实现）
 
@@ -476,7 +476,7 @@ dubbo 本身并不是一个服务软件。它其实就是一个 jar 包能够帮
 >     public static void main(String[] args) throws IOException {
 >         ClassPathXmlApplicationContext context = 
 >             new ClassPathXmlApplicationContext("classpath:spring-beans.xml");
->       
+>           
 >         System.in.read(); 
 >     }
 >     ```
@@ -648,7 +648,7 @@ dubbo 本身并不是一个服务软件。它其实就是一个 jar 包能够帮
 
     修改 dubbo.properties文件
 
-    ![image-20220129234324152](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220129234324152.png)
+    ![image-20220129234324152](img\image-20220129234324152.png)
 
   - 打包dubbo-monitor-simple
 
@@ -656,13 +656,13 @@ dubbo 本身并不是一个服务软件。它其实就是一个 jar 包能够帮
 
   - 解压 tar.gz 文件，并运行start.bat
 
-    ![image-20220129234339031](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220129234339031.png)
+    ![image-20220129234339031](img\image-20220129234339031.png)
 
     如果缺少servlet-api，自行导入 servlet-api 再访问监控中心
 
   - 启动访问8080
 
-    ![image-20220129234350049](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220129234350049.png)
+    ![image-20220129234350049](img\image-20220129234350049.png)
 
 - 监控中心配置
 
@@ -697,7 +697,7 @@ dubbo 本身并不是一个服务软件。它其实就是一个 jar 包能够帮
 
   注意starter版本适配：
 
-  ![image-20220129234459296](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220129234459296.png)
+  ![image-20220129234459296](img\image-20220129234459296.png)
 
 - 配置 application.properties
 
@@ -743,7 +743,7 @@ dubbo 本身并不是一个服务软件。它其实就是一个 jar 包能够帮
 
 ### 1.配置原则
 
-![image-20220129234624431](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220129234624431.png)
+![image-20220129234624431](img\image-20220129234624431.png)
 
 JVM 启动 -D 参数优先，这样可以使用户在部署和启动时进行参数重写，比如在启动时需改变协议的端口。
 
@@ -919,7 +919,7 @@ Dubbo 缺省会在启动时检查依赖的服务是否可用，不可用时会�
   - Consumer 端配置 优于 Provider 配置 优于 全局配置
   - 最后是 Dubbo Hard Code 的配置值（见配置文档）
 
-  ![image-20220129234821420](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220129234821420.png)
+  ![image-20220129234821420](img\image-20220129234821420.png)
 
 ### 4.版本号
 
@@ -1124,7 +1124,7 @@ public class UserServiceStub implements UserService {
 > - 在一个截面上碰撞的概率高，但调用量越大分布越均匀，而且按概率使用权重后也比较均匀，有利于动态调整提供者权重。
 > - 缺点：存在慢的提供者累积请求的问题，比如：第二台机器很慢，但没挂，当请求调到第二台时就卡在那，久而久之，所有请求都卡在调到第二台上。
 >
-> <img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220131200126709.png" alt="image-20220131200126709" style="zoom:50%;" />
+> <img src="img\image-20220131200126709.png" alt="image-20220131200126709" style="zoom:50%;" />
 >
 > **RoundRobin LoadBalance**
 >
@@ -1135,14 +1135,14 @@ public class UserServiceStub implements UserService {
 >
 > 存在慢的提供者累积请求的问题，比如：第二台机器很慢，但没挂，当请求调到第二台时就卡在那，久而久之，所有请求都卡在调到第二台上。
 >
-> <img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220131200142457.png" alt="image-20220131200142457" style="zoom:50%;" />
+> <img src="img\image-20220131200142457.png" alt="image-20220131200142457" style="zoom:50%;" />
 >
 > **LeastActive LoadBalance**
 >
 > - **加权最少活跃调用优先**，活跃数越低，越优先调用，相同活跃数的进行加权随机。活跃数指调用前后计数差（针对特定提供者：请求发送数 - 响应返回数），表示特定提供者的任务堆积量，活跃数越低，代表该提供者处理能力越强。
 > - 使慢的提供者收到更少请求，因为越慢的提供者的调用前后计数差会越大；相对的，处理能力越强的节点，处理更多的请求。
 >
-> <img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220131200154590.png" alt="image-20220131200154590" style="zoom:50%;" />
+> <img src="img\image-20220131200154590.png" alt="image-20220131200154590" style="zoom:50%;" />
 >
 > ### ShortestResponse
 >
@@ -1160,7 +1160,7 @@ public class UserServiceStub implements UserService {
 > - 缺省只对第一个参数 Hash，如果要修改，请配置 `<dubbo:parameter key="hash.arguments" value="0,1" />`
 > - 缺省用 160 份虚拟节点，如果要修改，请配置 `<dubbo:parameter key="hash.nodes" value="320" />`
 >
-> <img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220131200208768.png" alt="image-20220131200208768" style="zoom: 50%;" />
+> <img src="img\image-20220131200208768.png" alt="image-20220131200208768" style="zoom: 50%;" />
 
 **配置**
 
@@ -1237,7 +1237,7 @@ methodConfig.setLoadbalance();
 
     可在 dubbo 控制中心直接禁用某服务
 
-    ![image-20220131231004783](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220131231004783.png)
+    ![image-20220131231004783](img\image-20220131231004783.png)
 
   - 还可以改为 mock=fail:return+null 表示消费方对该服务的方法调用在失败后，再返回 null 值，不抛异常。用来容忍不重要服务不稳定时对调用方的影响
 
@@ -1358,7 +1358,7 @@ methodConfig.setLoadbalance();
 
 ### 1.RPC 原理
 
-![image-20220129235414821](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220129235414821.png)
+![image-20220129235414821](img\image-20220129235414821.png)
 
 > 一次完整的 RPC 调用流程（同步调用，异步另说）如下：
 >
@@ -1380,11 +1380,11 @@ Netty 是一个异步事件驱动的网络应用程序框架， 用于快速开�
 
 **BIO：(Blocking IO)**
 
-![image-20220129235545365](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220129235545365.png)
+![image-20220129235545365](img\image-20220129235545365.png)
 
 **NIO (Non-Blocking IO)**
 
-![image-20220129235551768](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220129235551768.png)
+![image-20220129235551768](img\image-20220129235551768.png)
 
 Selector 一般称 为**选择器** ，也可以翻译为 **多路复用器，**
 
@@ -1392,7 +1392,7 @@ Connect（连接就绪）、Accept（接受就绪）、Read（读就绪）、Wri
 
 Netty基本原理：
 
-<img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220129235603395.png" alt="image-20220129235603395" style="zoom: 150%;" />
+<img src="img\image-20220129235603395.png" alt="image-20220129235603395" style="zoom: 150%;" />
 
 ### 3.dubbo 原理
 
@@ -1400,7 +1400,7 @@ Netty基本原理：
 
 - **dubbo原理 - 框架设计**
 
-  <img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220131234052120.png" alt="image-20220131234052120" style="zoom: 150%;" />
+  <img src="img\image-20220131234052120.png" alt="image-20220131234052120" style="zoom: 150%;" />
 
   - config 配置层：对外配置接口，以 ServiceConfig, ReferenceConfig 为中心，可以直接初始化配置类，也可以通过 spring 解析配置生成配置类
   - proxy 服务代理层：服务接口透明代理，生成服务的客户端 Stub 和服务器端 Skeleton, 以 ServiceProxy 为中心，扩展接口为 ProxyFactory
@@ -1414,18 +1414,18 @@ Netty基本原理：
 
 - **dubbo原理 - 启动解析、加载配置信息**
 
-  ![image-20220129235709351](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220129235709351.png)
+  ![image-20220129235709351](img\image-20220129235709351.png)
 
 - **dubbo原理 - 服务暴露**
 
-  ![image-20220131234136030](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220131234136030.png)
+  ![image-20220131234136030](img\image-20220131234136030.png)
 
 - **dubbo原理 - 服务引用**
 
-  ![image-20220131234154784](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220131234154784.png)
+  ![image-20220131234154784](img\image-20220131234154784.png)
 
 - **dubbo原理 - 服务调用**
 
-  ![image-20220129235748245](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220129235748245.png)
+  ![image-20220129235748245](img\image-20220129235748245.png)
 
   

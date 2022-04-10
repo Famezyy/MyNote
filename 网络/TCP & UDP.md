@@ -136,7 +136,7 @@
 
 
 
-<img src="https://mmbiz.qpic.cn/mmbiz_png/j5D4MI5U9vX67Ziaria9ibcMMNVR5Gn2zUF7u9EEb9DVPlMCibpAT3M7dichraR0K8IrHq0iak68v0uIMVwETia136kAw/640?wx_fmt=png&tp=webp&wxfrom=5&wx_lazy=1&wx_co=1" alt="图片" style="zoom: 80%;" />
+<img src="img\640" alt="图片" style="zoom: 80%;" />
 
 
 
@@ -144,7 +144,7 @@
 
 
 
-<img src="https://mmbiz.qpic.cn/mmbiz_png/j5D4MI5U9vX67Ziaria9ibcMMNVR5Gn2zUFLGTicA5mThoESXOTmQn5k7T4wg4ym5kDiaaMxibYYLOp1waEbOwUrNpKQ/640?wx_fmt=png&tp=webp&wxfrom=5&wx_lazy=1&wx_co=1" alt="图片" style="zoom: 80%;" />
+<img src="img\6401" alt="图片" style="zoom: 80%;" />
 
 
 
@@ -152,7 +152,7 @@
 
 
 
-<img src="https://mmbiz.qpic.cn/mmbiz_png/j5D4MI5U9vX67Ziaria9ibcMMNVR5Gn2zUFlfF8iaLm80FnZzIicCyzckmPOVXM0CDWb7iafyVo2sre3ygo2fk0REkQQ/640?wx_fmt=png&tp=webp&wxfrom=5&wx_lazy=1&wx_co=1" alt="图片" style="zoom: 80%;" />
+<img src="img\6402" alt="图片" style="zoom: 80%;" />
 
 <img src="https://mmbiz.qpic.cn/mmbiz_png/j5D4MI5U9vX67Ziaria9ibcMMNVR5Gn2zUFBflo3qeEItFbdu3Lib6wicdICKRRXKV44YQBFWvNNNlTxicFpWuF3CwdA/640?wx_fmt=png&tp=webp&wxfrom=5&wx_lazy=1&wx_co=1" alt="图片" style="zoom: 80%;" />
 
@@ -200,7 +200,7 @@ $$
 
 
 
-<img src="https://mmbiz.qpic.cn/mmbiz_jpg/j5D4MI5U9vX67Ziaria9ibcMMNVR5Gn2zUFPbJaxr30iaNze41BbOphdpYDGN7TLqGA48nt7x9FnkOvcTA5msDuJow/640?wx_fmt=jpeg&tp=webp&wxfrom=5&wx_lazy=1&wx_co=1" alt="图片" style="zoom: 50%;" />
+<img src="img\6403" alt="图片" style="zoom: 50%;" />
 
 ## 7.TCP 流量控制
 
@@ -214,9 +214,7 @@ $$
 
   如果网络出现拥塞，分组将会丢失，此时发送方会继续重传，从而导致网络拥塞程度更高。因此当出现拥塞时，应当控制发送方的速率。这一点和流量控制很像，但是出发点不同。流量控制是为了让接收方能来得及接收，而拥塞控制是为了降低整个网络的拥塞程度。
 
-
-
-<img src="https://mmbiz.qpic.cn/mmbiz_jpg/j5D4MI5U9vX67Ziaria9ibcMMNVR5Gn2zUFvOdjmNBDImUCKjyy4TK20nXMpEe6pyuwkLepGLPl7TibSF8A3iaVnj7Q/640?wx_fmt=jpeg&tp=webp&wxfrom=5&wx_lazy=1&wx_co=1" alt="图片" style="zoom: 50%;" />
+<img src="img\6404" alt="图片" style="zoom: 50%;" />
 
 
 
@@ -232,9 +230,8 @@ $$
 
 - 虽然 TCP 的窗口基于字节，但是这里设窗口的大小单位为报文段。
 
-  
 
-<img src="https://mmbiz.qpic.cn/mmbiz_png/j5D4MI5U9vX67Ziaria9ibcMMNVR5Gn2zUFFur4HtlkwUecNb5icmgAeib0BXPDEl3oibNicajhmTZhXH8Oia2mO1lFMQw/640?wx_fmt=jpeg&tp=webp&wxfrom=5&wx_lazy=1&wx_co=1" alt="图片" style="zoom:50%;" />
+<img src="img\6405" alt="图片" style="zoom:50%;" />
 
 
 
@@ -258,9 +255,7 @@ $$
 
   慢开始和快恢复的快慢指的是 cwnd 的设定值，而不是 cwnd 的增长速率。慢开始 cwnd 设定为 1，而快恢复 cwnd 设定为 ssthresh。
 
-
-
-<img src="https://mmbiz.qpic.cn/mmbiz_png/US10Gcd0tQHHicibiaVO2qntJL1icM2XQPRFKUTkq3tWwYiaH3naN84EmCxmPdFBS2icFctFPk9RZLsGSia1MgDfASsXQ/640?wx_fmt=jpeg&tp=webp&wxfrom=5&wx_lazy=1&wx_co=1" alt="图片" style="zoom: 33%;" />
+<img src="img\6406" alt="图片" style="zoom: 33%;" />
 
 ## 9.提供网络利用率
 

@@ -15,7 +15,7 @@ Zookeeper 是一个开源的分布式的，为分布式框架提供协调服务�
 
 **Zookeeper 特点**
 
-<img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220123184450089.png" alt="image-20220123184450089" style="zoom:67%;" />
+<img src="img\image-20220123184450089.png" alt="image-20220123184450089" style="zoom:67%;" />
 
 - 一个 leader，多个 follower 的集群
 - 集群只要有**超过半数**服务器工作就可正常服务，一般安装奇数台服务器
@@ -28,7 +28,7 @@ Zookeeper 是一个开源的分布式的，为分布式框架提供协调服务�
 
 ZooKeeper 数据模型的结构与 Unix 文件系统很类似，整体上可以看作是一棵树，每个节点称做一个 ZNode。每一个 ZNode 默认能够存储 **1MB** 的数据，每个 ZNode 都可以通过其路径唯一标识。
 
-![image-20220123185553300](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220123185553300.png)
+![image-20220123185553300](img\image-20220123185553300.png)
 
 ### 3. 应用场景
 
@@ -58,27 +58,27 @@ ZooKeeper 数据模型的结构与 Unix 文件系统很类似，整体上可以�
 
 **服务器动态上下线**
 
-<img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220123192118067.png" alt="image-20220123192118067" style="zoom:67%;" />
+<img src="img\image-20220123192118067.png" alt="image-20220123192118067" style="zoom:67%;" />
 
 **软负载均衡**
 
 在 Zookeeper 中记录每台服务器的访问数，让访问数最少的服务器去处理最新的客户端请求
 
-<img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220123195053730.png" alt="image-20220123195053730" style="zoom:67%;" />
+<img src="img\image-20220123195053730.png" alt="image-20220123195053730" style="zoom:67%;" />
 
 ### 4. 下载
 
 官网首页： https://zookeeper.apache.org/
 
-<img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220123195457399.png" alt="image-20220123195457399" style="zoom:67%;" />
+<img src="img\image-20220123195457399.png" alt="image-20220123195457399" style="zoom:67%;" />
 
-<img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220123195518480.png" alt="image-20220123195518480" style="zoom:67%;" />
+<img src="img\image-20220123195518480.png" alt="image-20220123195518480" style="zoom:67%;" />
 
-![image-20220123195532442](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220123195532442.png)
+![image-20220123195532442](img\image-20220123195532442.png)
 
 下载 Linux 环境安装的 tar 包
 
-<img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220123195549494.png" alt="image-20220123195549494" style="zoom:67%;" />
+<img src="img\image-20220123195549494.png" alt="image-20220123195549494" style="zoom:67%;" />
 
 ---
 
@@ -179,14 +179,14 @@ Zookeeper 中的配置文件 zoo.cfg 中参数含义解读如下：
 
 - tickTime = 2000：通信心跳时间，Zookeeper 服务器与客户端心跳时间，单位毫秒
 
-  <img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220123200202573.png" alt="image-20220123200202573" style="zoom:67%;" />
+  <img src="img\image-20220123200202573.png" alt="image-20220123200202573" style="zoom:67%;" />
 
 - initLimit = 10：LF 初始通信时限
 
   - Leader 和 Follower 初始连接时能容忍的最多心跳数（tickTime 的数量）
   - 默认 20 秒钟还没建立连接时即失效
 
-  <img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220123200218326.png" alt="image-20220123200218326" style="zoom:67%;" />
+  <img src="img\image-20220123200218326.png" alt="image-20220123200218326" style="zoom:67%;" />
 
 - syncLimit = 5：LF同步通信时限
 
@@ -336,7 +336,7 @@ Zookeeper 中的配置文件 zoo.cfg 中参数含义解读如下：
 
 **Zookeeper选举机制——第一次启动**
 
-![image-20220124213759059](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220124213759059.png)
+![image-20220124213759059](img\image-20220124213759059.png)
 
 - 服务器1启动，发起一次选举。服务器1投自己一票。此时服务器1票数一票，不够半数以上（3票），选举无法完成，服务器1状态保持为 LOOKING
 - 服务器2启动，再发起一次选举。服务器1和2分别投自己一票并交换选票信息：此时服务器1发现服务器2的myid比自己目前投票推举的（服务器1）大，更改选票为推举服务器2。此时服务器1票数0票，服务器2票数2票，没有半数以上结果，选举无法完成，服务器1，2状态保持LOOKING
@@ -346,7 +346,7 @@ Zookeeper 中的配置文件 zoo.cfg 中参数含义解读如下：
 
 **Zookeeper选举机制——非第一次启动**
 
-![image-20220124213936362](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220124213936362.png)
+![image-20220124213936362](img\image-202201242139363632.png)
 
 #### 1.3 ZK集群启动停止脚本
 
@@ -486,7 +486,7 @@ Zookeeper 中的配置文件 zoo.cfg 中参数含义解读如下：
 
 #### ==2.3 设置节点（持久/ 短暂/ 有序号/ 无序号）==
 
-![image-20220124215242539](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220124215242539.png)
+![image-20220124215242539](img\image-20220124215242539.png)
 
 - 分别创建 2 个普通节点（永久节点 +  不带序号）
 
@@ -619,7 +619,7 @@ Zookeeper 中的配置文件 zoo.cfg 中参数含义解读如下：
 
 > ​    客户端注册监听它关心的目录节点，当目录节点发生变化（数据改变、节点删除、子目录节点增加删除）时，ZooKeeper 会通知客户端。监听机制保证 ZooKeeper 保存的任何的数据的任何改变都能快速的响应到监听了该节点的应用程序。
 
-<img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220128001559157.png" alt="image-20220128001559157" style="zoom:80%;" />
+<img src="img\image-20220128001559157.png" alt="image-20220128001559157" style="zoom:80%;" />
 
 1. 节点的值变化监听
 
@@ -860,9 +860,9 @@ public void exist() throws Exception {
 
 ### 4.客户端向服务端写数据流程
 
-<img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220128002643976.png" alt="image-20220128002643976" style="zoom:67%;" />
+<img src="img\image-20220128002643976.png" alt="image-20220128002643976" style="zoom:67%;" />
 
-<img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220128002650730.png" alt="image-20220128002650730" style="zoom:67%;" />
+<img src="img\image-20220128002650730.png" alt="image-20220128002650730" style="zoom:67%;" />
 
 ---
 
@@ -874,7 +874,7 @@ public void exist() throws Exception {
 
 ### 2.需求分析
 
-<img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220128121941073.png" alt="image-20220128121941073" style="zoom:80%;" />
+<img src="img\image-20220128121941073.png" alt="image-20220128121941073" style="zoom:80%;" />
 
 ### 3.具体实现
 
@@ -1022,15 +1022,15 @@ public void exist() throws Exception {
 
     - 点击 Edit Configurations…
 
-      <img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220128122340497.png" alt="image-20220128122340497" style="zoom:67%;" />
+      <img src="img\image-20220128122340497.png" alt="image-20220128122340497" style="zoom:67%;" />
 
     - 在弹出的窗口中（Program arguments）输入想启动的主机，例如，hadoop102
 
-      <img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220128122405451.png" alt="image-20220128122405451" style="zoom:67%;" />
+      <img src="img\image-20220128122405451.png" alt="image-20220128122405451" style="zoom:67%;" />
 
     - 回到 DistributeServer 的 main 方 法 ， 右 键 ， 在 弹 出 的 窗 口 中 点 击 Run “DistributeServer.main()”
 
-      <img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220128122432902.png" alt="image-20220128122432902" style="zoom:67%;" />
+      <img src="img\image-20220128122432902.png" alt="image-20220128122432902" style="zoom:67%;" />
 
     - 观察 DistributeServer 控制台，提示 hadoop102 is working
 
@@ -1044,7 +1044,7 @@ public void exist() throws Exception {
 >
 > ​    比如说"进程 1"在使用该资源的时候，会先去获得锁，"进程 1"获得锁以后会对该资源保持独占，这样其他进程就无法访问该资源，"进程 1"用完该资源以后就将锁释放掉，让其他进程来获得锁，那么通过这个锁机制，我们就能保证了分布式系统中多个进程能够有序的访问该临界资源。那么我们把这个分布式环境下的这个锁叫作分布式锁。
 
-<img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220128122532328.png" alt="image-20220128122532328" style="zoom:67%;" />
+<img src="img\image-20220128122532328.png" alt="image-20220128122532328" style="zoom:67%;" />
 
 ### 1.原生 Zookeeper 实现分布式锁案例
 

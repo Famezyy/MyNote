@@ -2,9 +2,9 @@
 
 ## HTTP
 
-> ![image-20220106232550783](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220106232550783.png)
+> ![image-20220106232550783](img\image-20220106232550783.png)
 
-> <img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220106232648764.png" alt="image-20220106232648764" style="zoom: 33%;" />
+> <img src="img\image-20220106232648764.png" alt="image-20220106232648764" style="zoom: 33%;" />
 
 
 
@@ -17,11 +17,11 @@
 
 ### 对称加密
 
-> ![image-20220106230657614](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220106230657614.png)
+> ![image-20220106230657614](img\image-20220106230657614.png)
 
 ### 非对称加密
 
-> ![image-20220106231017368](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220106231017368.png)
+> ![image-20220106231017368](img\image-20220106231017368.png)
 
 ### 证书
 
@@ -30,9 +30,9 @@
 
 ### TLS 握手过程
 
-> ![](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220106231545954.png)
+> ![](img\image-20220106231545954.png)
 >
 > - 使用了对称和非对称加密算法
 >
->   ![image-20220106231934547](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220106231934547.png)
+>   ![image-20220106231934547](img\image-20220106231934547.png)
 
