@@ -2,7 +2,7 @@
 
 在 Java 5.0 提供了 java.util.concurrent （简称JUC ）包，在此包中增加了在并发编程中很常用的实用工具类，用于定义类似于线程的自定义子系统，包括线程池、异步 IO 和轻量级任务框架。提供可调的、灵活的线程池。还提供了设计用于多线程上下文中的 Collection 实现等。
 
-![image-20220222125045713](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220222125045713.png)
+![image-20220222125045713](..\img\image-20220222125045713.png)
 
 ---
 
@@ -157,11 +157,11 @@ class Ticket {
 
 **Lock 接口**
 
-<img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220124235715303.png" alt="image-20220124235715303" style="zoom: 80%;" />
+<img src="..\img\image-20220124235715303.png" alt="image-20220124235715303" style="zoom: 80%;" />
 
-![image-20220222125107097](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220222125107097.png)
+![image-20220222125107097](..\img\image-20220222125107097.png)
 
-![image-20220222125116202](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220222125116202.png)
+![image-20220222125116202](..\img\image-20220222125116202.png)
 
 - 公平锁：十分公平，线程执行顺序按照先来后到顺序
 - 非公平锁：十分不公平：可以插队 （默认锁）
@@ -328,13 +328,13 @@ class Data {
 
 > 问题存在，A B C D 4 个线程时会出现虚假唤醒
 
-![image-20220222125131919](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220222125131919.png)
+![image-20220222125131919](..\img\image-20220222125131919.png)
 
 因此上述代码中必须使用 **while** 判断，而不能使用 **if**
 
 ### 2.JUC
 
-![image-20220222125140474](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220222125140474.png)
+![image-20220222125140474](..\img\image-20220222125140474.png)
 
 代码实现：
 
@@ -524,7 +524,7 @@ class Data3 {
 
 测试结果：
 
-![image-20220222125151093](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220222125151093.png)
+![image-20220222125151093](..\img\image-20220222125151093.png)
 
 ---
 
@@ -1109,15 +1109,15 @@ class MyCache{
 
 执行效果如图：
 
-<img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220222125240193.png" alt="image-20220222125240193" style="zoom:67%;" />
+<img src="..\img\image-20220222125240193.png" alt="image-20220222125240193" style="zoom:67%;" />
 
-![image-20220222125228234](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220222125228234.png)
+![image-20220222125228234](..\img\image-20220222125228234.png)
 
 ---
 
 ## 十一、阻塞队列
 
-![image-20220222125252595](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220222125252595.png)
+![image-20220222125252595](..\img\image-20220222125252595.png)
 
 #### BlockingQueue 接口
 
@@ -1263,7 +1263,7 @@ public class SynchronousQueueDemo {
 
 执行结果如图所示：
 
-![image-20220222125303873](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220222125303873.png)
+![image-20220222125303873](..\img\image-20220222125303873.png)
 
 ---
 
@@ -1289,7 +1289,7 @@ public class SynchronousQueueDemo {
 
 ### 1、3大方法
 
-<img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220222125311543.png" alt="image-20220222125311543" style="zoom:67%;" />
+<img src="..\img\image-20220222125311543.png" alt="image-20220222125311543" style="zoom:67%;" />
 
 ```java
 public class Demo01 {
@@ -1377,7 +1377,7 @@ public ThreadPoolExecutor(int corePoolSize, // 核心线程池大小
 }
 ```
 
-<img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220222125327175.png" alt="image-20220222125327175" style="zoom:67%;" />
+<img src="..\img\image-20220222125327175.png" alt="image-20220222125327175" style="zoom:67%;" />
 
 因为实际开发中工具类 **Executors** 不安全，所以需要手动创建线程池，自定义 7 个参数
 
@@ -1432,7 +1432,7 @@ public class Demo01 {
 
 ### 3、4种拒绝策略
 
-<img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220222125341366.png" alt="image-20220222125341366" style="zoom:67%;" />
+<img src="..\img\image-20220222125341366.png" alt="image-20220222125341366" style="zoom:67%;" />
 
 ```java
 /**

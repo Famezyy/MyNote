@@ -238,8 +238,6 @@ User(name=zhao)
 
 > 不需要导入额外的包
 
-
-
 4.1 在 application.property 中配置 <a href="#ehcache.xml">ehcache.xml</a>> 位置
 
 ```properties
@@ -578,7 +576,7 @@ public User getUser(User queryPram, int[] arr, String str) {
 
 **API 结构**
 
-<img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220113005721925.png" alt="image-20220113005721925" style="zoom: 80%;" />
+<img src="..\img\image-20220113005721925.png" alt="image-20220113005721925" style="zoom: 80%;" />
 
 ---
 
@@ -586,7 +584,7 @@ public User getUser(User queryPram, int[] arr, String str) {
 
 **API 结构**
 
-<img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220113005837032.png" alt="image-20220113005837032" style="zoom:80%;" />
+<img src="..\img\image-20220113005837032.png" alt="image-20220113005837032" style="zoom:80%;" />
 
 ---
 

@@ -3,7 +3,6 @@
 ```java
 public class CopyOnWriteArrayList<E>
     implements List<E>, RandomAccess, Cloneable, java.io.Serializable {
-    
 }
 ```
 

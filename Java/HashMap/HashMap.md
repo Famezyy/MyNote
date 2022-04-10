@@ -21,7 +21,7 @@
 
 - 下图描述了hashmap的存储结构图
 
-<img src="https://img-blog.csdn.net/20171127105027500?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvanVuY2hlbmJiMDQzMA==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast" alt="img" style="zoom: 67%;" />
+<img src="..\img\SouthEast" alt="img" style="zoom: 67%;" />
 
 ## 2.和HashTable的不同
 
@@ -111,7 +111,7 @@ tab[i = (n - 1) & hash]  // i为数组对应位置的索引  n为当前数组的
 ```
 
 >	    ​    当数组长度n较小时，n-1的二进制数高16位全部位0，这个时候如果直接和h值进行`&`（按位与）操作，那么只能利用到h值的低16位数据，这个时候会大大增加hash冲突发生的可能性，因为不同的h值转化为2进制后低16位是有可能相同的，如上面所举例子中:`key1.hashCode()` 和`key2.hashCode()` 得到的h值不同，一个`h1 = 3654061296` ，另一个`h2 = 3652881648`，但是不幸的是这h1、h2两个数转化为2进制后低16位是完全相同的，所以`h1 & (n-1)`和 `h2 & (n-1)` 会计算出相同的结果，这也导致了node1和node2 存储在了数组索引相同的位置，发生了hash冲突。
->
+>	
 >	    ​    当我们使用进行 `h ^ (h >>> 16)` 操作时，会将==h的高16位数据和低16位数据进行异或操作==，最终得出的hash值的高16位保留了h值的高16位数据，而hash值的低16数据则是h值的高低16位数据共同作用的结果。所以即使h1和h2的低16位相同，最终计算出的hash值低16位也大概率是不同的，降低了hash冲突发生的概率。
 
 ### 这里面还有一个值的注意的点: 为什么是(n-1)?
