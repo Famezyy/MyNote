@@ -4,11 +4,11 @@
 
 ## 简介
 
-<img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20211217001005534.png" alt="image-20211217001005534" style="zoom: 67%;" />
+<img src="..\img\image-20211217001005534.png" alt="image-20211217001005534" style="zoom: 67%;" />
 
-<img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20211217001238475.png" alt="image-20211217001238475" style="zoom:67%;" />
+<img src="..\img\image-20211217001238475.png" alt="image-20211217001238475" style="zoom:67%;" />
 
-<img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20211217001321246.png" alt="image-20211217001321246" style="zoom:67%;" />
+<img src="..\img\image-20211217001321246.png" alt="image-20211217001321246" style="zoom:67%;" />
 
 ## 1. 快速开始
 
@@ -776,7 +776,7 @@ jdbc.password=root
 >        <result column="last_name" property="lastName"></result>
 >        <!-- 其他不指定的列会自动封装，推荐写 resultMap 的话就把全部的映射规则都写上 -->
 >    </resultMap>
->                                        
+>                                              
 >    <!-- resultMap：自定义结果集映射规则 -->
 >    <select id="getEmpById" resultMap="myEmp">
 >        select * from tbl_employee where id = #{id}
@@ -977,7 +977,7 @@ jdbc.password=root
 >       <result column="last_name" property="lastName"></result>
 >       <result column="email" property="email"></result>
 >       <result column="gender" property="gender"></result>
->                           
+>                               
 >       <!--
 >           - column：指定判定的列名
 >           - javaType：列值对应的 java 类型
@@ -990,12 +990,12 @@ jdbc.password=root
 >                            column="d_id"
 >                            />
 >           </case>
->                           
+>                               
 >           <case value="1" resultType="com.mybatis.bean.Employee">
 >               <result column="last_name" property="email"></result>
 >           </case>
 >       </discriminator>
->                           
+>                               
 >   </resultMap>
 >   <select id="getEmpDis" resultMap="MyEmpDis">
 >       select * from tbl_employee where id=#{id}
@@ -1460,11 +1460,11 @@ jdbc.password=root
 
 ### 5.4 原理
 
-<img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20211228211912197.png" alt="image-20211228211912197" style="zoom:50%;" />
+<img src="..\img\image-20211228211912197.png" alt="image-20211228211912197" style="zoom:50%;" />
 
 
 
-<img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20211228213537333.png" alt="image-20211228213537333" style="zoom: 67%;" />
+<img src="..\img\image-20211228213537333.png" alt="image-20211228213537333" style="zoom: 67%;" />
 
 ### 5.5 整合第三方缓存
 
@@ -1788,7 +1788,7 @@ class IntegrateMybatisApplicationTests {
 
 ## 8. 运行原理
 
-![image-20211229205427060](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20211229205427060.png)
+![image-20211229205427060](..\img\image-20211229205427060.png)
 
 > **1. 获取 sqlSessionFactory 对象**
 >
@@ -1797,19 +1797,19 @@ class IntegrateMybatisApplicationTests {
 >
 > - 注意：MapperStatement 代表一个增删改查的详细信息
 >
-> <img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20211229211920563.png" style="zoom:67%;" />
+> <img src="..\img\image-20211229211920563.png" style="zoom:67%;" />
 >
 > **2. 获取 sqlSession 对象**
 >
 > - 返回一个 DefaultSqlSession 对象，包含 Executor 和 Configuration
 >
-> <img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20211229213729756.png" alt="image-20211229213729756" style="zoom:67%;" />
+> <img src="..\img\image-20211229213729756.png" alt="image-20211229213729756" style="zoom:67%;" />
 >
 > **3. 获取接口的实现类对象（MapperProxy）**
 >
 > - 使用 MapperProxyFactory 创建一个 MapperProxy 代理对象，包含了 DefaultSqlSession
 >
-> <img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20211229214800638.png" alt="image-20211229214800638" style="zoom:67%;" />
+> <img src="..\img\image-20211229214800638.png" alt="image-20211229214800638" style="zoom:67%;" />
 >
 > 
 >
@@ -1967,7 +1967,7 @@ class IntegrateMybatisApplicationTests {
 
 >   在配置文件中先配置的插件先被创建，并且包装时后面的插件会包装前面插件包装后的对象奥，会产生层层代理，执行目标方法时，按照逆向执行拦截方法
 >
-> <img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220101130341858.png" alt="image-20220101130341858" style="zoom: 50%;" />
+> <img src="..\img\image-20220101130341858.png" alt="image-20220101130341858" style="zoom: 50%;" />
 
 ### 定制插件
 
@@ -2084,7 +2084,7 @@ class IntegrateMybatisApplicationTests {
 
 > 1. Oracle 中创建一个带游标的存储过程
 >
->    ![image-20220101154808387](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220101154808387.png)
+>    ![image-20220101154808387](..\img\image-20220101154808387.png)
 >
 > 2. mybatis 调用存储过程
 >
@@ -2167,23 +2167,23 @@ class IntegrateMybatisApplicationTests {
 >        public void setParameter(PreparedStatement ps, int i, EmpStatus parameter, JdbcType jdbcType) throws SQLException {
 >            ps.setString(i, parameter.getCode().toString());
 >        }
->                            
+>                                  
 >        @Override
 >        public EmpStatus getResult(ResultSet rs, String columnName) throws SQLException {
 >            // 需要根据从数据库中拿到的枚举的状态码返回一个枚举对象
 >            int code = rs.getInt(columnName);
 >            EmpStatus empStatus = Employee.getEmpStatus(code);
 >            return empStatus;
->                            
+>                                  
 >        }
->                            
+>                                  
 >        @Override
 >        public EmpStatus getResult(ResultSet rs, int columnIndex) throws SQLException {
 >            int code = rs.getInt(columnIndex);
 >            EmpStatus empStatus = Employee.getEmpStatus(code);
 >            return empStatus;
 >        }
->                            
+>                                  
 >        @Override
 >        public EmpStatus getResult(CallableStatement cs, int columnIndex) throws SQLException {
 >            int code = cs.getInt(columnIndex);
@@ -2198,28 +2198,28 @@ class IntegrateMybatisApplicationTests {
 >     * 希望数据库保存的是100， 200状态码
 >     */
 >    public enum EmpStatus {
->                            
+>                                  
 >        LOGIN(100,"用户登录"),LOGOUT(200, "用户登出"),REMOVE(300, "用户移除");
->                            
+>                                  
 >        private Integer code;
 >        private String message;
 >        private EmpStatus(Integer code, String message) {
 >            this.code = code;
 >            this.message = message;
 >        }
->                            
+>                                  
 >        public Integer getCode() {
 >            return code;
 >        }
->                            
+>                                  
 >        public void setCode(Integer code) {
 >            this.code = code;
 >        }
->                            
+>                                  
 >        public String getMessage() {
 >            return message;
 >        }
->                            
+>                                  
 >        public void setMessage(String message) {
 >            this.message = message;
 >        }
@@ -2228,17 +2228,17 @@ class IntegrateMybatisApplicationTests {
 >
 >    ```java
 >    Employee.class
->                            
+>                                  
 >    public EmpStatus empStatus;
->                            
+>                                  
 >    public EmpStatus getEmpStatus() {
 >        return empStatus;
 >    }
->                            
+>                                  
 >    public void setEmpStatus(EmpStatus empStatus) {
 >        this.empStatus = empStatus;
 >    }
->                            
+>                                  
 >    /**
 >         * 根据状态码返回枚举对象
 >         */

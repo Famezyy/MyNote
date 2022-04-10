@@ -187,7 +187,7 @@ redis-server
 >
 >   - **单线程 + 多路 IO 复用**
 >
->     <img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220114005411353.png" alt="image-20220114005411353" style="zoom:67%;" />
+>     <img src="..\img\image-20220114005411353.png" alt="image-20220114005411353" style="zoom:67%;" />
 
 ---
 
@@ -310,7 +310,7 @@ redis-server
 
 > ​    String 的数据结构为简单动态字符串（Simple Dynamic String，缩写 SDS），是可以修改的字符串，内部结构实现上类似于 JAVA 的 ArrayList，采用预分配冗余空间的方式来减少内存的频繁分配。
 >
-> ![image-20220114015557740](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220114015557740.png)
+> ![image-20220114015557740](..\img\image-20220114015557740.png)
 >
 > ​    如图所示，内部为当前字符串实际分配的空间 capacity 一般要高于实际字符串长度，当字符串长度小于 1M 时，扩容都是加倍现有的空间，如果超过 1M，扩容是一次只会多扩容 1M 的空间，需要注意的是字符串最大长度为 512M。
 
@@ -348,7 +348,7 @@ redis-server
 >
 > - 因为普通的链表需要的附加指针空间太大，会比较浪费空间。比如这个列表里存的只是 int 类型的数据，结构上还需要两个额外的指针 prev 和 next
 >
->   ![img](https://img-blog.csdnimg.cn/88b974e67c474683a08e4a19fa28bd8b.png#pic_center)
+>   ![img](..\img\88b974e67c474683a08e4a19fa28bd8b.png)
 >
 > - Redis 将链表和 ziplist 结合起来组成了 quicklist。也就是将多个 ziplist 使用双向指针串起来使用。这样既满足了快速的插入删除性能，又不会出现太大的空间冗余
 
@@ -396,7 +396,7 @@ redis-server
 
 - 用户 ID 为查找的 key，存储的 value 用户对象包含姓名，年龄，生日等信息，如果用普通的 key/value 结构来存储主要有以下 2 种存储方式：
 
-  <img src="https://img-blog.csdnimg.cn/193bc5c71f7644629e0ab35ccf056e0b.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_70" alt="img" style="zoom: 80%;" />
+  <img src="..\img\watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_70" alt="img" style="zoom: 80%;" />
 
 #### 4.2 常用命令
 
@@ -462,13 +462,13 @@ redis-server
 >
 >- 有序链表
 >
->  ![img](https://img-blog.csdnimg.cn/27a06fae49d54080a4808cf5d6a11c06.png#pic_center)
+>  ![img](..\img\27a06fae49d54080a4808cf5d6a11c06.png)
 >
 >  要查找值为51的元素，需要从第一个元素开始依次查找、比较才能找到。共需要6次比较
 >
 >- 跳跃表
 >
->  ![img](https://img-blog.csdnimg.cn/ad5021fa573549748ed6809b4b83f316.png#pic_center)
+>  ![img](..\img\ad5021fa573549748ed6809b4b83f316.png)
 >
 >  - 从第2层开始，1节点比51节点小，向后比较
 >
@@ -706,7 +706,7 @@ redis-server
   > requirepass zhaoyouyi1993919
   > ````
   >
-  > ![img](https://img-blog.csdnimg.cn/8a6d670b12074b26b5283dfd8329362d.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_70#pic_center)
+  > ![img](..\img\watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_702)
 
 - **LIMITS限制**
 
@@ -849,7 +849,7 @@ redis-server
 
 1. 客户端可以订阅频道如下图
 
-![在这里插入图片描述](https://img-blog.csdnimg.cn/d6d85c97cd934b26829090da30d8a928.png#pic_center)
+![在这里插入图片描述](..\img\d6d85c97cd934b26829090da30d8a928.png)
 
 2. 当给这个频道发布消息后，消息就会发送给订阅的客户端
 
@@ -881,7 +881,7 @@ redis-server
 
 > ​    现代计算机用二进制（位） 作为信息的基础单位， 1 个字节等于 8 位， 例如 “abc” 字符串是由 3 个字节组成， 但实际在计算机存储时将其用二进制表示， “abc” 分别对应的 ASCII 码分别是97、 98、 99， 对应的二进制分别是 01100001、 01100010和01100011，如下图
 >
-> ![img](https://img-blog.csdnimg.cn/60424e743cb64d28ac26156633efc915.png#pic_center)
+> ![img](..\img\60424e743cb64d28ac26156633efc915.png)
 >
 > ​    合理地使用操作位能够有效地提高内存使用率和开发效率
 
@@ -904,11 +904,11 @@ Redis提供了 Bitmaps 这个“数据类型”可以实现对位的操作
 
     - 设置键的第 offset 个位的值（从 0 算起） ， 假设现在有20个用户，userid=1， 6， 11， 15， 19 的用户对网站进行了访问， 那么当前 Bitmaps 初始化结果如图
 
-    ![img](https://img-blog.csdnimg.cn/9070a0aa234e458a92da950e5b337752.png#pic_center)
+    ![img](..\img\9070a0aa234e458a92da950e5b337752.png)
 
     - users:20000911 代表 2000-09-11 这天的独立访问用户的 Bitmaps
 
-![image-20220115193427992](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220115193427992.png)
+![image-20220115193427992](..\img\image-20220115193427992.png)
 
 > 注：
 >
@@ -924,7 +924,7 @@ Redis提供了 Bitmaps 这个“数据类型”可以实现对位的操作
 
     - 获取 id=8 的用户是否在 2000-09-11 这天访问过， 返回 0 说明没有访问过
 
-      ![image-20220115193507925](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220115193507925.png)
+      ![image-20220115193507925](..\img\image-20220115193507925.png)
 
       > 注：因为 8 与 12 根本不存在，所以也是返回 0
 
@@ -938,11 +938,11 @@ Redis提供了 Bitmaps 这个“数据类型”可以实现对位的操作
 
     计算 2000 年 9 月 11 访问量
 
-    ![image-20220115194535400](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220115194535400.png)
+    ![image-20220115194535400](..\img\image-20220115194535400.png)
 
     start 和 end 代表起始和结束字节数， 下面操作计算用户 id 在第 1 个字节到第 3 个字节之间的独立访问用户数， 对应的范围是 8 ~ 31
 
-    ![image-20220115194553619](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220115194553619.png)
+    ![image-20220115194553619](..\img\image-20220115194553619.png)
 
   - 举例： K1 【01000001 01000000 00000000 00100001】，对应【0，1，2，3】
 
@@ -989,7 +989,7 @@ Redis提供了 Bitmaps 这个“数据类型”可以实现对位的操作
     (integer 2) # 与运算
     ```
 
-    ![img](https://img-blog.csdnimg.cn/0c3826e1020144fb86bfc547ddf1c50b.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_70#pic_center)
+    ![img](..\img\watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_703)
 
 #### 1.3 Bitmaps与set对比
 
@@ -1050,7 +1050,7 @@ Redis提供了 Bitmaps 这个“数据类型”可以实现对位的操作
 
   - 实例
 
-![img](https://img-blog.csdnimg.cn/c23f0f23825946829d849acc0b150d1b.png#pic_center)
+![img](..\img\c23f0f23825946829d849acc0b150d1b.png)
 
 - **pfmerge**
 
@@ -1058,7 +1058,7 @@ Redis提供了 Bitmaps 这个“数据类型”可以实现对位的操作
 
   - 实例
 
-    ![img](https://img-blog.csdnimg.cn/1b845dfaec8e4303b4d8a36b40325b55.png#pic_center)
+    ![img](..\img\1b845dfaec8e4303b4d8a36b40325b55.png)
 
 ### 3. Geospatial
 
@@ -1092,7 +1092,7 @@ Redis提供了 Bitmaps 这个“数据类型”可以实现对位的操作
 
   `geopos <key><member>[member...]`：获得指定地区的坐标值
 
-  ![img](https://img-blog.csdnimg.cn/9182ade18ffb44cbab39e98abfae98e9.png#pic_center)
+  ![img](..\img\9182ade18ffb44cbab39e98abfae98e9.png)
 
 - **geodist**
 
@@ -1100,7 +1100,7 @@ Redis提供了 Bitmaps 这个“数据类型”可以实现对位的操作
 
   获取两个位置之间的直线距离：
 
-  ![img](https://img-blog.csdnimg.cn/e3d1223b4e1245d5b13aef5a0f8d57f5.png#pic_center)
+  ![img](..\img\e3d1223b4e1245d5b13aef5a0f8d57f5.png)
 
   > 单位：
   >
@@ -1118,7 +1118,7 @@ Redis提供了 Bitmaps 这个“数据类型”可以实现对位的操作
 
   `georadius<key><longitude><latitude>radius m|km|ft|mi`：以给定的经纬度为中心，找出某一半径内的元素，四个参数——经度、纬度、距离、单位
 
-  ![img](https://img-blog.csdnimg.cn/ac2625720536437d9fc4662caa6c7f42.png#pic_center)
+  ![img](..\img\ac2625720536437d9fc4662caa6c7f42.png)
 
 ---
 
@@ -2076,7 +2076,7 @@ public final class RedisUtil {
 
 - 组队的过程中可以通过 discard
 
-![img](https://img-blog.csdnimg.cn/7af10e13b126438f8333e90c11e3e56b.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_70#pic_center)
+![img](..\img\watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_270)
 
 **实例**
 
@@ -2111,7 +2111,7 @@ OK
 
 - 组队时某个命令出现了错误，执行时整个的所有队列都会被取消
 
-  ![img](https://img-blog.csdnimg.cn/6e47f72e783b434cbb1dd43096e4e17a.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_70#pic_center)
+  ![img](..\img\watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_470)
 
   ```
   127.0.0.1:6379> set k1 1
@@ -2126,7 +2126,7 @@ OK
 
 - 如果执行阶段某个命令出现了错误，则只有报错的命令不会被执行，而其他的命令都会执行，不会回滚
 
-  ![img](https://img-blog.csdnimg.cn/eaee21b45f8a4066ac429fe0501e4d91.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_70#pic_center)
+  ![img](..\img\watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t5_70)
   
   ```
   127.0.0.1:6379> multi
@@ -2153,17 +2153,17 @@ OK
 
 一个请求想给金额减 1000
 
-![img](https://img-blog.csdnimg.cn/178a125a4a11408a9cf43ed1f63dee14.png#pic_center)
+![img](..\img\178a125a4a11408a9cf43ed1f63dee14.png)
 
 #### 4.2 悲观锁
 
-![img](https://img-blog.csdnimg.cn/148464141b62431ab1b5f3d1d98acd69.png#pic_center)
+![img](..\img\148464141b62431ab1b5f3d1d98acd69.png)
 
 > ​    悲观锁（Pessimistic Lock），顾名思义，就是很悲观，每次去拿数据的时候都认为别人会修改，所以每次在拿数据的时候都会上锁，这样别人想拿这个数据就会block直到它拿到锁。传统的关系型数据库里边就用到了很多这种锁机制，比如行锁，表锁等，读锁，写锁等，都是在做操作之前先上锁。
 
 #### 4.3 乐观锁
 
-![img](https://img-blog.csdnimg.cn/5358bb00c39e4c538d5bc4a668695375.png#pic_center)
+![img](..\img\5358bb00c39e4c538d5bc4a668695375.png)
 
 > ​    乐观锁（Optimistic Lock），顾名思义，就是很乐观，每次去拿数据的时候都认为别人不会修改，所以不会上锁，但是在更新的时候会判断一下在此期间别人有没有去更新这个数据，可以使用版本号等机制。乐观锁适用于多读的应用类型，这样可以提高吞吐量。Redis 就是利用这种 check-and-set 机制实现事务的。
 
@@ -2216,7 +2216,7 @@ QUEUED
 
 - 创建 springBoot 项目，添加 webapp/WEB-INF 目录
 
-  ![image-20220118020316118](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220118020316118.png)
+  ![image-20220118020316118](..\img\image-20220118020316118.png)
 
 - 导入 jar 包
 
@@ -2389,9 +2389,9 @@ QUEUED
 
 2. Jmeter
 
-![image-20220118025612786](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220118025612786.png)
+![image-20220118025612786](..\img\image-20220118025612786.png)
 
-![image-20220118025559949](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220118025559949.png)
+![image-20220118025559949](..\img\image-20220118025559949.png)
 
 - 并发暴露出来的问题
 
@@ -2399,7 +2399,7 @@ QUEUED
 
     - 超卖产生的原因
 
-    ![img](https://img-blog.csdnimg.cn/a0ad2173bb3d4d778e0cf195099c66df.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_70#pic_center)
+    ![img](..\img\watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_750)
 
   - 连接超时问题
 
@@ -2455,7 +2455,7 @@ QUEUED
 
 **利用乐观锁淘汰用户，解决超卖问题**
 
-![img](https://img-blog.csdnimg.cn/ad49570e88294de1a4bfaa645784dfdb.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_70#pic_center)
+![img](..\img\watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_706)
 
 ```java
 // RedisTemplate 的事务操作
@@ -2600,7 +2600,7 @@ public static boolean doSecKill(String uid,String prodid) throws IOException {
 >
 > - redis 2.6 版本以后，通过 lua 脚本解决争抢问题，实际上是 redis 利用其单线程的特性，用任务队列的方式解决多任务并发问题
 >
-> ![img](https://img-blog.csdnimg.cn/917c3c147e324d958b5405c9e401527b.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_70#pic_center)
+> ![img](..\img\watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_7066)
 
 ```java
 private boolean doSecKill(String userId, String proId) {
@@ -2687,7 +2687,7 @@ return 1;
 
 > ​    Redis 会单独创建（fork）一个子进程来进行持久化，会先将数据写入到 一个临时文件中，待持久化过程都结束了，再用这个临时文件替换上次持久化好的文件。 整个过程中，主进程是不进行任何 IO 操作的，这就确保了极高的性能 如果需要进行大规模数据的恢复，且对于数据恢复的完整性不是非常敏感，那 RDB 方式要比 AOF 方式更加的高效。RDB 的缺点是最后一次持久化后的数据可能丢失。
 
-![img](https://img-blog.csdnimg.cn/03fe7462cc2c4b29bb302a1b635c511e.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_70#pic_center)
+![img](..\img\watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_708)
 
 #### 1.2 Fork过程概述
 
@@ -2806,7 +2806,7 @@ return 1;
 - 节省磁盘空间
 - 恢复速度快
 
-![img](https://img-blog.csdnimg.cn/f4b6bbc8a5224dc2b05f67c3fa6ff831.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_70#pic_center)
+![img](..\img\watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_70123)
 
 **劣势**
 
@@ -2822,7 +2822,7 @@ return 1;
 
 #### 1.7 总结
 
-![img](https://img-blog.csdnimg.cn/6a123386c00041e78ac56f4f3f55af86.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_70#pic_center)
+![img](..\img\watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,23)
 
 > 注意持久化文件是在启动目录生成，不是一定在 /usr/local/bin 目录下
 
@@ -2842,7 +2842,7 @@ return 1;
 
 - Redis 服务重启时，会重新 load 加载 AOF 文件中的写操作达到数据恢复的目的；
 
-![img](https://img-blog.csdnimg.cn/012496cf23cc497e9acdba1ca80a4315.png#pic_center)
+![img](..\img\012496cf23cc497e9acdba1ca80a4315.png)
 
 #### 2.3 AOF的开启与说明
 
@@ -2924,13 +2924,13 @@ return 1;
     >   - 主进程把 aof_rewrite_buf 中的数据写入到新的 AOF 文件
     > - 使用新的 AOF 文件覆盖旧的 AOF 文件，完成 AOF 重写
     >
-    > ![img](https://img-blog.csdnimg.cn/46a8cc5a838a45dea15111935ba21a69.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_70#pic_center)
+    > ![img](..\img\watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_7120)
 
 #### 2.4 优势与劣势
 
 - **优势**
 
-  ![img](https://img-blog.csdnimg.cn/046d490cb9a34a999d1c126150ad6a2f.png#pic_center)
+  ![img](..\img\046d490cb9a34a999d1c126150ad6a2f.png)
 
   > - 备份机制更稳健，丢失数据概率更低
   > - 可读的日志文本，通过操作AOF
@@ -2944,7 +2944,7 @@ return 1;
 
 #### 2.5 总结
 
-<img src="https://img-blog.csdnimg.cn/1f1dde2ddf914e7b89f1571076ef9ed9.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_70#pic_center" alt="img" style="zoom: 80%;" />
+<img src="..\img\16,color_FFFFFF,t_70" alt="img" style="zoom: 80%;" />
 
 #### 2.6 AOF和RDB的选择
 
@@ -2996,7 +2996,7 @@ return 1;
 - 读写分离，性能扩展
 - 容灾快速恢复
 
-![在这里插入图片描述](https://img-blog.csdnimg.cn/652465d11add436ea377bfe71c983b44.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_70#pic_center)
+![在这里插入图片描述](..\img\color_FFFFFF,t_70)
 
 ### 2.搭建主从复制
 
@@ -3049,7 +3049,7 @@ return 1;
 
 - 查看服务是否启动
 
-  ![img](https://img-blog.csdnimg.cn/1410863119fc4e30adb2d5a09baa2883.png#pic_center)
+  ![img](..\img\1410863119fc4e30adb2d5a09baa2883.png)
 
 - 查看三台主机运行情况
 
@@ -3058,7 +3058,7 @@ return 1;
   info replication  # 打印主从复制的相关信息
   ```
 
-  ![img](https://img-blog.csdnimg.cn/e7d080a5b51846f0ac9463147e2851c0.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_70#pic_center)
+  ![img](..\img\watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_70)
 
 - 配从(库)不配主(库)
 
@@ -3068,15 +3068,15 @@ return 1;
   masterauth # 配置主机密码
   ```
 
-  ![img](https://img-blog.csdnimg.cn/4dd8be0df25d424aa302d0d2856281b4.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_70#pic_center)
+  ![img](..\img\_70)
 
-  ![img](https://img-blog.csdnimg.cn/fecee48780d448d88262e9d9226daaf1.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_70#pic_center)
+  ![img](..\img\1234)
 
 - 在主机上写，在从机上可以读取数据，在从机上写数据报错
 
-  ![img](https://img-blog.csdnimg.cn/85090c136b664f7ca557c657aad04238.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_70#pic_center)
+  ![img](..\img\12345)
 
-  ![img](https://img-blog.csdnimg.cn/0e78c208482b4c0db62af54bc7ca9b60.png#pic_center)
+  ![img](..\img\0e78c208482b4c0db62af54bc7ca9b60.png)
 
   
 
@@ -3118,7 +3118,7 @@ return 1;
 
 - 但是只要是重新连接 Master,一次完全同步（全量复制）将被自动执行
 
-![img](https://img-blog.csdnimg.cn/e1858fc3316944678d28a3e140715ffb.png#pic_center)
+![img](..\img\e1858fc3316944678d28a3e140715ffb.png)
 
 #### 3.2 薪火相传
 
@@ -3129,13 +3129,13 @@ return 1;
 >   - 风险是一旦某个 slave 宕机，后面的 slave 都没法备份
 >   - 主机挂了，从机还是从机，无法写数据了
 
-![img](https://img-blog.csdnimg.cn/352e37d65a0e443985a4aef24d724048.png#pic_center)
+![img](..\img\352e37d65a0e443985a4aef24d724048.png)
 
-![img](https://img-blog.csdnimg.cn/ee4f96c8e136401093126d60edad631c.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_70#pic_center)
+![img](..\img\1)
 
-![img](https://img-blog.csdnimg.cn/b0fe97cee88a47409598daccfc61538f.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_70#pic_center)
+![img](..\img\2)
 
-![img](https://img-blog.csdnimg.cn/f1bfb87fd71b46849c1be3c51363cf3f.png#pic_center)
+![img](..\img\3)
 
 #### 3.3 反客为主
 
@@ -3145,11 +3145,11 @@ return 1;
 
 - 6379 down 了
 
-  ![img](https://img-blog.csdnimg.cn/8ca20660fc1044bda35f8a852fbd4c5f.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_70#pic_center)
+  ![img](..\img\4)
 
 - 让 6380 反客为主
 
-  ![img](https://img-blog.csdnimg.cn/1a80f2f2b7c54605b09af5edf4bce071.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_70#pic_center)
+  ![img](..\img\5)
 
 ### 4 哨兵模式
 
@@ -3168,11 +3168,11 @@ sentinel monitor mymaster 127.0.0.1 6379 1
 
 - 启动哨兵，执行 `redis-sentinel /myredis/sentinel.conf`
 
-  ![img](https://img-blog.csdnimg.cn/d89d252cdb244f35afe46dd78cdf31e0.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_70#pic_center)
+  ![img](..\img\6)
 
 - 当主机挂掉，从机选举中产生新的主机
 
-  ![img](https://img-blog.csdnimg.cn/b8e355644d934c7d879c9670f18dc593.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_70#pic_center)
+  ![img](..\img\7)
 
 - 重新启动原主机，**原主机重启后会变为从机**
 
@@ -3182,7 +3182,7 @@ sentinel monitor mymaster 127.0.0.1 6379 1
 
 **故障恢复**
 
-![img](https://img-blog.csdnimg.cn/06d6391b367d46309376900f9962e3cc.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_70#pic_center)
+![img](..\img\8)
 
 > 优先级在 redis.conf 中设置，默认：replica-priority 100，值越小优先级越高
 >
@@ -3242,7 +3242,7 @@ public static  Jedis getJedisFromSentinel(){
 >
 > 之前通过代理主机来解决，但是 redis3.0 中提供了解决方案，就是无中心化集群配置
 
-<img src="https://img-blog.csdnimg.cn/a119e8e84725496b9cc8022f62f98260.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_70#pic_center" alt="img" style="zoom: 50%;" />
+<img src="..\img\9" alt="img" style="zoom: 50%;" />
 
 **集群概述**
 
@@ -3280,7 +3280,7 @@ public static  Jedis getJedisFromSentinel(){
 
 - **启动6个服务**
 
-  ![img](https://img-blog.csdnimg.cn/db5e9f1b818f4a9d9b36189c41ebc8c2.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_70#pic_center)
+  ![img](..\img\10)
 
   > 要确保 nodes-xxxx.conf 生成
 
@@ -3304,7 +3304,7 @@ public static  Jedis getJedisFromSentinel(){
 
    --replicas 1 配置集群，一台主机，一台从机，正好三组
 
-  <img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220122173502725.png" alt="image-20220122173502725" style="zoom:67%;" />
+  <img src="..\img\11" alt="image-20220122173502725" style="zoom:67%;" />
 
 - **查看是否集成成功**
 
@@ -3315,7 +3315,7 @@ public static  Jedis getJedisFromSentinel(){
   cluster nodes
   ```
 
-  ![img](https://img-blog.csdnimg.cn/c9df7abdc600455687a42304654c0986.png#pic_center)
+  ![img](..\img\12)
 
 ### 3 集群操作和故障恢复
 
@@ -3327,7 +3327,7 @@ public static  Jedis getJedisFromSentinel(){
   cluster nodes
   ```
 
-  ![img](https://img-blog.csdnimg.cn/ca7a18d60ddc411da40fc242c01aee93.png#pic_center)
+  ![img](..\img\13)
 
 - **redis cluster 如何分配这六个节点**
 
@@ -3351,19 +3351,19 @@ public static  Jedis getJedisFromSentinel(){
   >
   > 节点 C 负责处理 10923 号至 16383 号插槽
   >
-  > ![img](https://img-blog.csdnimg.cn/334f25bc51ac497392a47a861695f3f6.png#pic_center)
+  > ![img](..\img\334f25bc51ac497392a47a861695f3f6.png)
 
 - **在集群中录入值**
 
-  ![img](https://img-blog.csdnimg.cn/9a10c18b4d714794b3c6cfd0be45214f.png#pic_center)
+  ![img](..\img\9a10c18b4d714794b3c6cfd0be45214f.png)
 
-  ![img](https://img-blog.csdnimg.cn/94006ddd9ef540c68d5015167bdd0b43.png#pic_center)
+  ![img](..\img\94006ddd9ef540c68d5015167bdd0b43.png)
 
   > **注意：**在用 mset 同时设置多个值的时候，需要把这些 key 放到同一个组中，不然会报错。可以通过 {} 来定义组的概念，从而使 key 中 {} 内相同内容的键值对放到一个 slot 中去
   >
   > `mset fieldName1{group} fieldValue1 fieldName{group} fieldValue2 ...`
 
-  ![img](https://img-blog.csdnimg.cn/86e56a7080914797a34a178f211f8db7.png#pic_center)
+  ![img](..\img\86e56a7080914797a34a178f211f8db7.png)
 
 - **查询集群中的值**
 
@@ -3371,32 +3371,32 @@ public static  Jedis getJedisFromSentinel(){
   cluster keyslot k1 # 查询k1的插槽值
   ```
 
-  ![img](https://img-blog.csdnimg.cn/9ed0fcb60b9f47d68134c3d4189ffaf9.png#pic_center)
+  ![img](..\img\9ed0fcb60b9f47d68134c3d4189ffaf9.png)
 
   ```bash
   cluster countkeysinslot 12706 
   # 查看指定插槽中的key数量，注意只能在插槽值所在的主机上能成功，例如：12706 插槽在 6381 端口的主机上则只能在 6381 端口的主机上查到，在其他端口则查询失败
   ```
   
-  ![img](https://img-blog.csdnimg.cn/cfb702f6cd1b46bf821d3df0f41fb699.png#pic_center)
+  ![img](..\img\cfb702f6cd1b46bf821d3df0f41fb699.png)
   
   ```bash
   cluster getkeysinslot 5474 2 # 返回指定插槽的指定数量的key
   ```
   
-  ![img](https://img-blog.csdnimg.cn/bdea7f4d54684a70a2dc6ea1f6a27883.png#pic_center)
+  ![img](..\img\bdea7f4d54684a70a2dc6ea1f6a27883.png)
 
 #### 3.2 故障恢复
 
 - 如果主节点下线？从节点能否自动升为主节点？注意：**15秒超时**，15秒内恢复连接则还是主机，否则原从机晋升为主机
 
-![img](https://img-blog.csdnimg.cn/f0edf11f6fe64e868302ce7b818762b2.png#pic_center)
+![img](..\img\f0edf11f6fe64e868302ce7b818762b2.png)
 
 - 主节点恢复后，主从关系会如何？
   - 主节点回来变成从机
 
 
-![img](https://img-blog.csdnimg.cn/7c956da3f1ee49688a9e2c3a944c7e9b.png#pic_center)
+![img](..\img\7c956da3f1ee49688a9e2c3a944c7e9b.png)
 
 - 如果所有某一段插槽的主从节点都宕掉，redis服务是否还能继续?
 
@@ -3424,7 +3424,7 @@ public class JedisClusterTest {
 }
 ```
 
-![img](https://img-blog.csdnimg.cn/63518e61becb471694009257e8b854aa.png#pic_center)
+![img](..\img\63518e61becb471694009257e8b854aa.png)
 
 #### 3.4 SpringBoot配置
 
@@ -3458,7 +3458,7 @@ public class JedisClusterTest {
 
 > ​    key 对应的数据在数据源并不存在，每次针对此 key 的请求从缓存获取不到，请求都会压到数据源，从而可能压垮数据源。比如用一个不存在的用户 id 获取用户信息，不论缓存还是数据库都没有，若黑客利用此漏洞进行攻击可能压垮数据库。
 
-![img](https://img-blog.csdnimg.cn/ea1f074fbc7f4cc1aa67f25e6ad505f9.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_70#pic_center)
+![img](..\img\66)
 
 #### 1.2 解决方案
 
@@ -3480,7 +3480,7 @@ public class JedisClusterTest {
 
 > key 对应的数据存在，但在 redis 中过期，此时若有大量并发请求过来，这些请求发现缓存过期一般都会从后端 DB 加载数据并回设到缓存，这个时候大并发的请求可能会瞬间把后端DB压垮。
 
-![img](https://img-blog.csdnimg.cn/01dd313ab2d241b1b7124209e8fb2f0c.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_70#pic_center)
+![img](..\img\77)
 
 #### 2.2 解决方案
 
@@ -3498,7 +3498,7 @@ public class JedisClusterTest {
   - 当操作返回成功时，再进行 load db 的操作，并回设缓存,最后删除 mutex key
   - 当操作返回失败，证明有线程在 load db，当前线程睡眠一段时间再重试整个 get 缓存的方法
 
-![img](https://img-blog.csdnimg.cn/99bbbfecaa274ec093e8acb8a94d44bc.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_70#pic_center)
+![img](..\img\88)
 
 ### 3.缓存雪崩
 
@@ -3506,7 +3506,7 @@ public class JedisClusterTest {
 
 > ​    key 对应的数据存在，但在 redis 中过期，此时若有大量并发请求过来，这些请求发现缓存过期一般都会从后端 DB 加载数据并回设到缓存，这个时候大并发的请求可能会瞬间把后端 DB 压垮。缓存雪崩与缓存击穿的区别在于这里针对很多 key 缓存，前者则是某一个 key 正常访问
 
-![img](https://img-blog.csdnimg.cn/d8ebf83dde7a49f2af91d7b9a097a5af.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_70#pic_center)
+![img](..\img\99)
 
 #### 3.2 解决方案
 
@@ -3545,7 +3545,7 @@ del key   # 删除锁
 expire users 30
 ```
 
-![img](https://img-blog.csdnimg.cn/deecb1d2220848c882570c97169ef84a.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_70#pic_center)
+![img](..\img\111)
 
 > 这样设置的问题：如果设置时间和上锁分开进行的话，可能存在上完锁，服务器 down 了，就没有设置过期时间。
 
@@ -3592,11 +3592,11 @@ public void testLock(){
 
 不过代码除了修改的设置过期时间问题，还存在问题，入下图所示：
 
-![img](https://img-blog.csdnimg.cn/45a14c048cd546dfb459a5ec222c5261.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_70#pic_center)
+![img](..\img\12332)
 
 解决方法：
 
-![img](https://img-blog.csdnimg.cn/97330dad073a466286ec7cc3b902285d.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_70#pic_center)
+![img](..\img\123456)
 
 代码实现：
 
@@ -3626,7 +3626,7 @@ public void testLock(){
 
 原因：
 
-<img src="https://img-blog.csdnimg.cn/23374f8f2b2f458693f535efdbf7b3b2.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_70#pic_center" alt="img" style="zoom:67%;" />
+<img src="..\img\a" alt="img" style="zoom:67%;" />
 
 解决方案：使用lua脚本保证删除的原子性
 
@@ -3710,21 +3710,21 @@ public void testLockLua() {
 
 - 使用 `acl list` 命令展现用户权限列表
 
-  ![img](https://img-blog.csdnimg.cn/f6ef6cd7875b46fb8419e9ba054d24be.png#pic_center)
+  ![img](..\img\f6ef6cd7875b46fb8419e9ba054d24be.png)
 
 - 使用 `acl cat` 命令
 
   - 查看添加权限指令类别
 
-    ![img](https://img-blog.csdnimg.cn/d90cfb671048494fb06a42deb8f7e6d3.png#pic_center)
+    ![img](..\img\d90cfb671048494fb06a42deb8f7e6d3.png)
 
   - 加参数类型名可以查看类型下具体命令
 
-    ![img](https://img-blog.csdnimg.cn/b8104e4448a74ef5837e6825b33f6902.png#pic_center)
+    ![img](..\img\b8104e4448a74ef5837e6825b33f6902.png)
 
 - 使用 `acl whoami` 命令查看当前用户
 
-  ![img](https://img-blog.csdnimg.cn/db1aba8f89704486bb1e9efd01cf6f31.png#pic_center)
+  ![img](..\img\db1aba8f89704486bb1e9efd01cf6f31.png)
 
 - 使用 aclsetuser 命令创建和编辑用户 ACL
 
@@ -3750,7 +3750,7 @@ public void testLockLua() {
     acl setuser user1
     ```
 
-    ![img](https://img-blog.csdnimg.cn/72dd8294941e452fbc573d3633d82a1c.png#pic_center)
+    ![img](..\img\72dd8294941e452fbc573d3633d82a1c.png)
 
     > 在上面的示例中，我根本没有指定任何规则。如果用户不存在，这将使用 just created 的默认属性来创建用户。如果用户已经存在，则上面的命令将不执行任何操作。
 
@@ -3760,11 +3760,11 @@ public void testLockLua() {
     acl setuser user2 on >password ~cached:* +get # 只能 get 以 cached: 开头的 key
     ```
 
-    ![img](https://img-blog.csdnimg.cn/beaea2f2692447238d58336a0fa01bfe.png#pic_center)
+    ![img](..\img\beaea2f2692447238d58336a0fa01bfe.png)
 
   - 切换用户，验证权限
 
-    ![img](https://img-blog.csdnimg.cn/0d0fd42952cf4553be17a1d6c7a7166f.png#pic_center)
+    ![img](..\img\0d0fd42952cf4553be17a1d6c7a7166f.png)
 
 ### 2 IO多线程
 
@@ -3773,7 +3773,7 @@ public void testLockLua() {
 **原理架构**
 
 ​    Redis 6 加入多线程,但跟 Memcached 这种从 IO 处理到数据访问多线程的实现模式有些差异。Redis 的多线程部分只是用来处理网络数据的读写和协议解析，执行命令仍然是单线程。之所以这么设计是不想因为多线程而变得复杂，需要去控制 key、lua、事务，LPUSH/LPOP 等等的并发问题。整体的设计大体如下：
-![img](https://img-blog.csdnimg.cn/565bc0e70db343eb8a842e6903fddee8.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_70#pic_center)
+![img](..\img\watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,s_16,color_FFFFFF,t_70)
 
 > 另外，多线程 IO 默认也是不开启的，需要再配置文件中配置
 >
@@ -3785,7 +3785,7 @@ public void testLockLua() {
 
 ​    之前老版 Redis 想要搭集群需要单独安装 ruby 环境，Redis 5 将 redis-trib.rb 的功能集成到 redis-cli 。另外官方 redis-benchmark 工具开始支持 cluster 模式了，通过多线程的方式对多个分片进行压测压。
 
-![img](https://img-blog.csdnimg.cn/d281add1fb414e04868ef05948ebcdd8.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_70#pic_center)
+![img](..\img\watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,)
 
 > Redis6新功能还有：
 >

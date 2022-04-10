@@ -14,7 +14,7 @@
 
 > 记录是按照行来存储的，但是数据库的读取并不以行为单位，否则一次读取（IO操作）只能处理一行数据，效率会非常低
 
-<img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220213012558504.png" alt="image-20220213012558504" style="zoom:67%;" />
+<img src="img\image-20220213012558504.png" alt="image-20220213012558504" style="zoom:67%;" />
 
 ### 1.2 页结构概述
 
@@ -34,7 +34,7 @@ SHOW VARIABLES LIKE '%innodb_page_size%';
 
 ​    另外在数据库中，还存在着区（Extent）、段（Segment）和表空间（Tablespace）的概念。行、页、区、段、表空间的关系如下图：
 
-<img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220213013124200.png" alt="image-20220213013124200" style="zoom:67%;" />
+<img src="img\image-20220213013124200.png" alt="image-20220213013124200" style="zoom:67%;" />
 
 ​    区（Extent）是比页大一级的存储结构，在`InnoDB`存储引擎中，一个区会分配**64个连续的页**，因为`InnoDB`中的页默认大小是16kb，所以一个区的大小是64*16kb=**1MB**。
 
@@ -50,11 +50,11 @@ SHOW VARIABLES LIKE '%innodb_page_size%';
 
 ​    页结构的示意图如下：
 
-<img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220213141316276.png" alt="image-20220213141316276" style="zoom:67%;" />
+<img src="img\image-20220213141316276.png" alt="image-20220213141316276" style="zoom:67%;" />
 
 ​    这七个部分作用分别如下：
 
-<img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220213141452123.png" alt="image-20220213141452123" style="zoom:67%;" />
+<img src="img\image-20220213141452123.png" alt="image-20220213141452123" style="zoom:67%;" />
 
 具体见：[参考](./第07章_InnoDB数据存储结构.mmap)
 
@@ -65,7 +65,7 @@ SHOW VARIABLES LIKE '%innodb_page_size%';
 - 叶子节点，B+ 树最底层的节点，节点高度为0，存储行记录
 - 非叶子节点，节点高度大于0，存储索引键和页面指针，并不存储行记录本身
 
-<img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220213152658171.png" alt="image-20220213152658171" style="zoom:67%;" />
+<img src="img\image-20220213152658171.png" alt="image-20220213152658171" style="zoom:67%;" />
 
 ​    当我们从页结构来理解 B+ 树的结构时，可以帮我们理解一些通过索引进行检索的原理：
 
@@ -269,13 +269,13 @@ SHOW VARIABLES LIKE 'innodb_file_per_talbe';
 
    ​    如果该数据存在于内存中，基本上执行时间在`1ms`左右，效率还是很高的。
 
-   <img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220213182644877.png" alt="image-20220213182644877" style="zoom:67%;" />
+   <img src="img\image-20220213182644877.png" alt="image-20220213182644877" style="zoom:67%;" />
 
 2. 随机读取
 
    ​    如果数据没有在内存中，就需要在磁盘上对该页进行查找，整体时间预估在`10ms`左右，这 10ms 中有 6ms 是磁盘的实际繁忙时间（包括了**寻道**和**半圈旋转时间**），有 3ms 是对可能发生的排队时间的估计值，还有 1ms 的传输时间，将页从磁盘服务器缓冲区传输到数据库缓冲区中。这 10ms 看起来很快，但实际上对于数据库来说已经非常长了，因为这还只是一个页的读取时间。
 
-   <img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220213183148970.png" alt="image-20220213183148970" style="zoom:67%;" />
+   <img src="img\image-20220213183148970.png" alt="image-20220213183148970" style="zoom:67%;" />
 
 3. 顺序读取
 

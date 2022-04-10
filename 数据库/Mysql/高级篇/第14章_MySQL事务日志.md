@@ -36,7 +36,7 @@ InnoDB 存储引擎是以`页为单位`来管理存储空间的。在真正访�
 
 InnoDB 引擎的事务采用了 WAL 技术（`Write-ahead Logging`），这种技术的思想就是先写日志，再写磁盘，只有日志写入成功，才有事务提交成功，这里的日志就是 redo log。当发生宕机且数据未刷新到磁盘的时候，可以通过 redo log 来恢复，保证 ACID 中的 D，这就是 redo log 的作用。
 
-<img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220223215637710.png" alt="image-20220223215637710" style="zoom:67%;" />
+<img src="img\image-20220223215637710.png" alt="image-20220223215637710" style="zoom:67%;" />
 
 ### 1.2 REDO日志的好处、特点
 
@@ -67,7 +67,7 @@ Redo log可以简单分为以下两个部分：
 
   在服务器启动时就向操作系统申请了一大片称之为 redo log buffer 的`连续内存`空间，翻译成中文就是 redo 日志缓冲区。这片内存空间被划分为若干个连续的`redo log block`。一个 redo log block 占用`512字节`大小。
 
-  <img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220224232053395.png" alt="image-20220224232053395" style="zoom:67%;" />
+  <img src="img\image-20220224232053395.png" alt="image-20220224232053395" style="zoom:67%;" />
 
   **参数设置：innodb_log_buffer_size：**
 
@@ -86,13 +86,13 @@ Redo log可以简单分为以下两个部分：
 
   REDO 日志文件如图所示，其中的`ib_logfile0`和`ib_logfile1`即为 REDO 日志。
 
-  <img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220224233118737.png" alt="image-20220224233118737" style="zoom:67%;" />
+  <img src="img\image-20220224233118737.png" alt="image-20220224233118737" style="zoom:67%;" />
 
 ### 1.4 redo的整体流程
 
 以一个更新事务为例，redo log 流转过程，如下图所示：
 
-<img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220223215705064.png" alt="image-20220223215705064" style="zoom: 50%;" />
+<img src="img\image-20220223215705064.png" alt="image-20220223215705064" style="zoom: 50%;" />
 
 > 第1步：先将原始数据从磁盘中读入内存中来，修改数据的内存拷贝
 > 第2步：生成一条重做日志并写入 redo log buffer，记录的是数据被修改后的值
@@ -107,7 +107,7 @@ Redo log可以简单分为以下两个部分：
 
 redo log 的写入并不是直接写入磁盘的，InnoDB 引擎会在写 redo log 的时候先写 redo log buffer，之后以`一定的频率`刷入到真正的 redo log file 中。这里的一定频率怎么看待呢？这就是我们要说的刷盘策略。（先写入对应内存的开辟的空间 redo log buffer，然后根据某个策略写入磁盘 redo log file）
 
-<img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220223215719887.png" alt="image-20220223215719887" style="zoom:67%;" />
+<img src="img\image-20220223215719887.png" alt="image-20220223215719887" style="zoom:67%;" />
 
 注意，redo log buffer 刷盘到 redo log file 的过程并不是真正的刷到磁盘中去，只是刷入到`文件系统缓存（page cache）`中去（这是现代操作系统为了提高文件写入效率做的一个优化），真正的写入会交给系统自己来决定（比如 page cache 足够大了）。那么对于 InnoDB 来说就存在一个问题，如果交给系统来同步，同样如果系统宕机，那么数据也丢失了（虽然整个系统宕机的概率还是比较小的）。
 
@@ -128,11 +128,11 @@ mysql> show variables like 'innodb_flush_log_at_trx_commit';
 
 另外，InnoDB 存储引擎有一个后台线程，每隔 1s，就会把`redo log buffer`中的内容写到文件系统缓存`page cache`，然后调用刷盘操作。
 
-<img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220224234705362.png" alt="image-20220224234705362" style="zoom:67%;" />
+<img src="img\image-20220224234705362.png" alt="image-20220224234705362" style="zoom:67%;" />
 
 也就是说。一个没有提交事务的`redo log`记录，也可能会刷盘。因为在事务执行过程 redo log 记录是会写入`redo log buffer`中，这些 redo log 记录会被`后台线程`刷盘。
 
-<img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220224234908005.png" alt="image-20220224234908005" style="zoom:67%;" />
+<img src="img\image-20220224234908005.png" alt="image-20220224234908005" style="zoom:67%;" />
 
 除了后台线程每秒一次的轮询操作，还有一种情况，当`redo log buffer`占用的空间即将达到`innodb_log_buffer_size`（默认 16KB）的一半的时候，后台线程会主动刷盘。
 
@@ -144,7 +144,7 @@ mysql> show variables like 'innodb_flush_log_at_trx_commit';
 Innodb_flush_log_at_trx_commit = 1;
 ```
 
-<img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220223215757969.png" alt="image-20220223215757969" style="zoom:67%;" />
+<img src="img\image-20220223215757969.png" alt="image-20220223215757969" style="zoom:67%;" />
 
 > 每次事务提交时 MySQL 都会把 log buffer 的数据写入 page cache，并且 flush（刷到磁盘中去）。
 >
@@ -156,7 +156,7 @@ Innodb_flush_log_at_trx_commit = 1;
 Innodb_flush_log_at_trx_commit = 2;
 ```
 
-<img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220223215900223.png" alt="image-20220223215900223" style="zoom:67%;" />
+<img src="img\image-20220223215900223.png" alt="image-20220223215900223" style="zoom:67%;" />
 
 > 只要事务提交成功，`redo log buffer`中的内容只会写入文件系统缓存`page cache`。但是 flush（刷到磁盘）操作并不会同时进行。
 >
@@ -166,7 +166,7 @@ Innodb_flush_log_at_trx_commit = 2;
 Innodb_flush_log_at_trx_commit = 0;
 ```
 
-<img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220223215912197.png" alt="image-20220223215912197" style="zoom:67%;" />
+<img src="img\image-20220223215912197.png" alt="image-20220223215912197" style="zoom:67%;" />
 
 > log buffer 中的内容每秒一次地写入`page cache`中，并且执行 flush（刷到磁盘），因此最多丢失 1s 内的事务。
 >
@@ -246,13 +246,13 @@ MySQL 把对底层页面中的一次原子访问的过程称之为一个`Mini-Tr
 
 一个事务可以包含若干条语句，每一条语句其实是由若干个`mtr`组成，每一个`mtr`又可以包含若干条 redo 日志，画个图表示它们的关系就是这样：
 
-<img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220223215931652.png" alt="image-20220223215931652" style="zoom: 50%;" />
+<img src="img\image-20220223215931652.png" alt="image-20220223215931652" style="zoom: 50%;" />
 
 #### 2.redo日志写入log buffer
 
 向`log buffer`中写入 redo 日志的过程是顺序的，也就是先往前边的 block 中写，当该 block 的空闲空间用完之后再往下一个 block 中写。当我们想往`log buffer`中写入 redo 日志时，第一个遇到的问题就是应该在哪个`block`的哪个偏移量处，所以`InnoDB`的设计者特意提供了一个称之为`buf_free`的全局变量，该变量指明后续写入的 redo 日志应该写入到`log buffer`中的哪个位置，如图所示：
 
-<img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220223215951592.png" alt="image-20220223215951592" style="zoom:67%;" />
+<img src="img\image-20220223215951592.png" alt="image-20220223215951592" style="zoom:67%;" />
 
 一个 mtr 执行过程中可能产生若干条 redo 日志，`这些redo日志是一个不可分割的组`，所以其实并不是每生成一条 redo 日志，就将其插入到 log buffer 中，而是每个 mtr 运行过程中产生的日志先暂时存到一个地方，当该 mtr 结束的时候，将过程中产生的一组 redo 日志在全部复制到 log buffer 中。我们现在假设有两个名为`T1`、`T2`的事务，每个事务都包含 2 个 mtr，我们给这几个 mtr 命名一下：
 
@@ -261,12 +261,12 @@ MySQL 把对底层页面中的一次原子访问的过程称之为一个`Mini-Tr
 
 每个 mtr 都会产生一组 redo 日志，用示意图来描述一下这些 mtr 产生的日志情况：
 
-<img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220223220152077.png" alt="image-20220223220152077" style="zoom:67%;" />
+<img src="img\image-20220223220152077.png" alt="image-20220223220152077" style="zoom:67%;" />
 
 
 不同的事务可能是`并发`执行的，所以`T1`、`T2`之间的`mtr`可能是`交替执行`的。每当一个 mtr 执行完成时，伴随该 mtr 生成的一组 redo 日志就需要被复制到 log buffer 中，也就是说不同事务的 mtr 可能是交替写入 log buffer 的。
 
-<img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220223220203041.png" alt="image-20220223220203041" style="zoom:67%;" />
+<img src="img\image-20220223220203041.png" alt="image-20220223220203041" style="zoom:67%;" />
 
 有的 mtr 产生的 redo 日志量非常大，比如`mtr_t1_2`产生的 redo 日志占用空间比较大，占用了 3 个 block 来存储。
 
@@ -278,11 +278,11 @@ MySQL 把对底层页面中的一次原子访问的过程称之为一个`Mini-Tr
 >
 > 这个和磁盘的扇区有关，机械磁盘默认的扇区就是 512 字节，如果你要写入的数据大于 512 字节，那么要写入的扇区肯定不止一个，这时就要涉及到盘片的转动，找到下一个扇区，假设现在需要写入两个扇区 A 和 B，如果扇区 A 写入成功，而扇区 B 写入失败，那么就会出现`非原子性`的写入，而如果每次只写入和扇区大小一样的 512 字节，那么每次的写入都是原子性的。
 
-<img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220223220213363.png" alt="image-20220223220213363" style="zoom: 50%;" />
+<img src="img\image-20220223220213363.png" alt="image-20220223220213363" style="zoom: 50%;" />
 
 真正的 redo 日志都是存储到占用`496`字节大小的`log block body`中，图中的`log block header`和`log block trailer`存储的是一些管理信息。
 
-<img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220223220242973.png" alt="image-20220223220242973" style="zoom: 50%;" />
+<img src="img\image-20220223220242973.png" alt="image-20220223220242973" style="zoom: 50%;" />
 
 - `log block header`的属性分别如下：
   - `LOG_BLOCK_HDR_NO`：log buffer 是由 log block 组成,在内部 log buffer 就好似一个数组,因此 LOG_BLOCK_HDR_NO 用来标记这个数组中的位置。其是递增并且循环使用的,占用 4 个字节,但是由于第一位用来判断是否是 flush bit，所以最大的值为2G
@@ -339,7 +339,7 @@ MySQL 把对底层页面中的一次原子访问的过程称之为一个`Mini-Tr
 
 在将 redo 日志写入日志文件组时，是从`ib_logfile0`开始写，如果`ib_logfile0`写满了，就接着`ib_logfile1`写，以此类推。如果写到最后一个文件，那就重新到`ib_logfile0`继续写，整个过程如下图所示：
 
-<img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220223220325242.png" alt="image-20220223220325242" style="zoom: 50%;" />
+<img src="img\image-20220223220325242.png" alt="image-20220223220325242" style="zoom: 50%;" />
 
 总共的 redo 日志文件大小其实就是：`innodb_log_file_size × innodb_log_files_in_group`。
 
@@ -354,13 +354,13 @@ MySQL 把对底层页面中的一次原子访问的过程称之为一个`Mini-Tr
 
 每次刷盘 redo log 记录到日志文件组中，write pos 位置就会后移。每次 MySQL 加载日志文件组恢复数据时，会清空加载过的 redo log 记录，并把 checkpoint 后移。write pos 和 checkpoint 之间的空间的部分可以用来写入新的 redo log 记录。
 
-<img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220223220352164.png" alt="image-20220223220352164" style="zoom: 50%;" />
+<img src="img\image-20220223220352164.png" alt="image-20220223220352164" style="zoom: 50%;" />
 
 
 
 如果 write pos 追上 checkpoint ，表示**日志文件组满**了，这时候不能再写入新的 redo log 记录，MySQL 得停下来，清空一些记录，把 checkpoint 推进一下。
 
-<img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220223220409647.png" alt="image-20220223220409647" style="zoom: 50%;" />
+<img src="img\image-20220223220409647.png" alt="image-20220223220409647" style="zoom: 50%;" />
 
 
 
@@ -368,7 +368,7 @@ MySQL 把对底层页面中的一次原子访问的过程称之为一个`Mini-Tr
 
 InnoDB 的更新操作采用的是`Write Ahead Log`（预先日志持久化）策略，即先写日志，再写入磁盘。
 
-<img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220310230526058.png" alt="image-20220310230526058" style="zoom: 67%;" />
+<img src="img\image-20220310230526058.png" alt="image-20220310230526058" style="zoom: 67%;" />
 
 redo 日志会携带一个`LSN（Log Sequence Number）`，同时每个数据页上也会记录一个 LSN，这个日志序列号可以用于数据页是否是脏页的判断
 
@@ -505,11 +505,11 @@ mysql> show variables like 'innodb_undo_logs';
 
 **只有Buffer Pool的流程：**
 
-<img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220223220510612.png" alt="image-20220223220510612" style="zoom: 67%;" />
+<img src="img\image-20220223220510612.png" alt="image-20220223220510612" style="zoom: 67%;" />
 
 **有了Redo Log和Undo Log之后：**
 
-<img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220223220520969.png" alt="image-20220223220520969" style="zoom:67%;" />
+<img src="img\image-20220223220520969.png" alt="image-20220223220520969" style="zoom:67%;" />
 
 简述：先找是否有加载对应的 BufferPool 有就使用没有就加载读取 -> 写入UndoLog -> 操作数据 -> 写入 RedoLogBuffer 内存 -> 写入 RedoLog 到磁盘文件
 
@@ -521,7 +521,7 @@ mysql> show variables like 'innodb_undo_logs';
 - `DB_TRX_ID`：每个事务都会分配一个事务 ID，当对某条记录发生变更时，就会将这个事务的事务 ID 写入 trx_id 中
 - `DB_ROLL_PTR`：回滚指针，本质上就是 undo log 的指针
 
-<img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220223220533745.png" alt="image-20220223220533745" style="zoom:67%;" />
+<img src="img\image-20220223220533745.png" alt="image-20220223220533745" style="zoom:67%;" />
 
 **当我们执行INSERT时：**
 
@@ -532,7 +532,7 @@ INSERT INTO user (name) VALUES ("tom");
 
 插入的数据都会生成一条 insert undo log，并且数据的回滚指针会指向它。undo log 会记录 undo log 的序号、插入主键的列和值等，那么在进行回滚的时候，通过主键直接把对应的数据删除即可。
 
-<img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220223220550950.png" alt="image-20220223220550950" style="zoom:67%;" />
+<img src="img\image-20220223220550950.png" alt="image-20220223220550950" style="zoom:67%;" />
 
 **当我们执行UPDATE时：**
 
@@ -542,7 +542,7 @@ INSERT INTO user (name) VALUES ("tom");
 UPDATE user SET name="Sun" WHERE id=1;
 ```
 
-<img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220223220606362.png" alt="image-20220223220606362" style="zoom:67%;" />
+<img src="img\image-20220223220606362.png" alt="image-20220223220606362" style="zoom:67%;" />
 
 这时会把老的记录写入新的 undo log，让回滚指针指向新的 undo log，它的 undo No 是 1，并且新的 undo log 会指向老的 undo log（undo No 是 0）。
 
@@ -552,7 +552,7 @@ UPDATE user SET name="Sun" WHERE id=1;
 UPDATE user SET id=2 WHERE id=1;
 ```
 
-![image-20220223220624584](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220223220624584.png)
+![image-20220223220624584](img\image-20220223220624584.png)
 
 对于更新主键的操作，会先把原来的数据 deletemark 标识打开，这时并没有真正的删除数据，真正的删除会交给清理线程去判断，然后在后面插入一条新的数据，新的数据也会产生 undo log，并且 undo log 的序号会递增。
 
@@ -582,7 +582,7 @@ UPDATE user SET id=2 WHERE id=1;
 
 ### 2.6 小结
 
-<img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220223220701657.png" alt="image-20220223220701657" style="zoom: 50%;" />
+<img src="img\image-20220223220701657.png" alt="image-20220223220701657" style="zoom: 50%;" />
 
 `undo log`是逻辑日志，对事务回滚时，只是将数据库逻辑地恢复到原来的样子。
 
