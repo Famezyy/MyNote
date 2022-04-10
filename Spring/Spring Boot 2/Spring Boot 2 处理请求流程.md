@@ -20,7 +20,7 @@ multipartRequestParsed = (processedRequest != request);
 
 <p align="center">mappedHandler中存储的信息</p>
 
-<img src="https://cdn.nlark.com/yuque/0/2021/png/23097143/1635604649378-284c9015-9bdb-4443-92d0-ef7845f59156.png" alt="img" style="zoom: 67%;" />
+<img src="..\img\1635604649378-284c9015-9bdb-4443-92d0-ef7845f59156.png" alt="img" style="zoom: 67%;" />
 
 ```java
 DispatcherServlet -> doDispatch()
@@ -378,7 +378,7 @@ public void handleReturnValue(@Nullable Object returnValue, MethodParameter retu
 
   先获取对应的处理器
 
-<img src="https://cdn.nlark.com/yuque/0/2020/png/1354552/1605151728659-68c8ce8a-1b2b-4ab0-b86d-c3a875184672.png?x-oss-process=image%2Fwatermark%2Ctype_d3F5LW1pY3JvaGVp%2Csize_23%2Ctext_YXRndWlndS5jb20g5bCa56GF6LC3%2Ccolor_FFFFFF%2Cshadow_50%2Ct_80%2Cg_se%2Cx_10%2Cy_10" alt="img" style="zoom:67%;" />
+<img src="..\img\1605151728659-68c8ce8a-1b2b-4ab0-b86d-c3a875184672.png" alt="img" style="zoom:67%;" />
 
 - 返回值处理器判断是否支持这种类型返回值 supportsReturnType()
 - 返回值处理器调用 handleReturnValue()进行处理
@@ -463,7 +463,7 @@ spring:
 </dependency>
 ```
 
-![img](https://cdn.nlark.com/yuque/0/2020/png/1354552/1605260623995-8b1f7cec-9713-4f94-9cf1-8dbc496bd245.png?x-oss-process=image%2Fwatermark%2Ctype_d3F5LW1pY3JvaGVp%2Csize_18%2Ctext_YXRndWlndS5jb20g5bCa56GF6LC3%2Ccolor_FFFFFF%2Cshadow_50%2Ct_80%2Cg_se%2Cx_10%2Cy_10)
+![img](..\img\1605260623995-8b1f7cec-9713-4f94-9cf1-8dbc496bd245.png)
 
 - 查找可生产的类型时，遍历所有的messageConverters查找支持的messageConverter转换器（**可以定制**）
 
@@ -483,7 +483,7 @@ for (HttpMessageConverter<?> converter : this.messageConverters) {
 
 - 返回对象为Bean时，使用**Json Media Type**
 
-![img](https://cdn.nlark.com/yuque/0/2021/png/23097143/1635756652057-f4bd84cd-0803-4385-afcd-a09503949b28.png)
+![img](..\img\1635756652057-f4bd84cd-0803-4385-afcd-a09503949b28.png)
 
 - 匹配完**可产生的类型**和**浏览器可接受的类型**后，再次循环遍历所有messageConverters查找支持相应类型转换的Converters，然后调用对应转换器的write方法完成写入
 
@@ -493,7 +493,7 @@ genericConverter.write(body, targetType, selectedMediaType, outputMessage);
 
 - 例：当返回对象为Json时，最终调用**AbstractJackson2HttpMessageConverter**的WriteInternal()方法，在该方法中完成写入操作
 
-![img](https://cdn.nlark.com/yuque/0/2021/png/23097143/1635757296300-0b2e620e-925c-4ca1-b25e-c38f3c18c50a.png)
+![img](..\img\1635757296300-0b2e620e-925c-4ca1-b25e-c38f3c18c50a.png)
 
 #### 5.6.2.2 返回字符串或没有返回值时
 

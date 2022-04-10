@@ -78,11 +78,11 @@ sequenceDiagram
 
 > - Spring Security 本质是一个**过滤器链**
 >
->   <img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220104002342827.png" alt="image-20220104002342827" style="zoom:67%;" />
+>   <img src="..\img\image-20220104002342827.png" alt="image-20220104002342827" style="zoom:67%;" />
 >
 > - 重点三个过滤器
 >
->   <img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220104002046246.png" alt="image-20220104002046246" style="zoom: 80%;" />
+>   <img src="..\img\image-20220104002046246.png" alt="image-20220104002046246" style="zoom: 80%;" />
 >
 >   1. `FilterSecurityInterceptor`：是一个权限过滤器，基本位于过滤链的最底部
 >   2. `ExceptionTranslationFiler`：是一个异常过滤器，用来处理在认证授权过程中抛出的异常 AccessDeniedException 和 AuthenticationException
@@ -186,9 +186,9 @@ sequenceDiagram
 
 ### 4.1 用户认证
 
-![image-20220104010603048](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220104010603048.png)
+![image-20220104010603048](..\img\image-20220104010603048.png)
 
-![image-20220104010903947](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220104010903947.png)
+![image-20220104010903947](..\img\image-20220104010903947.png)
 
 
 
@@ -546,9 +546,9 @@ spring.datasource.url=jdbc:mysql://localhost:3306/mybatis?useSSL=false&userUnico
 
 #### 4.4.1 实现原理
 
-<img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220103195736575.png" alt="image-20220103195736575" style="zoom: 67%;" />
+<img src="..\img\image-20220103195736575.png" alt="image-20220103195736575" style="zoom: 67%;" />
 
-![image-20220103195801666](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220103195801666.png)
+![image-20220103195801666](..\img\image-20220103195801666.png)
 
 #### 4.4.2 具体实现
 
@@ -595,7 +595,7 @@ spring.datasource.url=jdbc:mysql://localhost:3306/mybatis?useSSL=false&userUnico
 >
 > 
 >
-> ![img](https://img-blog.csdnimg.cn/img_convert/31690c9f894def1d03290185d242125d.png)
+> ![img](..\img\31690c9f894def1d03290185d242125d.png)
 >
 > 
 >
@@ -644,7 +644,7 @@ spring.datasource.url=jdbc:mysql://localhost:3306/mybatis?useSSL=false&userUnico
 >
 > 2. 如果是 token，则是解析出 token，然后将当前请求加入到 Spring-security 管理的权限信息中去（推荐）
 >
->    <img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220103204427044.png" alt="image-20220103204427044" style="zoom:67%;" />
+>    <img src="..\img\image-20220103204427044.png" alt="image-20220103204427044" style="zoom:67%;" />
 
 ### 5.3 案例
 
@@ -1007,7 +1007,7 @@ spring.datasource.url=jdbc:mysql://localhost:3306/mybatis?useSSL=false&userUnico
 >    @NoArgsConstructor
 >    public class User implements Serializable {
 >        private static final long serialVersionUID = -40356785423868321L;
->          
+>                
 >        @TableId(type= IdType.AUTO)
 >        private Long id;
 >        private String username;
@@ -1052,39 +1052,39 @@ spring.datasource.url=jdbc:mysql://localhost:3306/mybatis?useSSL=false&userUnico
 >    @NoArgsConstructor
 >    @AllArgsConstructor
 >    public class LoginUser implements UserDetails {
->    
+>          
 >    	private User user;
->        
+>              
 >        @Override
 >        public Collection<? extends GrantedAuthority> getAuthorities() {
 >            return null;
 >        }
->    
+>          
 >        @Override
 >        public String getPassword() {
 >            return user.getPassword();
 >        }
->    
+>          
 >        @Override
 >        public String getUsername() {
 >            return user.getUsername();
 >        }
->    
+>          
 >        @Override
 >        public boolean isAccountNonExpired() {
 >            return true;
 >        }
->    
+>          
 >        @Override
 >        public boolean isAccountNonLocked() {
 >            return true;
 >        }
->    
+>          
 >        @Override
 >        public boolean isCredentialsNonExpired() {
 >            return true;
 >        }
->    
+>          
 >        @Override
 >        public boolean isEnabled() {
 >            return true;
@@ -1116,7 +1116,7 @@ spring.datasource.url=jdbc:mysql://localhost:3306/mybatis?useSSL=false&userUnico
 >   ```java
 >   @Configuration
 >   public class SecurityConfig extends WebSecurityConfigurerAdapter {
->     
+>         
 >       @Bean
 >       public PasswordEncoder passwordEncoder() {
 >           return new BCryptPasswordEncoder();
@@ -1180,13 +1180,13 @@ spring.datasource.url=jdbc:mysql://localhost:3306/mybatis?useSSL=false&userUnico
 >   ```java
 >   @Service
 >   public class LoginService {
->       
+>           
 >       @Autowired
 >       private AuthenticationManager authenticationManager;
->       
+>           
 >       @Autowired
 >       RedisCache redisCache;
->       
+>           
 >       public ResponseResult login(User user) {
 >           // AuthenticationManager authenticate 进行认证
 >           // authenticate 方法接受一个 Authentication 接口对象，我们可以创捷一个它的实现类  UsernamePasswordAuthenticationToken 对象
@@ -1201,10 +1201,10 @@ spring.datasource.url=jdbc:mysql://localhost:3306/mybatis?useSSL=false&userUnico
 >           LoginUser loginUser = (LoginUser) authentication.getPrincipal();
 >           String username = loginUser.getUsername();
 >           String jwt = JwtUtil.createJWT(username);
->       
+>           
 >           // 把完整的用户信息存入redis，userId 作为 key
 >           redisCache.setCacheObject("login：" + username, loginUser);
->       
+>           
 >           return new ResponseResult(200, "登陆成功", Collections.singletonMap("token", jwt));
 >       }
 >   }
@@ -1267,7 +1267,7 @@ spring.datasource.url=jdbc:mysql://localhost:3306/mybatis?useSSL=false&userUnico
 >    ```java
 >    @Autowired
 >    JwtAuthenticationTokenFilter jwtAuthenticationTokenFilter;
->       
+>             
 >    @Override
 >    protected void configure(HttpSecurity http) throws Exception {
 >        http.csrf().disable()
@@ -1279,7 +1279,7 @@ spring.datasource.url=jdbc:mysql://localhost:3306/mybatis?useSSL=false&userUnico
 >            .antMatchers("/user/login").anonymous()
 >            // 对于其他接口全部需要验证
 >            .anyRequest().authenticated();
->       
+>             
 >        // 添加 jwtAuthenticationTokenFilter 在 UsernamePasswordAuthenticationFilter 之前执行
 >        http.addFilterBefore(jwtAuthenticationTokenFilter, UsernamePasswordAuthenticationFilter.class);
 >    }
@@ -1292,10 +1292,10 @@ spring.datasource.url=jdbc:mysql://localhost:3306/mybatis?useSSL=false&userUnico
 >   ```java
 >   @RestController
 >   public class LogoutController {
->     
+>         
 >       @Autowired
 >       LogoutService logoutService;
->     
+>         
 >       @GetMapping("/user/logout")
 >       public ResponseResult logout() {
 >           return logoutService.logout();
@@ -1306,17 +1306,17 @@ spring.datasource.url=jdbc:mysql://localhost:3306/mybatis?useSSL=false&userUnico
 >   ```java
 >   @Service
 >   public class LogoutService {
->     
+>         
 >       @Autowired
 >       RedisCache redisCache;
->     
+>         
 >       public ResponseResult logout() {
->     
+>         
 >           // 获取 SecurityContextHolder 中的用户信息，访问这个接口会经过 JwtAuthenticationTokenFilter 并向 SecurityContextHolder 中放入用户信息
 >           UsernamePasswordAuthenticationToken authentication = (UsernamePasswordAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
 >           LoginUser loginUser = (LoginUser) authentication.getPrincipal();
 >           String username = loginUser.getUsername();
->     
+>         
 >           // 删除 redis 中的值
 >           redisCache.deleteObject("login:" + username);
 >           return new ResponseResult(200, "注销成功");
@@ -1624,10 +1624,10 @@ spring.datasource.url=jdbc:mysql://localhost:3306/mybatis?useSSL=false&userUnico
 >    ```java
 >    @Autowired
 >    MyAuthenticationEntryPoint myAuthenticationEntryPoint;
->    
+>          
 >    @Autowired
 >    MyAccessDeniedHandler myAccessDeniedHandler;
->    
+>          
 >    @Override
 >    protected void configure(HttpSecurity http) throws Exception {
 >        http.csrf().disable()
@@ -1639,10 +1639,10 @@ spring.datasource.url=jdbc:mysql://localhost:3306/mybatis?useSSL=false&userUnico
 >            .antMatchers("/user/login").anonymous()
 >            // 对于其他接口全部需要验证
 >            .anyRequest().authenticated();
->    
+>          
 >        // 添加 jwtAuthenticationTokenFilter 在 UsernamePasswordAuthenticationFilter 之前执行
 >        http.addFilterBefore(jwtAuthenticationTokenFilter, UsernamePasswordAuthenticationFilter.class);
->    
+>          
 >        // 配置异常处理器
 >        http.exceptionHandling()
 >            // 认证失败处理器
@@ -1687,16 +1687,16 @@ spring.datasource.url=jdbc:mysql://localhost:3306/mybatis?useSSL=false&userUnico
 >            .antMatchers("/user/login").anonymous()
 >            // 对于其他接口全部需要验证
 >            .anyRequest().authenticated();
->    
+>          
 >        // 添加 jwtAuthenticationTokenFilter 在 UsernamePasswordAuthenticationFilter 之前执行
 >        http.addFilterBefore(jwtAuthenticationTokenFilter, UsernamePasswordAuthenticationFilter.class);
->    
+>          
 >        // 配置异常处理器
 >        http.exceptionHandling()
 >            // 认证失败处理器
 >            .authenticationEntryPoint(myAuthenticationEntryPoint)
 >            .accessDeniedHandler(myAccessDeniedHandler);
->    
+>          
 >        // 允许跨域
 >        http.cors();
 >    }
@@ -1755,7 +1755,7 @@ spring.datasource.url=jdbc:mysql://localhost:3306/mybatis?useSSL=false&userUnico
 >   ```java
 >   @Autowired
 >   MyAuthenticationSuccessHandler myAuthenticationSuccessHandler;
->   
+>       
 >   protected void configure(HttpSecurity http) throws Exception {
 >   	http.formLogin().successHandler(myAuthenticationSuccessHandler);
 >       http.authorizeRequests().anyRequest().authenticated();
