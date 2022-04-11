@@ -33,7 +33,7 @@ $ git commit --amend --only -m 'xxxxxxx'
 如果这只是单个提交(commit)，修改它：
 
 ```bash
-$ git commit --amend --author "New Authorname <authoremail@mydomain。com>"  
+$ git commit --amend --author "New Authorname <authoremail@mydomain.com>"  
 ```
 
 如果你需要修改所有历史，参考 git filter-branch 的指南页。
@@ -95,11 +95,11 @@ $ git push -f [remote] [branch]
 ```bash
 To https：//github。com/yourusername/repo。git  
 ! [rejected]        mybranch -> mybranch (non-fast-forward)  
-error： failed to push some refs to 'https：//github。com/tanay1337/webmaker。org。git'  
+error： failed to push some refs to 'https：//github。com/tanay1337/webmaker.org.git'  
 hint： Updates were rejected because the tip of your current branch is behind  
-hint： its remote counterpart。 Integrate the remote changes (e。g。  
-hint： 'git pull 。。。') before pushing again。  
-hint： See the 'Note about fast-forwards' in 'git push --help' for details。  
+hint： its remote counterpart。 Integrate the remote changes (e.g.  
+hint： 'git pull ...') before pushing again.
+hint： See the 'Note about fast-forwards' in 'git push --help' for details.
 ```
 
 注意，rebasing(见下面)和修正(amending)会用一个**新的提交(commit)代替旧的**，所以如果之前你已经往远程仓库上推过一次修正前的提交(commit)，那你现在就必须强推(`force push`) (`-f`)。注意 ==总是==确保你指明一个分支！
@@ -139,13 +139,13 @@ hint： See the 'Note about fast-forwards' in 'git push --help' for details。
 一般来说，如果你想暂存一个文件的一部分，你可这样做：
 
 ```bash
-$ git add --patch filename。x
+$ git add --patch filename.x
 ```
 
 `-p` 简写。这会打开交互模式， 你将能够用 `s` 选项来分隔提交(commit)；然而，如果这个文件是新的，会没有这个选择， 添加一个新文件时，这样做：
 
 ```bash
-$ git add -N filename。x  
+$ git add -N filename.x  
 ```
 
 然后，你需要用 `e` 选项来手动选择需要添加的行，执行 `git diff --cached` 将会显示哪些行暂存了哪些行只是保存在本地了。
@@ -160,7 +160,7 @@ $ git add -N filename。x
 
 ```bash
 $ git commit -m "WIP"  
-$ git add 。 
+$ git add .
 $ git stash
 $ git reset HEAD^
 $ git stash pop --index 0
@@ -641,7 +641,7 @@ Newer，awesomer features
 # You are currently editing a commit while rebasing branch 'main' on '8074d12'。  
 #  
 # Changes to be committed：  
-# modified：   README。md  
+# modified：   README.md  
 #  
 ```
 
@@ -816,7 +816,7 @@ $ git stash apply "stash@{n}"
 除此之外，也可以使用时间标记(假如你能记得的话)。
 
 ```bash
-$ git stash apply "stash@{2。hours.ago}"  
+$ git stash apply "stash@{2.hours.ago}"  
 ```
 
 ### 暂存时保留未暂存的内容
@@ -900,14 +900,14 @@ $ git update-ref refs/tags/<tag_name> <hash>
 ### 我想从Git删除一个文件，但保留该文件
 
 ```bash
-(main)$ git rm --cached log。txt  
+(main)$ git rm --cached log.txt  
 ```
 
 ## 配置(Configuration)
 
 ### 我想给一些Git命令添加别名(alias)
 
-在 OS X 和 Linux 下，你的 Git的配置文件储存在 `~/。gitconfig`。我在`[alias]` 部分添加了一些快捷别名(和一些我容易拼写错误的)，如下：
+在 OS X 和 Linux 下，你的 Git的配置文件储存在 `~/.gitconfig`。我在`[alias]` 部分添加了一些快捷别名(和一些我容易拼写错误的)，如下：
 
 ```bash
 [alias]  
@@ -965,3 +965,16 @@ $ git reset --hard 0254ea7
 ```
 
 然后使用`git reset`就可以把main改回到之前的commit，这提供了一个在历史被意外更改情况下的安全网。
+
+### git 命令不显示中文的解决方法
+
+git status 不显示中文: 在终端模式下安顺序执行以下命令即可：
+
+```bash
+$ git config --global core.quotepath false 
+$ git config --global i18n.commitencoding utf-8
+$ git config --global i18n.commitencoding utf-8
+$ git config --global i18n.logoutputencoding utf-8
+$ export LESSCHARSET=utf-8
+```
+
