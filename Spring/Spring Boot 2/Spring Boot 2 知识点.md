@@ -122,3 +122,63 @@ private HandlerMethodArgumentResolver getArgumentResolver(MethodParameter parame
 </dependency>
 ```
 
+---
+
+## 事务传播行为
+
+用来描述这样一个现象：`methodA`开启了一个事务，调用了`methodB`，`methodB`是继续在`methodA`的事务中进行还是开启一个新的事物。
+
+```java
+@Transaction(Propagation=REQUIRED)
+public void methodA() {
+    methodB();
+    //doSomething
+}
+
+@Transaction(Propagation=REQUIRED_NEW)
+public void methodB() {
+    //doSomething
+}
+```
+
+**七种传播行为**
+
+- `REQUIRED`（默认）
+
+  如果当前有事务，则继续在事务中进行， 如果没有则开启一个新的事务
+
+- `REQUIRED_NEW`
+
+  无论是否存在事务，都会开启一个新的事务来执行，新老事务相互独立，一个事务抛出异常不会影响另一个事务的提交
+
+- `NESTED`
+
+  如果当前存在事务，则嵌套在当前事务中执行，如果没有事务则新建一个事务
+
+  外部事务抛出异常会导致嵌套事务回滚，嵌套事务回滚不会影响外部事务
+
+- `SUPPORTS`
+
+  支持当前事务，如果当前不存在事务，就以非事务的方式进行
+
+- `NOT_SUPPORTED`
+
+  以非事务的方式执行，如果当前存在事务，则把当前事务挂起
+
+- `MANDATORY`
+
+  强制的事务执行，如果不存在事务就抛出异常
+
+- `NEVER`
+
+  以非事务的方式执行，如果存在事务则抛出异常
+
+---
+
+## spring、springMVC、springboot的区别
+
+`spring`是一个 IOC 容器，用来管理 Bean，使用依赖注入实现控制反转，可以方便的整合各种框架，提供 AOP 机制弥补 OOP 的代码重复问题，更方便地将不同类不同方法中的共同处理抽取成切面，自动注入给方法执行，比如日志、异常等。
+
+`springMVC`是`spring`对 web 框架的一个解决方案，提供了一个总的前端控制器`Servlet`，用来接受请求，然后定义了一套路由策略（url 到 handler 的映射）及适配执行 handler，将 handler 结果使用试图解析技术生成试图传递给前端。
+
+`springboot`是`spring`提供的一个快速开发工具包，相当于`springMVC`的进阶版，让程序员能更方便、更快速的开发`spring+springMVC`应用，简化了配置（约定了默认配置，使用 class 代替 xml配置文件），整合了一系列的解决方案（starter 机制）。
