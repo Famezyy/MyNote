@@ -776,7 +776,7 @@ jdbc.password=root
 >        <result column="last_name" property="lastName"></result>
 >        <!-- 其他不指定的列会自动封装，推荐写 resultMap 的话就把全部的映射规则都写上 -->
 >    </resultMap>
->                                              
+>                                                 
 >    <!-- resultMap：自定义结果集映射规则 -->
 >    <select id="getEmpById" resultMap="myEmp">
 >        select * from tbl_employee where id = #{id}
@@ -977,7 +977,7 @@ jdbc.password=root
 >       <result column="last_name" property="lastName"></result>
 >       <result column="email" property="email"></result>
 >       <result column="gender" property="gender"></result>
->                               
+>                                 
 >       <!--
 >           - column：指定判定的列名
 >           - javaType：列值对应的 java 类型
@@ -990,12 +990,12 @@ jdbc.password=root
 >                            column="d_id"
 >                            />
 >           </case>
->                               
+>                                 
 >           <case value="1" resultType="com.mybatis.bean.Employee">
 >               <result column="last_name" property="email"></result>
 >           </case>
 >       </discriminator>
->                               
+>                                 
 >   </resultMap>
 >   <select id="getEmpDis" resultMap="MyEmpDis">
 >       select * from tbl_employee where id=#{id}
@@ -1414,7 +1414,7 @@ jdbc.password=root
 >
 >   1. 一个会话查询一条数据，这个数据就会被放在当前会话的一级缓存中
 >   2. 当会话关闭时，一级缓存中的数据会被保存到二级缓存中，新的会话查询信息就可以参照二级缓存
->   3. 不同 nameSpace 查处的数据会放在自己对应的缓存（map）中
+>   3. 不同 nameSpace 查出的数据会放在自己对应的缓存（map）中
 >   4. 查询的数据默认先放在一级缓存中，只有**会话提交或关闭**后，一级缓存中的数据才会被转移到二级缓存中
 >
 > - 使用：
@@ -1449,14 +1449,14 @@ jdbc.password=root
 
 ### 5.3 缓存相关的设置/属性
 
-> 1. 全部设置 `cacheEnabled=false`：二级缓存关闭，一级缓存一直可用
-> 2. 每个 select 标签都有 `userCache=true` 属性，代表开启或关闭二级缓存，一级缓存一直可用
-> 3. 每个增删改标签的 `flushCache=true` 属性，默认为true，==执行完后会清空一级和二级缓存==
-> 4. 查询标签也有 `flushCache=false` 默认 false，若改为 ture，则每次查询之后都会清空一级缓存，一级缓存失效
-> 5. `sqlSession.clearCache()`：只会清空当前 session 的一级缓存
-> 6. localCacheScope：本地缓存作用域
->    1. 一级缓存SESSION：当前会话的所有数据保存在会话缓存中
->    2. STATEMENT：可以禁用一级缓存
+> - 全部设置 `cacheEnabled=false`：二级缓存关闭，一级缓存一直可用
+> - 每个 select 标签都有 `userCache=true` 属性，代表开启或关闭二级缓存，一级缓存一直可用
+> - 每个增删改标签的 `flushCache=true` 属性，默认为true，==执行完后会清空一级和二级缓存==
+> - 查询标签也有 `flushCache=false` 默认 false，若改为 ture，则每次查询之后都会清空一级缓存，一级缓存失效
+> - `sqlSession.clearCache()`：只会清空当前 session 的一级缓存
+> - `localCacheScope`：本地缓存作用域
+>   - 一级缓存SESSION：当前会话的所有数据保存在会话缓存中
+>   - STATEMENT：可以禁用一级缓存
 
 ### 5.4 原理
 
@@ -1627,26 +1627,26 @@ jdbc.password=root
 
 ### 6.2 开启事务
 
-> 1. 标注 `@EnableTransactionManagement` 开启基于注解的事务管理功能
+> - 标注 `@EnableTransactionManagement` 开启基于注解的事务管理功能
 >
->    ```java
->    @SpringBootApplication
->    @EnableTransactionManagement
->    public class IntegrateMybatisApplication {
->    ```
+>   ```java
+>   @SpringBootApplication
+>   @EnableTransactionManagement
+>   public class IntegrateMybatisApplication {
+>   ```
 >
-> 2. 给方法上标注 `@Transactional` 表示当前方法是一个事务
+> - 给方法上标注 `@Transactional` 表示当前方法是一个事务
 >
->    ```java
->    @RequestMapping("/emp")
->    @Transactional
->    public void getEmployee() {
->        employeeMapper.insertEmp("test");
->        int i = 3 / 0;
->    }
->    ```
+>   ```java
+>   @RequestMapping("/emp")
+>   @Transactional
+>   public void getEmployee() {
+>       employeeMapper.insertEmp("test");
+>       int i = 3 / 0;
+>   }
+>   ```
 >
-> 3. JDBC 的 autoconfigure 会自动给容器中添加 DataSource 和 DataSourceTransactionManager，不需手动配置
+> - JDBC 的 autoconfigure 会自动给容器中添加 DataSource 和 DataSourceTransactionManager，不需手动配置
 
 ---
 
@@ -2167,23 +2167,23 @@ class IntegrateMybatisApplicationTests {
 >        public void setParameter(PreparedStatement ps, int i, EmpStatus parameter, JdbcType jdbcType) throws SQLException {
 >            ps.setString(i, parameter.getCode().toString());
 >        }
->                                  
+>                                     
 >        @Override
 >        public EmpStatus getResult(ResultSet rs, String columnName) throws SQLException {
 >            // 需要根据从数据库中拿到的枚举的状态码返回一个枚举对象
 >            int code = rs.getInt(columnName);
 >            EmpStatus empStatus = Employee.getEmpStatus(code);
 >            return empStatus;
->                                  
+>                                     
 >        }
->                                  
+>                                     
 >        @Override
 >        public EmpStatus getResult(ResultSet rs, int columnIndex) throws SQLException {
 >            int code = rs.getInt(columnIndex);
 >            EmpStatus empStatus = Employee.getEmpStatus(code);
 >            return empStatus;
 >        }
->                                  
+>                                     
 >        @Override
 >        public EmpStatus getResult(CallableStatement cs, int columnIndex) throws SQLException {
 >            int code = cs.getInt(columnIndex);
@@ -2198,28 +2198,28 @@ class IntegrateMybatisApplicationTests {
 >     * 希望数据库保存的是100， 200状态码
 >     */
 >    public enum EmpStatus {
->                                  
+>                                     
 >        LOGIN(100,"用户登录"),LOGOUT(200, "用户登出"),REMOVE(300, "用户移除");
->                                  
+>                                     
 >        private Integer code;
 >        private String message;
 >        private EmpStatus(Integer code, String message) {
 >            this.code = code;
 >            this.message = message;
 >        }
->                                  
+>                                     
 >        public Integer getCode() {
 >            return code;
 >        }
->                                  
+>                                     
 >        public void setCode(Integer code) {
 >            this.code = code;
 >        }
->                                  
+>                                     
 >        public String getMessage() {
 >            return message;
 >        }
->                                  
+>                                     
 >        public void setMessage(String message) {
 >            this.message = message;
 >        }
@@ -2228,17 +2228,17 @@ class IntegrateMybatisApplicationTests {
 >
 >    ```java
 >    Employee.class
->                                  
+>                                     
 >    public EmpStatus empStatus;
->                                  
+>                                     
 >    public EmpStatus getEmpStatus() {
 >        return empStatus;
 >    }
->                                  
+>                                     
 >    public void setEmpStatus(EmpStatus empStatus) {
 >        this.empStatus = empStatus;
 >    }
->                                  
+>                                     
 >    /**
 >         * 根据状态码返回枚举对象
 >         */
