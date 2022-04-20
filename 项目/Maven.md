@@ -85,7 +85,7 @@
 
 ### 2.2 Maven 的使用
 
-> 在 pom.xml 文件的目录下执行  mvn compile 会编译所有 java 文件
+> 在 pom.xml 文件的目录下执行`mvn compile`会编译所有 java 文件
 
 ### ==2.3 POM 文件==
 
@@ -186,26 +186,40 @@
 
 #### 2.5.1 命令
 
-> 1. `mvn clean`：清理命令，删除以前生成的数据，删除 target 目录
->    - **maven-clean-plugin**：清理插件
-> 2. `mvn compile`：代码编译，把 src/main/java 目录中的 java 代码编译为 class 文件，并且拷贝到 target/classes 目录，同时把 src/main/resources 目录中的文件拷贝到 target/classes 目录中，classes 这个目录是存放类文件的根目录，也叫类路径 classpath
->    - **maven-compiler-plugin**：编译插件
->    - **maven-resources-plugin**：资源插件，用来处理文件。作用是把 src/main/resources 目录中的文件拷贝到 target/classes 目录中
-> 3. `mvn test-compile`：编译 src/test/java 目录中的源文件，把生成的 class 拷贝到 target/test-classes 目录，同时把 src/test/resources 目录中的文件拷贝到 target/test-classes 目录
->    - **maven-compiler-plugin**
->    - **maven-resources-plugin**
-> 4. `mvn test`：测试命令，执行 test-classes 目录的测试程序
->    - **maven-surefire-plugin**
-> 5. `mvn package`：打包，把项目中的资源 class 文件和配置文件都放到一个压缩文件中，默认 jar 类型，web 应用是 war 类型
->    - **maven-jar-plugin**：执行打包处理，生成一个 jar 扩展文件，放在 target 目录下
->    - 打包的文件名：artifactId-version.packaging
->    - 打包的文件中包含的是 src/main 目录中所有的生成的 class 和配置文件，和 test 无关
-> 6. `mvn install`：把生成的打包的文件，安装到 maven 仓库中
->    - **maven-install-plugin**：把生成的 jar 文件安装到本地仓库
->    - 文件结构
->      - groupId 中 "." 前后都是独立的文件夹：com.youyi
->      - artifactId：独立的文件夹
->      - version：独立的文件夹
+> - `mvn clean`：清理命令，删除以前生成的数据，删除 target 目录
+>   - **maven-clean-plugin**：清理插件
+>
+> - `mvn compile`：代码编译，把 src/main/java 目录中的 java 代码编译为 class 文件，并且拷贝到 target/classes 目录，同时把 src/main/resources 目录中的文件拷贝到 target/classes 目录中，classes 这个目录是存放类文件的根目录，也叫类路径 classpath
+>
+>   - **maven-compiler-plugin**：编译插件
+>
+>   - **maven-resources-plugin**：资源插件，用来处理文件。作用是把 src/main/resources 目录中的文件拷贝到 target/classes 目录中
+>
+> - `mvn test-compile`：编译 src/test/java 目录中的源文件，把生成的 class 拷贝到 target/test-classes 目录，同时把 src/test/resources 目录中的文件拷贝到 target/test-classes 目录
+>
+>   - **maven-compiler-plugin**
+>
+>   - **maven-resources-plugin**
+>
+> - `mvn test`：测试命令，执行 test-classes 目录的测试程序
+>   - **maven-surefire-plugin**
+>
+> - `mvn package`：打包，把项目中的资源 class 文件和配置文件都放到一个压缩文件中，默认 jar 类型，web 应用是 war 类型
+>
+>   - **maven-jar-plugin**：执行打包处理，生成一个 jar 扩展文件，放在 target 目录下
+>
+>   - 打包的文件名：artifactId-version.packaging
+>
+>   - 打包的文件中包含的是 src/main 目录中所有的生成的 class 和配置文件，和 test 无关
+>
+> - `mvn install`：把生成的打包的文件，安装到 maven 仓库中
+>
+>   - **maven-install-plugin**：把生成的 jar 文件安装到本地仓库
+>
+>   - 文件结构
+>     - groupId 中 "." 前后都是独立的文件夹：com.youyi
+>     - artifactId：独立的文件夹
+>     - version：独立的文件夹
 
 #### 2.5.2 自定义配置插件
 
@@ -401,7 +415,7 @@
 
 > 1. 新建父工程
 >
-> 2. 在父工程中新建子工程（module），只会在父工程的 pom 文件中添加，不会再祖先工程中添加
+> 2. 在父工程中新建子工程（module），只会在父工程的 pom 文件中添加，不会在祖先工程中添加
 >
 >    ```xml
 >    <modules>
