@@ -25,7 +25,7 @@
 
 在`JAVA8`及以前是`char数组`，因为英文只占一个字节，用`char数组`太浪费空间了，所以`JAVA9`之后改为`byte数组`。
 
-> `char`占用两个字节，`byte`占用一个字节
+> `char`占用两个字节（UTF-16），`byte`占用一个字节
 
 为了兼容英文之外的其他语言，`JAVA9`还新增了一个`code`字段，用来描述使用哪种编码格式。
 
@@ -53,5 +53,58 @@ public int length() {
      */
     return value.length >> coder();
 }
+```
+
+使用`UTF-16`时，由于两个字节最多存储 6 万多个字符，对于其他字符，该如何处理呢？
+
+其实`UTF-16`的两个字节称为一个`代码单元`，基本字符通常由`一个代码`单元组成，对于需要用两个以上字节表示的字符，可以使用`辅助字符`来表示，该字符用`两个代码单元`构成。
+
+> 基本字符：U+0000 ~ U+FFFF
+>
+> 辅助字符：U+100000 ~ U+10FFFF
+
+当获取字符长度是，如果存在辅助字符，则使用`length()`方法获取不到实际长度：
+
+```java
+String s1 = "zhao";
+String s2 = "zhao😊";
+
+System.out.println(s1.length()); // 4
+System.out.println(s2.length()); // 6
+System.out.println(s2.charAt(4)); // ?
+System.out.println(s2.charAt(5)); // ?
+```
+
+因为`length()`的作用是获取`代码单元`的数量，而辅助字符需要两个代码单元。此时可以使用`码点`的方式来获取：
+
+> 字符底层都是用二进制表示的，一个二进制对应一个字符，这个二进制就是码点
+
+```java
+String s1 = "zhao";
+String s2 = "zhao😊";
+
+System.out.println(s1.codePointCount(0, s1.length())); // 4
+System.out.println(s2.codePointCount(0, s2.length())); // 5
+```
+
+判断`辅助字符`的方法：
+
+```java
+String s1 = "zhao";
+String s2 = "zhao😊";
+
+/// 1.查看码点是否是辅助字符
+// 获取码点
+System.out.println(Arrays.toString(s1.codePoints().toArray())); // [122, 104, 97, 111]
+System.out.println(Arrays.toString(s2.codePoints().toArray())); // [122, 104, 97, 111, 128522]
+
+// 判断码点是否是辅助字符
+System.out.println(Character.isSupplementaryCodePoint(122)); // false
+System.out.println(Character.isSupplementaryCodePoint(128522)); // true
+
+/// 2.查看char是否是辅助字符
+System.out.println(Character.isSurrogate(s2.charAt(3))); // false
+System.out.println(Character.isSurrogate(s2.charAt(4))); // true
+System.out.println(Character.isSurrogate(s2.charAt(5))); // true
 ```
 
