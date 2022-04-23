@@ -204,3 +204,16 @@ public void methodB() {
 **依赖注入**
 
 获得依赖对象的过程由自身管理变成了由`IOC容器`主动注入，依赖注入是实现`IOC`的方法，就是由`IOC容器`在运行期间，动态地将某种依赖关系注入到对象之中。
+
+---
+
+## 注入 Bean 的七种方式
+
+- 使用`xml`的方式声明`Bean`的定义，`Spring容器`在启动时会加载并解析这个 xml，把 Bean 装载到`IOC容器`中
+- 使用`@ComponentScan`注解扫描声明了`@Controller`、`@Service`、`@Repository`、`@COmponent`注解的类
+- 使用`@COnfiguration`注解声明配置类，并使用`@Bean`注解实现 Bean 的定义
+- 使用`@Import`注解，导入配置类或者普通的`Bean`，解决了导入第三方`Bean`的问题
+- 使用`FactoryBean工厂Bean`，动态构建一个`Bean实例`
+- 实现`ImportBeanDefinitionRegistrer`接口，重写`registerBeanDefinitions`方法，可以动态的注入`Bean`实例
+- 实现前置处理器接口`BeanDefinitionRegistryPostProcessor`，重写`postProcessBeanDefinitionRegistry`方法，同样可以动态注入`Bean`，[参考](./Spring Boot 2 注解驱动开发.md#BeanDefinitionRegistryPostProcessor)
+- 实现`ImportSelector`接口，动态批量注入配置类或者`Bean`对象
