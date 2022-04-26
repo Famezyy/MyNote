@@ -95,7 +95,7 @@ Redo log可以简单分为以下两个部分：
 <img src="img\image-20220223215705064.png" alt="image-20220223215705064" style="zoom: 50%;" />
 
 > 第1步：先将原始数据从磁盘中读入内存中来，修改数据的内存拷贝
-> 第2步：生成一条重做日志并写入 redo log buffer，记录的是数据被修改后的值
+> 第2步：生成一条重做日志并写入`redo log buffer`，记录的是数据被修改后的值
 > 第3步：当事务 commit 时，将 redo log buffer 中的内容刷新到 redo log file，对 redo log file 采用追加写的方式
 > 第4步：定期将内存中修改的数据刷新到磁盘中
 
