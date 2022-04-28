@@ -1271,21 +1271,11 @@ public class SynchronousQueueDemo {
 
 **线程池：3大方法、7大参数、4种拒绝策略**
 
-池化技术：
-
 程序的运行本质：占用系统的资源！（优化资源的使用 => 池化技术）
-
-线程池、连接池、内存池、对象池…
 
 池化技术：事先准备好一些资源，有人要用，就来我这里拿，用完之后还给我
 
-线程池的好处：
-
-- 减少创建和销毁的过程，降低系统资源的消耗
-- 提高响应的速度
-- 方便管理
-
-线程复用、可以控制最大并发数、管理线程
+[线程池的好处](多线程知识点.md#线程池的特点)
 
 ### 1、3大方法
 
@@ -1353,7 +1343,7 @@ public ThreadPoolExecutor(int corePoolSize, // 核心线程池大小
                           TimeUnit unit, // 超时单位 
                           // 阻塞队列 
                           BlockingQueue<Runnable> workQueue, 
-                          // 线程工厂：创建线程的，一般 不用动
+                          // 线程工厂：创建线程的，一般不用动
                           ThreadFactory threadFactory,  
                           // 拒绝策略
                           RejectedExecutionHandler handle) {
