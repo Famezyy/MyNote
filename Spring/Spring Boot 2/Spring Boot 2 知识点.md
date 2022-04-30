@@ -1,4 +1,4 @@
-## Spring Configuration Processor
+## 1.Spring Configuration Processor
 
 >   它的作用和 主配置文件 application.properties 或者 application.yml 里面的 spring.profiles.active 有着相似的作用，但是不同的是，使用 spring.profiles.avtive，你添加的其他配置文件命名格式只能是 application-{name}.properties 或者 application-{name}.yml，而使用文件处理器这个依赖，则对文件名没有任何约束
 
@@ -66,7 +66,7 @@ public class DockerController {
 
 ---
 
-## application/x-www-form-urlencoded 类型的请求
+## 2.application/x-www-form-urlencoded 类型的请求
 
 由 RequestParamMethodArgumentResolver 参数解析器解析
 
@@ -124,7 +124,7 @@ private HandlerMethodArgumentResolver getArgumentResolver(MethodParameter parame
 
 ---
 
-## 事务传播行为
+## 3.事务传播行为
 
 用来描述这样一个现象：`methodA`开启了一个事务，调用了`methodB`，`methodB`是继续在`methodA`的事务中进行还是开启一个新的事物。
 
@@ -175,7 +175,7 @@ public void methodB() {
 
 ---
 
-## spring、springMVC、springboot的区别
+## 4.spring、springMVC、springboot的区别
 
 `spring`是一个 IOC 容器，用来管理 Bean，使用依赖注入实现控制反转，可以方便的整合各种框架，提供 AOP 机制弥补 OOP 的代码重复问题，更方便地将不同类不同方法中的共同处理抽取成切面，自动注入给方法执行，比如日志、异常等。
 
@@ -185,7 +185,7 @@ public void methodB() {
 
 ---
 
-## IOC
+## 5.IOC
 
 `IOC容器`，实际上就是个`map(key, value)`，里面存的是`各种对象`（在 xml 里配置的 bean 节点、@Repository、@Service、@Controller、@Component），在项目启动的时候会读取配置文件里面的 bean 节点，根据全限定类名使用反射创建对象放到 map 里。
 
@@ -207,7 +207,7 @@ public void methodB() {
 
 ---
 
-## 注入 Bean 的七种方式
+## 6.注入 Bean 的七种方式
 
 - 使用`xml`的方式声明`Bean`的定义，`Spring容器`在启动时会加载并解析这个 xml，把 Bean 装载到`IOC容器`中
 - 使用`@ComponentScan`注解扫描声明了`@Controller`、`@Service`、`@Repository`、`@COmponent`注解的类
@@ -217,3 +217,97 @@ public void methodB() {
 - 实现`ImportBeanDefinitionRegistrer`接口，重写`registerBeanDefinitions`方法，可以动态的注入`Bean`实例
 - 实现前置处理器接口`BeanDefinitionRegistryPostProcessor`，重写`postProcessBeanDefinitionRegistry`方法，同样可以动态注入`Bean`，[参考](./Spring Boot 2 注解驱动开发.md#BeanDefinitionRegistryPostProcessor)
 - 实现`ImportSelector`接口，动态批量注入配置类或者`Bean`对象
+
+## 7.一个注解，优雅的实现循环重试功能
+
+在实际工作中，重处理是一个非常常见的场景，比如：
+
+- 发送消息失败。
+- 调用远程服务失败。
+- 争抢锁失败。
+
+这些错误可能是因为网络波动造成的，等待过后重处理就能成功。通常来说，会用`try/catch`，`while`循环之类的语法来进行重处理，但是这样的做法缺乏统一性，并且不是很方便，要多写很多代码。然而`spring-retry`却可以通过注解，在不入侵原有业务逻辑代码的方式下，优雅的实现重处理功能。
+
+### 1.@Retryable是什么？
+
+spring 系列的`spring-retry`是另一个实用程序模块，可以帮助我们以标准方式处理任何特定操作的重试。在`spring-retry`中，所有配置都是基于简单注释的。
+
+### 2.使用步骤
+
+#### POM依赖
+
+```xml
+<dependency>
+    <groupId>org.springframework.retry</groupId>
+    <artifactId>spring-retry</artifactId>
+</dependency>
+```
+
+#### 启用`@Retryable`
+
+```java
+@EnableRetry
+@SpringBootApplication
+public class HelloApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(HelloApplication.class, args);
+    }
+}
+```
+
+#### 在方法上添加`@Retryable`
+
+```java
+@Service
+public class TestRetryServiceImpl implements TestRetryService {
+ 
+    @Override
+    @Retryable(value = Exception.class, maxAttempts = 3, backoff = @Backoff(delay = 2000,multiplier = 1.5))
+    public int test(int code) throws Exception{
+        System.out.println("test被调用,时间："+LocalTime.now());
+          if (code==0){
+              throw new Exception("情况不对头！");
+          }
+        System.out.println("test被调用,情况对头了！");
+ 
+        return 200;
+    }
+}
+```
+
+来简单解释一下注解中几个参数的含义：
+
+- `value`：抛出指定异常才会重试
+- `include`：和 value 一样，默认为空，当 exclude 也为空时，默认所有异常
+- `exclude`：指定不处理的异常
+- `maxAttempts`：最大重试次数，默认3次
+- `backoff`：重试等待策略，默认使用`@Backoff`，`@Backoff`的 value 默认为1000L，我们设置为2000L；`multiplier`（指定延迟倍数）默认为 0，表示固定暂停 1 秒后进行重试，如果把`multiplier`设置为1.5，则第一次重试为 2 秒，第二次为 3 秒，第三次为 4.5 秒。
+
+**当重试耗尽时还是失败，会出现什么情况呢？**
+
+当重试耗尽时，`RetryOperations`可以将控制传递给另一个回调，即`RecoveryCallback`。`Spring-Retry`还提供了`@Recover`注解，用于 @Retryable 重试失败后处理方法。如果不需要回调方法，可以直接不写回调方法，那么实现的效果是，重试次数完了后，如果还是没成功没符合业务判断，就抛出异常。
+
+#### @Recover
+
+```java
+@Recover
+public int recover(Exception e, int code){
+   System.out.println("回调方法执行！！！！");
+   //记日志到数据库 或者调用其余的方法
+    return 400;
+}
+```
+
+可以看到传参里面写的是 `Exception e`，这个是作为回调的接头暗号（重试次数用完了，还是失败，我们抛出这个`Exception e`通知触发这个回调方法）。对于`@Recover`注解的方法，需要特别注意的是：
+
+- 方法的返回值必须与`@Retryable`方法一致
+- 方法的第一个参数，必须是 Throwable 类型的，建议是与`@Retryable`配置的异常一致，其他的参数，需要哪个参数，写进去就可以了（`@Recover`方法中有的）
+- 该回调方法与重试方法写在同一个实现类里面
+
+#### 注意事项
+
+- 由于是基于 AOP 实现，所以不支持类里自调用方法
+- 如果重试失败需要给`@Recover`注解的方法做后续处理，那这个重试的方法不能有返回值，只能是 void
+- 方法内不能使用`try catch`，只能往外抛异常
+- `@Recover`注解来开启重试失败后调用的方法(注意，需跟重处理方法在同一个类中)，此注解注释的方法参数一定要是`@Retryable`抛出的异常，否则无法识别，可以在该方法中进行日志处理。
+
