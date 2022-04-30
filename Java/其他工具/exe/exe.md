@@ -114,7 +114,7 @@
 
 <img src="imd/666" alt="图片"  />
 
-![图片](https://mmbiz.qpic.cn/mmbiz/TNUwKhV0JpQzGBznBYXGYDfiaJt9lwwosRol3RXibh1TN65zRBsaCY7ssOzSdeTotJTxoBzn4UaTXglJVybib7Z2w/640?wx_fmt=jpeg&tp=webp&wxfrom=5&wx_lazy=1&wx_co=1)
+<img src="imd/639" alt="图片"  />
 
 Source: "自己本地JRE路径*"; DestDir: "{app}{#MyJreName}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
