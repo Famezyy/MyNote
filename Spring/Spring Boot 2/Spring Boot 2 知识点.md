@@ -311,3 +311,19 @@ public int recover(Exception e, int code){
 - 方法内不能使用`try catch`，只能往外抛异常
 - `@Recover`注解来开启重试失败后调用的方法(注意，需跟重处理方法在同一个类中)，此注解注释的方法参数一定要是`@Retryable`抛出的异常，否则无法识别，可以在该方法中进行日志处理。
 
+## 8.如何理解 starter
+
+为了让开发者在开发 spring 生态下的企业级应用的时候，只需要关心业务逻辑，减少对配置和外部环境的依赖。
+
+主要作用有以下几个：
+
+- 维护对应 jar 包的版本依赖，开发者可以不需要关心版本冲突等容易出错的细节
+- 自动导入对应功能的所有的 jar 包依赖
+- 导入 starter 后，这个组件会自动集成到 Spring 生态中，对于相关的 bean 的管理也是基于自动装配机制来完成的
+- 依赖 starter 组件后，这些功能所需要维护的外部化配置会自动集成到 Spring Boot 中，只需要在 application.properties 中配置
+
+> 命名方式
+>
+> - 官方维护的 starter：spring-boot-starter-xxx
+> - 第三方维护的 starter：xxx-spring-boot-starter
+

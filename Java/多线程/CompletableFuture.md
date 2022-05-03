@@ -208,6 +208,32 @@ price: 15.207942444040832
 
 除了`anyOf()`可以实现“任意个`CompletableFuture`只要一个成功”，`allOf()`可以实现“所有`CompletableFuture`都必须成功”，这些组合操作可以实现非常复杂的异步流程控制。
 
+也可以利用`join`方法使主线程等待至获得所有结果：
+
+```java
+CompletableFuture<A> futureA = CompletableFuture.supplyAsync(() -> doA());
+CompletableFuture<B> futureB = CompletableFuture.supplyAsync(() -> doB());
+CompletableFuture.allOf(futureA,futureB) // 等a b 两个任务都执行完成
+
+C c = doC(futureA.join(), futureB.join());
+
+CompletableFuture<D> futureD = CompletableFuture.supplyAsync(() -> doD(c));
+CompletableFuture<E> futureE = CompletableFuture.supplyAsync(() -> doE(c));
+CompletableFuture.allOf(futureD,futureE) // 等d e两个任务都执行完成
+
+return doResult(futureD.join(),futureE.join());
+```
+
+这样 A B 两个逻辑可以并行执行，D E 两个逻辑可以并行执行，最大执行时间取决于哪个逻辑更慢。
+
+> `CompletableFuture.get()`和`CompletableFuture.join()`这两个方法是获取异步守护线程的返回值的。
+>
+> **不同点：**
+>
+> - `get()`方法会抛出经检查的异常，可被捕获，自定义处理或者直接抛出
+>
+> - `join()`会抛出未经检查的异常
+
 最后我们注意`CompletableFuture`的命名规则：
 
 - `xxx()`：表示该方法将继续在已有的线程中执行

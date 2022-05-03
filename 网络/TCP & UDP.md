@@ -7,7 +7,7 @@
 </style>
 <p style="text-align:right"><a href="https://mp.weixin.qq.com/s/doxVJZ1G6187B4AOXb0JlA">引用</a></p>
 
-<img src="H:\笔记\网络\img\image-20220422203304153.png" alt="image-20220422203304153" style="zoom:80%;" />
+<img src="\img\image-20220422203304153.png" alt="image-20220422203304153" style="zoom:80%;" />
 
 ## 1.TCP 和 UDP 的特点
 
