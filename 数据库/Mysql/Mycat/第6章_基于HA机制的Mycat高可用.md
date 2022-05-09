@@ -81,12 +81,16 @@ defaults
 	timeout connect 5000
 	timeout client 50000
 	timeout server 50000
+
+# 监听端口配置
 listen proxy_status
 	bind :48066
 	mode tcp
 	balance roundrobin
 	server mycat_1 192.168.11.101:8066 check inter 10s
 	server mycat_2 192.168.11.105:8066 check inter 10s
+	
+# 前端可视化界面配置
 frontend admin_stats
 	bind :7777
 	mode http
@@ -129,37 +133,63 @@ http://192.168.11.102:7777/admin
 mysql: [Warning] Using a password on the command line interface can be insecure.
 Welcome to the MySQL monitor.  Commands end with ; or \g.
 Your MySQL connection id is 1
+# 可以发现使用 mycat 登录！
 Server version: 5.6.29-mycat-1.6.7.1-release-20190627191042 MyCat Server (OpenCloudDB)
 ```
 
 ## 3.配置 Keepalived
 
-1 、  安装 Keepalived
+### 3.1 安装 Keepalived
 
-#1准备好Keepalived安装包，传到/opt目录下
-#2解压到/usr/local/src
-tar -zxvf keepalived-1.4.2.tar.gz -C /usr/local/src
-#3安装依赖插件
+**（1）准备好Keepalived安装包，传到/opt目录下**
+
+**（2）解压到/usr/local/src**
+
+```bash
+tar -zxvf keepalived-2.2.7.tar.gz -C /usr/local/src
+```
+
+**（3）安装依赖插件**
+
+```bash
 yum install -y gcc openssl-devel popt-devel
-#3进入解压后的目录，进行配置，进行编译
-cd /usr/local/src/keepalived-1.4.2
+```
+
+**（3）进入解压后的目录，进行配置，进行编译**
+
+```bash
+cd /usr/local/src/keepalived-2.2.7
 ./configure --prefix=/usr/local/keepalived
-#4进行编译，完成后进行安装
+```
+
+**（4）进行编译，完成后进行安装**
+
+```bash
 make && make install
-#5运行前配置
-cp /usr/local/src/keepalived-1.4.2/keepalived/etc/init.d/keepalived /etc/init.d/
+```
+
+> 或者直接运行指令：`yum install keepalived`
+
+**（5）运行前配置**
+
+```bash
+cp /usr/local/src/keepalived-2.2.7/keepalived/etc/init.d/keepalived /etc/init.d/
 mkdir /etc/keepalived
-cp /usr/local/keepalived/etc/keepalived/keepalived.conf /etc/keepalived/
-cp /usr/local/src/keepalived-1.4.2/keepalived/etc/sysconfig/keepalived /etc/sysconfig/
+cp /usr/local/keepalived/etc/keepalived/keepalived.conf.sample /etc/keepalived/
+cp /usr/local/src/keepalived-2.2.7/keepalived/etc/sysconfig/keepalived /etc/sysconfig/
 cp /usr/local/keepalived/sbin/keepalived /usr/sbin/
-#6修改配置文件
+```
+
+**（6）修改配置文件**
+
+```bash
 vim /etc/keepalived/keepalived.conf
 
 #修改内容如下
 ! Configuration File for keepalived
 global_defs {
 	notification_email {
-	xlcocoon@foxmail.com
+		xlcocoon@foxmail.com
 	}
 	notification_email_from keepalived@showjoy.com
 	smtp_server 127.0.0.1
@@ -172,7 +202,7 @@ global_defs {
 vrrp_instance VI_1 {
 	#主机配MASTER，备机配BACKUP
 	state MASTER
-	#所在机器网卡
+	#所在机器网卡：ifconfig
 	interface ens33
 	virtual_router_id 51
 	#数值越大优先级越高
@@ -184,45 +214,79 @@ vrrp_instance VI_1 {
 	}
 	virtual_ipaddress {
 		#虚拟IP
-		192.168.140.200
+		192.168.11.200
 	}
 }
-virtual_server 192.168.140.200 48066 {
+virtual_server 192.168.11.200 48066 {
 	delay_loop 6
 	lb_algo rr
 	lb_kind NAT
 	persistence_timeout 50
 	protocol TCP
 
-​	real_server 192.168.140.125 48066 {
-​		weight 1
-​		TCP_CHECK {
-​			connect_timeout 3
-​			retry 3
-​			delay_before_retry 3
-​		}
-​	}
-​	real_server 192.168.140.126 48600 {
-​		weight 1
-​		TCP_CHECK {
-​			connect_timeout 3
-​			nb_get_retry 3
-​			delay_before_retry 3
-​		}
-​	}
+	real_server 192.168.11.103 48066 {
+		weight 1
+		TCP_CHECK {
+			connect_timeout 3
+			retry 3
+			delay_before_retry 3
+		}
+	}
+	real_server 192.168.11.102 48600 {
+		weight 1
+		TCP_CHECK {
+			connect_timeout 3
+			nb_get_retry 3
+			delay_before_retry 3
+		}
+	}
 }
+```
 
-2 、 启动验证
+### 3.2 启动验证
 
-#1启动Keepalived
+**（1）启动Keepalived**
+
+```bash
 service keepalived start
-#2登录验证
-mysql -umycat -p123456 -h 192.168.140.200 -P 48066
+```
+
+**（2）登录验证**
+
+```bash
+mysql -umycat -p123456 -h 192.168.11.200 -P 48066
+```
 
 ## 4.测试高可用
 
-1 、  测试步骤
+### 测试步骤
 
-#1关闭mycat
-#2通过虚拟ip查询数据
+**（1）关闭mycat**
+
+**（2）通过虚拟ip查询数据**
+
+```bash
 mysql -umycat -p123456 -h 192.168.140.200 -P 48066
+```
+
+```sql
+mysql> show tables;
+ERROR 2013 (HY000): Lost connection to MySQL server during query
+No connection. Trying to reconnect...
+Connection id:    1
+Current database: TESTDB
+
++------------------+
+| Tables_in_orders |
++------------------+
+| customer         |
+| dict_order_type  |
+| login_info       |
+| orders           |
+| orders_detail    |
+| orders_ware_info |
+| payment_info     |
++------------------+
+7 rows in set (0.06 sec)
+```
+
