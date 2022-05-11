@@ -160,6 +160,361 @@ GNOME Terminal 的外观可能会随 Linux 发行版而有所不同。例如，�
 
 <img src="img/016.jpg" alt="{%}" style="zoom:80%;" />
 
-要想顺利运行 GNOME Terminal，重要的是要使用正确的命令名，所以要在 Command 字段中输入 gnome-terminal，如上图所示。一切设置妥当之后，点击 Add 按钮。现在就可以使用指定的快捷键快速启动 GNOME Terminal 了。
+要想顺利运行 GNOME Terminal，重要的是要使用正确的命令名，所以要在 Command 字段中输入`gnome-terminal`，如上图所示。一切设置妥当之后，点击 Add 按钮。现在就可以使用指定的快捷键快速启动 GNOME Terminal 了。
 
 GNOME Terminal 通过菜单和快捷键提供了一些配置选项，可以在启动 GNOME Terminal 之后应用。了解这些选项可以提高 GNOME Terminal CLI 的体验。
+
+### 4.2 菜单栏
+
+GNOME Terminal 的菜单栏包含配置选项和定制选项，你可以通过这些选项打造符合自己使用习惯的 GNOME Terminal。
+
+> **提示**
+>
+> 如果 GNOME Terminal 窗口没有显示菜单栏，那么用鼠标右键单击终端仿真器会话区域，在弹出的菜单中选择 Show Menubar。
+
+下展示了 GNOME Terminal 的 File 菜单下的配置选项。File 菜单中包含了可用于创建和管理所有 CLI 终端会话的菜单项。
+
+**File菜单**
+
+| 名称         | 快捷键       | 描述                                                         |
+| :----------- | :----------- | :----------------------------------------------------------- |
+| New Tab      | Shift+Ctrl+T | 在现有的 GNOME Terminal 窗口的新标签中启动一个新的 shell 会话 |
+| New Window   | Shift+Ctrl+N | 在新的 GNOME Terminal 窗口中启动一个新的 shell 会话          |
+| Close Tab    | Shift+Ctrl+W | 在 GNOME Terminal 窗口中关闭当前标签                         |
+| Close Window | Shift+Ctrl+Q | 关闭当前 GNOME Terminal 窗口                                 |
+
+注意，就像在网络浏览器中一样，你可以在 GNOME Terminal 会话中打开新标签，启动全新的 CLI 会话。每个标签会话均被视为独立的 CLI 会话。
+
+> **提示**
+>
+> 并不是必须通过点击菜单项才能访问 File 菜单中的选项。在终端模拟器会话区域中右键单击，也可以使用部分 File 菜单选项。
+
+下表所示的 Eidt 菜单中包含用于处理标签内文本内容的菜单项。你可以在会话窗口中的任意位置复制和粘贴文本。
+
+**Edit菜单**
+
+| 名称         | 快捷键       | 描述                                            |
+| :----------- | :----------- | :---------------------------------------------- |
+| Copy         | Shift+Ctrl+C | 将所选文本复制到 GNOME 的剪贴板中               |
+| Copy as HTML | None         | 将所选文本及其字体和颜色复制到 GNOME 的剪贴板中 |
+| Paste        | Shift+Ctrl+V | 将 GNOME 剪贴板中的文本粘贴到会话中             |
+| Select All   | None         | 选中回滚缓冲区（scrollback buffer）中的全部输出 |
+| Preferences  | None         | 编辑当前会话的配置文件                          |
+
+如果你缺乏键盘操作技能，则在终端中复制和粘贴命令非常有用。因此，GNOME Terminal 的 Copy 和 Paste 功能的键盘快捷键值得记下来。
+
+> **注意**
+>
+> 在查看GNOME Terminal菜单选项时，记住，你所用的Linux发行版的GNOME Terminal的可用选择也许有所不同。这是因为有些Linux发行版使用的GNOME Terminal版本较旧。可以点击Help菜单，选择其中的About菜单项来查看版本号。
+
+下表所示的 View 菜单中包含用于控制 CLI 会话窗口外观的菜单项。这些选项能够给视力有缺陷的用户带来帮助。
+
+**View菜单**
+
+| 名称         | 快捷键 | 描述                              |
+| :----------- | :----- | :-------------------------------- |
+| Show Menubar | None   | 打开 / 关闭菜单栏                 |
+| Full Screen  | F11    | 打开 / 关闭终端窗口全桌面显示模式 |
+| Zoom In      | Ctrl++ | 逐步增大窗口中的文本字号          |
+| Normal Size  | Ctrl+0 | 恢复默认字号                      |
+| Zoom Out     | Ctrl+- | 逐步减小窗口中的文本字号          |
+
+注意，如果关闭了菜单栏显示，那么会话的菜单栏就会消失。不过，可以在任何一个终端会话窗口中单击右键，然后选择 Show Menubar，轻而易举地找回菜单栏。
+
+下表所展示的 Serach 菜单中的菜单项用于在终端会话中进行简单的搜索。这些搜索与你在网络浏览器或文字处理软件中进行的操作类似。
+
+**Search菜单**
+
+| 名称            | 快捷键       | 描述                                     |
+| :-------------- | :----------- | :--------------------------------------- |
+| Find            | Shift+Ctrl+F | 打开 Find 窗口，指定待搜索的文本         |
+| Find Next       | Shift+Ctrl+G | 从终端会话的当前位置开始向前搜索指定文本 |
+| Find Previous   | Shift+Ctrl+H | 从终端会话的当前位置开始向后搜索指定文本 |
+| Clear Highlight | Shift+Ctrl+J | 去除已查找到文本的高亮显示               |
+
+下表所示的 Terminal 菜单中包含用于控制终端仿真会话特性的菜单项。这些菜单项并没有对应的快捷键。
+
+**Terminal菜单**
+
+| 名称            | 描述                                                      |
+| :-------------- | :-------------------------------------------------------- |
+| Read-Only       | 允许 / 禁止终端会话接受键盘输入，该菜单项并不会影响快捷键 |
+| Reset           | 发出重置终端会话控制码                                    |
+| Reset and Clear | 发出重置终端会话控制码并清除终端会话显示                  |
+| 80x24           | 将当前终端窗口尺寸调整为80列宽x24行高                     |
+| 80x43           | 将当前终端窗口尺寸调整为80列宽x43行高                     |
+| 132x24          | 将当前终端窗口尺寸调整为132列宽x24行高                    |
+| 130x43          | 将当前终端窗口尺寸调整为130列宽x43行高                    |
+
+Reset 菜单项极其有用。你有时候可能意外地导致终端会话显示了一堆杂乱无章的字符和符号。这时候根本分辨不出文本信息。这通常是由于在屏幕上显示了非文本文件。可以通过选择 Reset 或 Reset and Clear 让终端会话恢复正常。
+
+> **注意**
+>
+> 记住，在调整终端窗口尺寸时（比如使用 Terminal 菜单中的80列宽x24行高设置），实际的窗口大小受制于所用的字体。最好的办法是尝试不同的设置，从中找出适合的尺寸。
+
+下表所示的 Tabs 菜单包含用于控制标签位置以及活动标签选择的菜单项。这个菜单只有当你打开了多个标签会话时才会出现。
+
+**Tabs菜单**
+
+| 名称                | 快捷键               | 描述                                                    |
+| :------------------ | :------------------- | :------------------------------------------------------ |
+| Previous Tab        | Ctrl+Page Up         | 使上一个标签成为活动标签                                |
+| Next Tab            | Ctrl+Page Down       | 使下一个标签成为活动标签                                |
+| Move Terminal Left  | Shift+Ctrl+Page Up   | 将当前标签放在前一个标签之前                            |
+| Move Terminal Right | Shift+Ctrl+Page Down | 将当前标签放在前一个标签之后                            |
+| Detach Terminal     | None                 | 删除选项卡并使用此选项卡会话启动一个新的 GNOME 终端窗口 |
+
+最后，Help 菜单包含两个菜单项。
+
+- Contents 提供了完整的 GNOME Terminal 手册，你可以从中研究 GNOME Terminal 的各个菜单项和特性
+- About 显示了当前正在运行的 GNOME Terminal 的版本
+
+除了 GNOME Terminal 终端仿真软件包，另一个常用的软件包是 Konsole。尽管两者在很多方面类似，但还是存在着相当大的差异，我们有必要单独开辟一节来讲解。
+
+## 5.使用Konsole终端仿真器
+
+KDE 项目拥有自己的终端仿真软件包 Konsole。Konsole 具备基本的终端仿真特性，还提供了更高级的图形应用程序功能。本节描述了 Konsole 的各种特性及其用法。
+
+### 5.1 访问Konsole终端仿真器
+
+Konsole 是 KDE 桌面环境 Plasma 默认的终端仿真器，可以轻松地通过 KDE 环境的菜单系统访问。在其他桌面环境中，通常要利用搜索功能访问 Konsole。
+
+在 KDE 桌面环境（Plasma）中，要想启动 Konsole 终端仿真器，可以点击屏幕左下方的 Application Launcher 图标，然后点击 Applications ➪ System ➪ Terminal (Konsole)。
+
+> **注意**
+>
+> 在 Plasma 菜单环境中，你可能会看到两个或更多的终端菜单项。如果是这样，则下方带有文字 Konsole 的 Terminal 菜单项就是 Konsole 终端仿真器。
+
+在 GNOME Shell 桌面环境中，通常默认并未安装 Konsole。如果安装了 Konsole，可以通过 GNOME Shell 的搜索功能访问。点击桌面左上角的 Activities 图标。出现搜索栏时，点击搜索栏，在其中输入 konsole。如果系统中的终端仿真器可用，你就会看到出现 Konsole 的图标。
+
+> **注意**
+>
+> 你的系统中可能没有安装 Konsole 终端仿真软件包。如果想安装的话，请阅读第 9 章来学习如何在命令行中安装软件。
+
+点击 Konsole 图标，打开终端仿真器。在 Ubuntu 发行版中打开的 Konsole 如下图所示。
+
+<img src="img/017.jpg" alt="{%}" style="zoom:80%;" />
+
+别忘了在大多数桌面环境中可以创建快捷键来访问 Konsole 等应用程序。启动 Konsole 终端仿真器要用到的命令是`konsole`。如果已经安装过 Konsole，则可以在其他的终端仿真器中输入 konsole，然后按 Enter 键来启动它。
+
+> **提示**
+>
+> 在 Plasma 桌面环境中已经为 Konsole 终端仿真器设置好了默认快捷键：Ctrl+Alt+T。
+>
+> （与在 GNOME Shell 中打开 GNOME Terminal 的快捷键相同）
+
+与 GNOME Terminal 类似，Konsole 终端仿真器也通过菜单和快捷键提供了多个配置选项。接下来会逐一讲解。
+
+### 5.2 菜单栏
+
+Konsole 的菜单栏包含了查看和更改终端仿真会话特性所需的配置及定制化选项。
+
+> **提示**
+>
+> 如果没有看到 Konsole 菜单栏，可以按 Ctrl+Shift+M 组合键将其显示出来。
+
+下表所示的 File 菜单包含用于在当前窗口或新窗口中启动新标签的菜单项。
+
+**File菜单**
+
+| 名称              | 快捷键       | 描述                                                         |
+| :---------------- | :----------- | :----------------------------------------------------------- |
+| New Window        | Ctrl+Shift+N | 在新的 Konsole Terminal 窗口中启动一个新的 shell 会话        |
+| New Tab           | Ctrl+Shift+T | 在现有 Konsole Terminal 窗口的新标签中启动一个新的 shell 会话 |
+| Clone Tab         | None         | 在现有 Konsole Terminal 窗口的新选项卡中启动一个新的 shell 会话并尝试复制当前标签 |
+| Save Output As    | Ctrl+Shift+S | 将回滚缓冲区中当前标签的输出保存为文本文件或 HTML 文件       |
+| Print Screen      | Ctrl+Shift+P | 打印当前标签的显示内容                                       |
+| Open File Manager | None         | 打开默认的文件浏览器                                         |
+| Close Session     | Ctrl+Shift+W | 关闭当前标签会话                                             |
+| Close Window      | Ctrl+Shift+Q | 关闭当前 Konsole 窗口                                        |
+
+Konsole 提供了两个方便的菜单项来保存 shell 会话信息：Save Output As 和 Print Screen。Print Screen 允许使用系统打印机来打印当前标签的显示内容或将其保存为 PDF 文件。
+
+> **注意**
+>
+> 在阅读这些 Konsole 菜单项时，记住，你所使用的 Linux 发行版中的 Konsole 提供的菜单项可能和在这里看到的大不相同。这是因为一些 Linux 发行版安装的依然是比较旧的 Konsole 终端仿真软件包。
+
+下表中所示的 Edit 菜单包含用于处理会话文本内容的菜单项。除此之外，还可以管理标签名称。
+
+**Edit菜单**
+
+| 名称          | 快捷键       | 描述                                                   |
+| :------------ | :----------- | :----------------------------------------------------- |
+| Copy          | Ctrl+Shift+C | 将所选择的文本复制到Konsole的剪贴板中                  |
+| Paste         | Ctrl+Shift+V | 将Konsole剪贴板中的文本粘贴到会话中                    |
+| Select All    | None         | 选中当前标签中的所有文本                               |
+| Copy Input To | None         | 开始 / 停止将会话输入复制到选定的其他会话中            |
+| Send Signal   | None         | 将选定的信号发送至当前标签的shell进程或其他进程        |
+| Rename Tab    | Ctrl+Alt+S   | 修改会话标签的标题                                     |
+| ZModem Upload | Ctrl+Alt+U   | 开始上传所选中的文件（如果支持ZMODEM文件传输协议的话） |
+| Find          | Ctrl+Shift+F | 打开Find窗口，提供回滚缓冲区文本搜索选项               |
+| Find Next     | F3           | 在回滚缓冲区历史中查找下一处文本匹配                   |
+| Find Previous | Shift+F3     | 在回滚缓冲区历史中查找上一处文本匹配                   |
+
+Konsole 提供了一种不错的方法来跟踪每个标签会话的用途。可以使用 Rename Tab 菜单项为标签起一个符合其用途的名称。这有助于分辨打开的标签会话究竟是用来做什么的。
+
+> **注意**
+>
+> Konsole 维护着每个标签的历史记录（以前称为**回滚缓冲区**）。历史记录包含了终端查看区域的输出文本。在默认情况下，保留回滚缓冲区中的最后 1000 行。只需使用查看区域中的滚动条即可在回滚缓冲区中回滚。还可以按Shift+向上箭头键逐行向后滚动或按Shift+PageUp键一次向后滚动一页（24行）。
+
+下表所示的 View 菜单包含用于控制 Konsole 窗口中单个会话视图的菜单项。除此之外还可以监视终端会话活动。
+
+**View菜单**
+
+| 名称                       | 快捷键       | 描述                                                        |
+| :------------------------- | :----------- | :---------------------------------------------------------- |
+| Split View                 | None         | 控制显示在当前 Konsole 窗口中的多个标签会话                 |
+| Detach Current Tab         | Ctrl+Shift+L | 删除一个标签会话，并使用该标签会话启动一个新的 Konsole 窗口 |
+| Detach Current View        | Ctrl+Shift+H | 删除当前标签会话的视图，并使用它启动一个新的 Konsole 窗口   |
+| Monitor for Silence        | Ctrl+Shift+I | 打开 / 关闭无活动标签（tab silence）的特殊消息              |
+| Monitor for Activity       | Ctrl+Shift+A | 打开 / 关闭活动标签（tab activity）的特殊消息               |
+| Read-only                  | None         | 允许 / 禁止终端会话接受键盘输入，不影响键盘快捷键           |
+| Enlarge Font               | Ctrl++       | 逐步增大窗口中的文本字号                                    |
+| Reset Font Size            | Ctrl+Alt+0   | 重置文本字号                                                |
+| Shrink Font                | Ctrl+-       | 逐步减小窗口中的文本字号                                    |
+| Set Encoding               | None         | 设置用于发送和显示字符的字符集                              |
+| Clear Scrollback           | None         | 删除当前会话的回滚缓冲区中的文本                            |
+| Clear Scrollback and Reset | Ctrl+Shift+K | 删除当前会话的回滚缓冲区中的文本并重置终端窗口              |
+| Full Screen Mode           | F11          | 打开 / 关闭终端窗口的全屏显示模式                           |
+
+菜单项 Monitor for Silence 用于指明无活动标签。如果在当前标签会话内超过 7 秒没有出现新内容，则该标签即为无活动标签。这允许你在等待应用程序输出的时候切换到另一个标签。
+
+> **提示**
+>
+> 当你在活动会话区域单击鼠标右键时，Konsole 会弹出一个简单的菜单，其中包含一些菜单项。
+
+下表所示的 Bookmarks 菜单中的菜单项可用于管理 Konsole 窗口的**书签**。书签能够保存活动会话的目录位置，随后可以在相同会话或新的会话中返回到这些位置。
+
+**Bookmarks菜单**
+
+| 名称                    | 快捷键       | 描述                                   |
+| :---------------------- | :----------- | :------------------------------------- |
+| Add Bookmark            | Ctrl+Shift+B | 在当前目录位置创建一个新书签           |
+| Bookmark Tabs as Folder | None         | 为当前所有的终端标签会话创建一个新书签 |
+| New Bookmark Folder     | None         | 创建一个新的书签文件夹                 |
+| Edit Bookmarks          | None         | 编辑已有的书签                         |
+
+下表所示的 Settings 菜单包含可用于定制和管理配置文件的菜单项。配置文件允许用户自动运行命令、设置会话外观、配置回滚缓冲区等。你还可以通过 Setting 菜单为 shell 会话多添加一点儿功能。
+
+**Setting菜单**
+
+| 名称                         | 快捷键       | 描述                                            |
+| :--------------------------- | :----------- | :---------------------------------------------- |
+| Edit Current Profile         | None         | 打开 Edit Profile 窗口，提供配置文件配置选项    |
+| Switch Profile               | None         | 将所选的配置文件应用于当前标签                  |
+| Manage Profiles              | None         | 打开 Manage Profiles 窗口，提供配置文件管理选项 |
+| Show Menubar                 | Ctrl+Shift+M | 打开 / 关闭菜单栏显示                           |
+| Configure Keyboard Shortcuts | None         | 创建 Konsole 命令键盘快捷键                     |
+| Configure Notifications      | None         | 创建自定义的 Konsole 提醒                       |
+| Configure Konsole            | Ctrl+Shift+, | 配置很多 Konsole 特性                           |
+
+Configure Notifications 允许将会话中发生的特定事件与不同的行为关联起来，比如播放声音。当出现某个事件时，就会触发指定的行为（或一系列行为）。
+
+下表所示的 Help 菜单提供了完整的 Konsole 手册（如果你的 Linux 发行版中已经安装了 KDE 手册的话）以及标准的 About Konsole 对话框。
+
+**Help菜单**
+
+| 名称                        | 快捷键   | 描述                                      |
+| :-------------------------- | :------- | :---------------------------------------- |
+| Konsole Handbook            | None     | 包含完整的 Konsole 手册                   |
+| What's This?                | Shift+F1 | 包含终端部件（terminal widget）的帮助信息 |
+| Report Bug                  | None     | 打开 Submit BugReport 表单                |
+| Donate                      | None     | 在 Web 浏览器中打开 KDE 捐赠页面          |
+| Switch Application Language | None     | 打开 Switch Application Language 表单     |
+| About Konsole               | None     | 显示包括 Konsole 当前版本在内的相关信息   |
+| About KDE                   | None     | 显示 KDE 桌面环境的相关信息               |
+
+Help 菜单提供了一份全面详实的文档以帮助你使用 Konsole。除此之外，在你碰到程序 bug 的时候，还可以使用 Bug Report 表单向 Konsole 开发人员提交问题。
+
+相较于另一个流行的软件包 xterm，Konsole 只能算是“年轻一辈”了。下一节我们要探望一下“老古董” xterm。
+
+## 6.使用xterm终端仿真器
+
+最古老也是最基础的终端仿真器软件包是 xterm。xterm 在 X Window（历史上流行的显示服务器）出现之前就有了，如今仍是一些发行版（比如 openSUSE）的默认配备。
+
+xterm 是一个功能完善的仿真软件包，并不需要太多的资源（比如内存）来运行。正因为如此，在专门为老旧硬件设计的 Linux 发行版中，xterm 非常流行。
+
+尽管 xterm 并没有提供很多炫目的特性，但是把一件事做到了极致：仿真旧式终端，比如数字设备公司（digital equipment corporation，DEC）的 VT102、VT220 以及 Tektronix 4014 终端。对于 VT102 和 VT220 终端，xterm 甚至能够仿真 VT 序列色彩控制码，允许你在脚本中使用色彩。
+
+> **注意**
+>
+> DEC VT102 和 VT220 是盛行于 20 世纪 80 年代和 90 年代初期，用于连接 Unix 系统的哑文本终端。VT102/VT220 不仅能显示文本，还能使用块模式图形显示基本的图形结构。由于这种终端访问方式如今仍在很多商业环境中使用，因而使得VT102/VT220 仿真依然流行。
+
+下图展示了运行在 CentOS 发行版的 GNOME Shell 环境中的 xterm（必须手动安装）。可以看出它非常“朴素”。
+
+<img src="img/018.jpg" alt="{%}" style="zoom:80%;" />
+
+如今想要把 xterm 终端仿真器找出来可得花点儿心思。它通常并没有被包含在桌面环境的图形菜单中。
+
+### 6.1 访问xterm
+
+在 KDE 桌面环境（Plasma）中，可以通过点击屏幕左下角的 Application Launcher 图标，然后点击 Applications ➪ System ➪ standard terminal emulator for the X Window system （xterm）来访问 xterm。
+
+只要安装了 xterm 软件包，就可以通过 GNOME Shell 的搜索功能访问 xterm。点击桌面左上角的 Activities 图标，出现搜索栏时，在其中输入 xterm，就会看到 Konsole 图标出现。另外别忘了，你可以自己创建快捷键启动 xterm。
+
+xterm 包允许使用命令行参数设置各种特性。接下来将讨论这些特性以及如何进行修改。
+
+### 6.2 命令行选项
+
+xterm 的命令行选项非常多。你可以控制大量的特性来定制终端仿真，比如允许或禁止某种 VT 仿真。
+
+> **注意**
+>
+> xterm 的配置选项数量众多，无法在此一一列举。bash 手册中提供了大量的参考文档。第3章中会讲到如何阅读 bash 手册。另外，xterm 开发团队也在其网站上提供了一些不错的帮助资料。
+
+可以通过向`xterm`命令加入参数来调用某些配置选项。如果想让 xterm 仿真 DEC VT100 终端，可以输入命令`xterm -ti vt100`，然后按 Enter 键。下表给出了一些可以配合 xterm 终端仿真器使用的命令行选项。
+
+**xterm命令行选项**
+
+| 选项             | 描述                       |
+| :--------------- | :------------------------- |
+| `-bg *color*`    | 指定终端背景色             |
+| `-fb *font*`     | 指定粗体文本所使用的字体   |
+| `-fg *color*`    | 指定用于前景文本的颜色     |
+| `-fn *font*`     | 指定文本字体               |
+| `-fw *font*`     | 指定宽文本字体             |
+| `-lf *filename*` | 指定用于屏幕日志的文件名   |
+| `-ms *color*`    | 指定文本光标颜色           |
+| `-*name*`        | 指定标题栏中的应用程序名称 |
+| `-ti *terminal*` | 指定要仿真的终端类型       |
+
+一些 xterm 命令行选项使用加号（`+`）或减号（`-`）来指明如何设置某种特性。加号表示启用某种特性，减号表示关闭某种特性，反之亦然。加号可以表示禁止某种特性，减号可以表示允许某种特性，比如在使用`bc`参数的时候。下表中列出了可以使用`+/-`命令行选项来设置的一些常用特性。
+
+**xterm `+/-`命令行选项**
+
+| 选项         | 描述                                        |
+| :----------- | :------------------------------------------ |
+| `ah`         | 启用 / 禁止文本光标高亮                     |
+| `aw`         | 启用 / 禁止文本行自动环绕（auto-line-wrap） |
+| `bc`         | 启用 / 禁止文本光标闪烁                     |
+| `cm`         | 启用 / 禁止识别 ANSI 色彩更改控制码         |
+| `fullscreen` | 启用 / 禁止全屏模式                         |
+| `j`          | 启用 / 禁止跳跃式滚动（jump scrolling）     |
+| `l`          | 启用 / 禁止将屏幕数据记录进日志文件         |
+| `mb`         | 启用 / 禁止边缘响铃（margin bell）          |
+| `rv`         | 启用 / 禁止图像反转                         |
+| `t`          | 启用 / 禁止 Tektronix 模式                  |
+
+注意，不是所有的 xterm 实现都支持这些命令行选项。在启动 xterm 时，可以使用`-help`来确定所使用的 xterm 实现支持哪些选项。
+
+> **注意**
+>
+> 如果觉得 xterm 还不错，但是想使用更现代的终端仿真器，那么不妨考虑 rxvt-unicode 软件包。可以通过大多数发行版的标准仓库（参见第 9 章）来安装 rxvt-unicode，它占用内存不多，运行速度飞快。
+
+现在你已经了解了 3 种终端仿真软件包，一个重要的问题是：谁才是最好的终端仿真器？对于这个问题，没有什么权威的答案。究竟使用哪个仿真器软件包取决于你的个人需求。不过能够有所选择总是件好事。
+
+## 7.小结
+
+开始学习 Linux 命令行命令前，需要先能访问 CLI。在图形化界面的世界里，有时这会费点儿周折。本章讨论了能够进入 Linux 命令行的各种界面。
+
+首先，我们讨论了通过虚拟控制台终端（GUI 之外的终端）以及图像化终端仿真软件包（GUI 中的终端）访问 CLI 时的不同，简要对比了两种访问方式之间的差异。
+
+接下来，我们详细探究了通过虚拟控制台终端访问 CLI，包括像更改背景色这类控制台终端配置选项。
+
+在学习了虚拟控制台终端之后，我们还讲述了通过图形化终端仿真器来访问 CLI，其中主要涉及 3 种终端仿真器：GNOME Terminal、Konsole 和 xterm。
+
+本章还介绍了 GNOME Shell 桌面项目的 GNOME Terminal 终端仿真软件包。GNOME 桌面环境通常已经默认安装了 GNOME Terminal，可以通过其菜单项和快捷键方便地设置很多终端特性。
+
+除此之外，我们还讨论了 KDE 桌面项目的 Konsole 终端仿真软件包。KDE 桌面环境（Plasma）通常已默认安装了 Konsole。它提供了一些非常好的特性，比如能够监测到空闲的终端。
+
+本章最后讲到的是 xterm 终端仿真器软件包。xterm 是 Linux 中第一个可用的终端仿真器，能够仿真旧式终端硬件，比如 VT 和Tektronix 终端。
