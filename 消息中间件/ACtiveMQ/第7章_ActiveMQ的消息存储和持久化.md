@@ -108,9 +108,11 @@ kahadb 在消息保存目录中只有 4 类文件和一个 lock，跟 ActiveMQ �
 
 **步骤**
 
-- 添加 mysql 数据库的驱动包到 lib 文件夹
+- **添加 mysql 数据库的驱动包到 lib 文件夹**
 
--  jdbcPersistenceAdapter 配置
+  <img src="img/image-20220512195032031.png" alt="image-20220512195032031" style="zoom:80%;" />
+
+-  **jdbcPersistenceAdapter 配置**
 
   在`${activeMQ安装目录}/conf`路径下修改 activemq.xml 配置文件，按照如下修改：
 
@@ -124,34 +126,52 @@ kahadb 在消息保存目录中只有 4 类文件和一个 lock，跟 ActiveMQ �
   </persistenceAdapter>
   ```
 
-- 数据库连接池配置
+- **数据库连接池配置**
 
-  需要我们准备一个mysql数据库，并创建一个名为activemq的数据库。
+  需要我们准备一个 mysql 数据库，并创建一个名为 activemq 的数据库。
 
-  在</broker>标签和<import>标签之间插入数据库连接池配置
+  在\</broker>标签和\<import>标签之间插入数据库连接池配置
 
   ```xml
   </broker>
   
   <bean id="mysql-ds" class="org.apache.commons.dbcp2.BasicDataSource" destroy-method="close">
       <property name="driverClassName" value="com.mysql.jdbc.Driver"/>
-      <property name="url" value="jdbc:mysql://mysql数据库URL/activemq?relaxAutoCommit=true"/>
-      <property name="username" value="mysql数据库用户名"/>
-      <property name="password" value="mysql数据库密码"/>
+      <property name="url" value="jdbc:mysql://localhost/activemq?relaxAutoCommit=true"/>
+      <property name="username" value="root"/>
+      <property name="password" value="root"/>
       <property name="poolPreparedStatements" value="true"/>
   </bean>
   
   <import resource="jetty.xml"/>
   ```
 
-  之后需要建一个数据库，名为activemq。新建的数据库要采用latin1 或者ASCII编码。https://blog.csdn.net/JeremyJiaming/article/details/88734762
+  之后需要建一个数据库，名为 activemq。新建的数据库要采用 latin1 或者 ASCII 编码。https://blog.csdn.net/JeremyJiaming/article/details/88734762
 
-  默认是的dbcp数据库连接池，如果要换成其他数据库连接池，需要将该连接池jar包，也放到lib目录下。
+  ```sql
+  CREATE DATABASE activemq;
+  ```
 
-- 建库SQL和创表说明
+  默认是的 dbcp 数据库连接池，如果要换成其他数据库连接池，需要将该连接池 jar 包，也放到 lib 目录下。
 
-  重启activemq。会自动生成如下3张表。如果没有自动生成，需要我们手动执行SQL。我个人建议要自动生成，我在操作过程中查看日志文件，发现了不少问题，最终解决了这些问题后，是能够自动生成的。如果不能自动生成说明你的操作有问题。如果实在不行，下面是手动建表的SQL：
+- **建库 SQL 和创表说明**
 
+  重启 activemq。会自动生成如下 3 张表。
+
+  ```sql
+  mysql> show tables;
+  +--------------------+
+  | Tables_in_activemq |
+  +--------------------+
+  | ACTIVEMQ_ACKS      |
+  | ACTIVEMQ_LOCK      |
+  | ACTIVEMQ_MSGS      |
+  +--------------------+
+  3 rows in set (0.02 sec)
+  ```
+  
+  如果没有自动生成，需要我们手动执行 SQL。我个人建议要自动生成，我在操作过程中查看日志文件，发现了不少问题，最终解决了这些问题后，是能够自动生成的。如果不能自动生成说明你的操作有问题。如果实在不行，下面是手动建表的 SQL：
+  
   ```sql
   -- auto-generated definition
   create table ACTIVEMQ_ACKS
@@ -169,7 +189,6 @@ kahadb 在消息保存目录中只有 4 类文件和一个 lock，跟 ActiveMQ �
   
   create index ACTIVEMQ_ACKS_XIDX on ACTIVEMQ_ACKS (XID);
   
-  
   -- auto-generated definition
   create table ACTIVEMQ_LOCK
   (
@@ -177,7 +196,6 @@ kahadb 在消息保存目录中只有 4 类文件和一个 lock，跟 ActiveMQ �
       TIME bigint null,
       BROKER_NAME varchar(250) null
   );
-  
   
   -- auto-generated definition
   create table ACTIVEMQ_MSGS
@@ -193,17 +211,13 @@ kahadb 在消息保存目录中只有 4 类文件和一个 lock，跟 ActiveMQ �
   );
   
   create index ACTIVEMQ_MSGS_CIDX on ACTIVEMQ_MSGS (CONTAINER);
-  
   create index ACTIVEMQ_MSGS_EIDX on ACTIVEMQ_MSGS (EXPIRATION);
-  
   create index ACTIVEMQ_MSGS_MIDX on ACTIVEMQ_MSGS (MSGID_PROD, MSGID_SEQ);
-  
   create index ACTIVEMQ_MSGS_PIDX on ACTIVEMQ_MSGS (PRIORITY);
-  
   create index ACTIVEMQ_MSGS_XIDX on ACTIVEMQ_MSGS (XID);
   ```
-
-  ACTIVEMQ_MSGS 数据表用于存储消息信息，字段如下：
+  
+  `ACTIVEMQ_MSGS`数据表用于存储消息信息，字段如下：
 
   - ID：自增的数据库主键
   - CONTAINER：消息的 Destination
@@ -212,47 +226,43 @@ kahadb 在消息保存目录中只有 4 类文件和一个 lock，跟 ActiveMQ �
   - EXPIRATION：消息的过期时间，存储的是从 1970-01-01 到现在的毫秒数
   - MSG：消息本体的 JAVA 序列化对象的二进制数据
   - PRIORITY：优先级，从 0-9，数值越大优先级越高
-
-  ACTIVEMQ_ACKS 数据表用于存储订阅关系。如果是持久化 Topic，订阅者和服务器的订阅关系在这个表保存。数据库字段如下：
-
+  
+  `ACTIVEMQ_ACKS`数据表用于存储订阅关系。如果是持久化 Topic，订阅者和服务器的订阅关系在这个表保存。数据库字段如下：
+  
   - CONTAINER：消息的 Destination
   - SUB_DEST：如果是使用 static 集群，这个字段会有集群其他系统的信息
   - CLIENT_ID：每个订阅者都必须有一个唯一的客户端 ID 用以区分
   - SUB_NAME：订阅者名称
   - SELECTOR：选择器，可以选择只消费满足条件的消息。条件可以用自定义属性实现，可支持多属性 AND 和 OR 操作
   - LAST_ACKED_ID：记录消费过的消息的 ID
-
-  ACTIVEMQ_LOCK 数据表在集群环境中才有用，只有一个 broker 可以获得消息，称为 Master Broker，其他的只能作为备份等待 Master Broker 不可用，才可能成为下一个 Master Broker。这个表用于记录哪个 Broker 是当前的 Master Broker。字段如下：
-
+  
+  `ACTIVEMQ_LOCK`数据表在集群环境中才有用，只有一个 broker 可以获得消息，称为 Master Broker，其他的只能作为备份等待 Master Broker 不可用，才可能成为下一个 Master Broker。这个表用于记录哪个 Broker 是当前的 Master Broker。字段如下：
+  
   - ID：锁的唯一 ID
   - BROKER_NAME：当前拥有锁的 broker 的名称
 
 ### 4.2 queue验证和数据表变化
 
-在点对点类型中，当 DeliveryMode 设置为 NON_PERSISTENCE 时，消息被保存在内存中，当 DeliveryMode 设置为 PERSISTENCE 时，消息保存在 broker 的相应的文件或者数据库中。
+在点对点类型中，当 DeliveryMode 设置为`NON_PERSISTENCE`时，消息被保存在内存中，当 DeliveryMode 设置为`PERSISTENCE`时，消息保存在 broker 的相应的文件或者数据库中。而且点对点类型中消息一旦被 Consumer 消费就会从 broker 中删除。
 
-而且点对点类型中消息一旦被 COnsumer 消费就会从 broker 中删除。
+queue 模式中，非持久化不会将消息持久化到数据库，持久化会将消息持久化数据库。我们使用 queue 模式持久化，发布 4 条消息后，发现 ACTIVEMQ_MSGS 数据表多了 4 条数据。
 
-queue模式中，非持久化不会将消息持久化到数据库，持久化会将消息持久化数据库。
-
-我们使用queue模式持久化，发布3条消息后，发现ACTIVEMQ_MSGS数据表多了3条数据。
-
-图
+<img src="img/image-20220512201706690.png" alt="image-20220512201706690" style="zoom:80%;" />
 
 启动消费者，消费了所有的消息后，发现数据表的数据消失了。
 
-图
+<img src="img/image-20220512202131746.png" alt="image-20220512202131746" style="zoom:80%;" />
 
-queue模式非持久化，不会持久化消息到数据表。
+在 queue 模式非持久化中消息不会持久化消息到数据表。
 
 ### 4.3 topic验证和说明
 
-我们先启动一下持久化topic的消费者。看到ACTIVEMQ_ACKS数据表多了一条消息。  
+我们先启动一下持久化 topic 的消费者。看到 ACTIVEMQ_ACKS 数据表多了一条消息。  
 
 ```java
 // 持久化topic 的消息消费者
 public class JmsConsummer_persistence {
-    private static final String ACTIVEMQ_URL = "tcp://118.24.20.3:61626";
+    private static final String ACTIVEMQ_URL = "tcp://192.168.11.101:61616";
     public static final String TOPIC_NAME = "jdbc-02";
 
     public static void main(String[] args) throws Exception{
@@ -275,19 +285,19 @@ public class JmsConsummer_persistence {
 }
 ```
 
-ACTIVEMQ_ACKS数据表，多了一个消费者的身份信息。一条记录代表：一个持久化topic消费者
+ACTIVEMQ_ACKS 数据表，多了一个消费者的身份信息。一条记录代表：一个持久化 topic 消费者
 
-图
+<img src="img/image-20220512203445942.png" alt="image-20220512203445942" style="zoom:80%;" />
 
-我们启动持久化生产者发布3个数据，ACTIVEMQ_MSGS数据表新增3条数据，消费者消费所有的数据后，ACTIVEMQ_MSGS数据表的数据并没有消失。持久化topic的消息不管是否被消费，是否有消费者，产生的数据永远都存在，且只存储一条。这个是要注意的，持久化的topic大量数据后可能导致性能下降。这里就像公总号一样，消费者消费完后，消息还会保留。
+我们启动持久化生产者发布 4 个数据，ACTIVEMQ_MSGS 数据表新增 4 条数据，消费者消费所有的数据后，ACTIVEMQ_MSGS 数据表的数据并没有消失。持久化 topic 的消息不管是否被消费，是否有消费者，产生的数据永远都存在，且只存储一条。这个是要注意的，持久化的 topic 大量数据后可能导致性能下降。这里就像公总号一样，消费者消费完后，消息还会保留。
 
-图
+<img src="img/image-20220512203833790.png" alt="image-20220512203833790" style="zoom:80%;" />
 
 ### 4.4 总结
 
 对于 queue，在没有消费者消费的情况下会将消息保存到 activemq_msgs 表中，只要有任意一个消费者已经消费过了，消费之后这些消息将会立即被删除。
 
-对于 topic，一般是先启动消费订阅然后再生产的情况下会将消息保存到 activemq_acks。
+对于 topic，一般是先启动消费订阅然后再生产的情况下会将消息保存到 activemq_msgs，订阅者保存在 activemq_acks。
 
 > 在配置关系型数据库作为 ActiveMQ 的持久化存储方案时，需要注意以下几点：
 >
@@ -305,21 +315,19 @@ ACTIVEMQ_ACKS数据表，多了一个消费者的身份信息。一条记录代�
 
 **(1)**   **说明**
 
-这种方式克服了JDBC Store的不足，JDBC每次消息过来，都需要去写库读库。ActiveMQ Journal，使用高速缓存写入技术，大大提高了性能。当消费者的速度能够及时跟上生产者消息的生产速度时，journal文件能够大大减少需要写入到DB中的消息。
+这种方式克服了 JDBC Store 的不足，JDBC 每次消息过来，都需要去写库读库。ActiveMQ Journal，使用高速缓存写入技术，大大提高了性能。当消费者的速度能够及时跟上生产者消息的生产速度时，journal 文件能够大大减少需要写入到 DB 中的消息。从 4.X 开始变为默认开启。
 
-举个例子：生产者生产了1000条消息，这1000条消息会保存到journal文件，如果消费者的消费速度很快的情况下，在journal文件还没有同步到DB之前，消费者已经消费了90%的以上消息，那么这个时候只需要同步剩余的10%的消息到DB。如果消费者的速度很慢，这个时候journal文件可以使消息以批量方式写到DB。
+举个例子：生产者生产了 1000 条消息，这 1000 条消息会保存到 journal 文件，如果消费者的消费速度很快的情况下，在 journal 文件还没有同步到 DB 之前，消费者已经消费了 90% 的以上消息，那么这个时候只需要同步剩余的 10% 的消息到 DB。如果消费者的速度很慢，这个时候 journal 文件可以使消息以批量方式写到 DB。
 
-为了高性能，这种方式使用日志文件存储+数据库存储。先将消息持久到日志文件，等待一段时间再将未消费的消息持久到数据库。该方式要比JDBC性能要高。
-
- 
+为了高性能，这种方式使用日志文件存储 + 数据库存储。先将消息持久到日志文件，等待一段时间再将未消费的消息持久到数据库。该方式要比 JDBC 性能要高。
 
 **(2)**   **activemq.xml配置**
 
-下面是基于上面JDBC配置，再做一点修改：
+下面是基于上面 JDBC 配置，再做一点修改：
 
 ```xml
-<persistenceAdapter>
-    <jdbcPersistenceAdapter
+<persistenceFactory>
+    <journalPersistenceAdapterFactory
 		journalLogFiles="4"
         journalLogFileSize="32768"
         useJournal="true"
@@ -327,20 +335,20 @@ ACTIVEMQ_ACKS数据表，多了一个消费者的身份信息。一条记录代�
         dataSource="#mysql-ds"
         dataDirectory="activemq-data"
 	/>
-</persistenceAdapter>
+</persistenceFactory>
 ```
 
 ## 6.总结
 
-- jdbc效率低，kahaDB效率高，jdbc+Journal效率较高
+- jdbc 效率低，kahaDB 效率高，jdbc+Journal 效率较高
 
-- 持久化消息主要指的是：MQ所在服务器宕机了消息不会丢试的机制
+- 持久化消息主要指的是：MQ 所在服务器宕机了消息不会丢试的机制
 
 - 持久化机制演变的过程：
 
-  从最初的AMQ Message Store方案到ActiveMQ V4版本退出的High Performance Journal（高性能事务支持）附件，并且同步推出了关于关系型数据库的存储方案。ActiveMQ5.3版本又推出了对KahaDB的支持（5.4版本后被作为默认的持久化方案），后来ActiveMQ 5.8版本开始支持LevelDB，到现在5.9提供了标准的Zookeeper+LevelDB集群化方案。
+  从最初的 AMQ Message Store 方案到 ActiveMQ V4 版本退出的 High Performance Journal（高性能事务支持）附件，并且同步推出了关于关系型数据库的存储方案。ActiveMQ5.3 版本又推出了对 KahaDB 的支持（5.4 版本后被作为默认的持久化方案），后来 ActiveMQ 5.8 版本开始支持 LevelDB，到现在 5.9 提供了标准的 Zookeeper+LevelDB 集群化方案。
 
-- ActiveMQ消息持久化机制有：
+- ActiveMQ 消息持久化机制有：
 
   | 机制                     | 实现方式                                                     |
   | ------------------------ | ------------------------------------------------------------ |
