@@ -1,9 +1,8 @@
 # 第8章_Springboot整合rabbitmq集群
 
-springboot整合rabbitmq
-集群创建方式这里省略
-整合开始
-1 引入starter
+## 1.springboot整合rabbitmq集群
+
+### 1.1 引入starter
 
 ```xml
 <parent>
@@ -19,97 +18,74 @@ springboot整合rabbitmq
 
 ```
 
-2：详细配置如下
+### 1.2 详细配置如下
 
 ```yaml
- rabbitmq:
-    addresses: 127.0.0.1:6605,127.0.0.1:6606,127.0.0.1:6705 #指定client连接到的server的地址，多个以逗号分隔(优先取addresses，然后再取host)
-#    port:
-    ##集群配置 addresses之间用逗号隔开
-    # addresses: ip:port,ip:port
-    password: admin
-    username: 123456
-    virtual-host: / # 连接到rabbitMQ的vhost
-    requested-heartbeat: #指定心跳超时，单位秒，0为不指定；默认60s
-    publisher-confirms: #是否启用 发布确认
-    publisher-reurns: # 是否启用发布返回
-    connection-timeout: #连接超时，单位毫秒，0表示无穷大，不超时
-    cache:
-      channel.size: # 缓存中保持的channel数量
-      channel.checkout-timeout: # 当缓存数量被设置时，从缓存中获取一个channel的超时时间，单位毫秒；如果为0，则总是创建一个新channel
-      connection.size: # 缓存的连接数，只有是CONNECTION模式时生效
-      connection.mode: # 连接工厂缓存模式：CHANNEL 和 CONNECTION
-    listener:
-      simple.auto-startup: # 是否启动时自动启动容器
-      simple.acknowledge-mode: # 表示消息确认方式，其有三种配置方式，分别是none、manual和auto；默认auto
-      simple.concurrency: # 最小的消费者数量
-      simple.max-concurrency: # 最大的消费者数量
-      simple.prefetch: # 指定一个请求能处理多少个消息，如果有事务的话，必须大于等于transaction数量.
-      simple.transaction-size: # 指定一个事务处理的消息数量，最好是小于等于prefetch的数量.
-      simple.default-requeue-rejected: # 决定被拒绝的消息是否重新入队；默认是true（与参数acknowledge-mode有关系）
-      simple.idle-event-interval: # 多少长时间发布空闲容器时间，单位毫秒
-      simple.retry.enabled: # 监听重试是否可用
-      simple.retry.max-attempts: # 最大重试次数
-      simple.retry.initial-interval: # 第一次和第二次尝试发布或传递消息之间的间隔
-      simple.retry.multiplier: # 应用于上一重试间隔的乘数
-      simple.retry.max-interval: # 最大重试时间间隔
-      simple.retry.stateless: # 重试是有状态or无状态
-    template:
-      mandatory: # 启用强制信息；默认false
-      receive-timeout: # receive() 操作的超时时间
-      reply-timeout: # sendAndReceive() 操作的超时时间
-      retry.enabled: # 发送重试是否可用
-      retry.max-attempts: # 最大重试次数
-      retry.initial-interval: # 第一次和第二次尝试发布或传递消息之间的间隔
-      retry.multiplier: # 应用于上一重试间隔的乘数
-      retry.max-interval: #最大重试时间间隔
+rabbitmq:
+addresses: 127.0.0.1:6605,127.0.0.1:6606,127.0.0.1:6705 #指定client连接到的server的地址，多个以逗号分隔(优先取addresses，然后再取host)
+# port:
+##集群配置 addresses之间用逗号隔开
+# addresses: ip:port,ip:port
+password: admin
+username: 123456
+virtual-host: / # 连接到rabbitMQ的vhost
+requested-heartbeat: #指定心跳超时，单位秒，0为不指定；默认60s
+publisher-confirms: #是否启用 发布确认
+publisher-reurns: # 是否启用发布返回
+connection-timeout: #连接超时，单位毫秒，0表示无穷大，不超时
+cache:
+channel.size: # 缓存中保持的channel数量
+channel.checkout-timeout: # 当缓存数量被设置时，从缓存中获取一个channel的超时时间，单位毫秒；如果为0，则总是创建一个新channel
+connection.size: # 缓存的连接数，只有是CONNECTION模式时生效
+connection.mode: # 连接工厂缓存模式：CHANNEL 和 CONNECTION
+listener:
+simple.auto-startup: # 是否启动时自动启动容器
+simple.acknowledge-mode: # 表示消息确认方式，其有三种配置方式，分别是none、manual和auto；默认auto
+simple.concurrency: # 最小的消费者数量
+simple.max-concurrency: # 最大的消费者数量
+simple.prefetch: # 指定一个请求能处理多少个消息，如果有事务的话，必须大于等于transaction数量.
+simple.transaction-size: # 指定一个事务处理的消息数量，最好是小于等于prefetch的数量.
+simple.default-requeue-rejected: # 决定被拒绝的消息是否重新入队；默认是true（与参数acknowledge-mode有关系）
+simple.idle-event-interval: # 多少长时间发布空闲容器时间，单位毫秒
+simple.retry.enabled: # 监听重试是否可用
+simple.retry.max-attempts: # 最大重试次数
+simple.retry.initial-interval: # 第一次和第二次尝试发布或传递消息之间的间隔
+simple.retry.multiplier: # 应用于上一重试间隔的乘数
+simple.retry.max-interval: # 最大重试时间间隔
+simple.retry.stateless: # 重试是有状态or无状态
+template:
+mandatory: # 启用强制信息；默认false
+receive-timeout: # receive() 操作的超时时间
+reply-timeout: # sendAndReceive() 操作的超时时间
+retry.enabled: # 发送重试是否可用
+retry.max-attempts: # 最大重试次数
+retry.initial-interval: # 第一次和第二次尝试发布或传递消息之间的间隔
+retry.multiplier: # 应用于上一重试间隔的乘数
+retry.max-interval: #最大重试时间间隔
 ```
 
 对于发送方而言，需要做以下配置：
-1 配置CachingConnectionFactory
-2 配置Exchange/Queue/Binding
-3 配置RabbitAdmin创建上一步的Exchange/Queue/Binding
-4 配置RabbitTemplate用于发送消息，RabbitTemplate通过CachingConnectionFactory获取到Connection，然后想指定Exchange发送
-对于消费方而言，需要做以下配置：
-1 配置CachingConnectionFactory
-2 配置Exchange/Queue/Binding
-3 配置RabbitAdmin创建上一步的Exchange/Queue/Binding
-4 配置RabbitListenerContainerFactory
-5 配置@RabbitListener/@RabbitHandler用于接收消息
+> 1. 配置CachingConnectionFactory
+> 2. 配置Exchange/Queue/Binding
+> 3. 配置RabbitAdmin创建上一步的Exchange/Queue/Binding
+> 4. 配置RabbitTemplate用于发送消息，RabbitTemplate通过CachingConnectionFactory获取到Connection，然后想指定Exchange发送对于消费方而言，需要做以下配置：
+> 5. 配置CachingConnectionFactory
+> 6. 配置Exchange/Queue/Binding
+> 7. 配置RabbitAdmin创建上一步的Exchange/Queue/Binding
+> 8. 配置RabbitListenerContainerFactory
+> 9. 配置@RabbitListener/@RabbitHandler用于接收消息
+
 在默认情况下主要的配置如下：
 
 <img src="img/image-20220514200505795.png" alt="image-20220514200505795"  />
 
-3 Spring AMQP的主要对象
+### 1.3 Spring AMQP的主要对象
 
 <img src="img/image-20220514200528747.png" alt="image-20220514200528747"  />
 
-4 使用：
-通过配置类加载的方式：
+### 1.4 通过配置类加载的方式：
 
 ```java
-package com.yd.demo.config;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.amqp.core.AcknowledgeMode;
-import org.springframework.amqp.core.Binding;
-import org.springframework.amqp.core.BindingBuilder;
-import org.springframework.amqp.core.DirectExchange;
-import org.springframework.amqp.core.Queue;
-import org.springframework.amqp.core.TopicExchange;
-import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
-import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
-import org.springframework.amqp.rabbit.connection.ConnectionFactory;
-import org.springframework.amqp.rabbit.core.RabbitAdmin;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.amqp.rabbit.listener.RabbitListenerContainerFactory;
-import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import java.util.HashMap;
-import java.util.Map;
 @Configuration
 public class RabbitConfig {
     private static final Logger logger = LoggerFactory.getLogger(RabbitConfig.class);
@@ -127,11 +103,11 @@ public class RabbitConfig {
     private String password;
     @Value("${spring.rabbitmq.virtual-host}")
     private String virtualHost;
- /*   @Value("${rabbit.channelCacheSize}")
+    /*   @Value("${rabbit.channelCacheSize}")
     private int channelCacheSize;*/
-//    @Value("${rabbit.port}")
-//    private int port;
-/*    @Autowired
+    //    @Value("${rabbit.port}")
+    //    private int port;
+    /*    @Autowired
     private ConfirmCallBackListener confirmCallBackListener;
     @Autowired
     private ReturnCallBackListener returnCallBackListener;*/
@@ -141,7 +117,7 @@ public class RabbitConfig {
         cachingConnectionFactory.setAddresses(hosts);
         cachingConnectionFactory.setUsername(userName);
         cachingConnectionFactory.setPassword(password);
-//        cachingConnectionFactory.setChannelCacheSize(channelCacheSize);
+        //        cachingConnectionFactory.setChannelCacheSize(channelCacheSize);
         //cachingConnectionFactory.setPort(port);
         cachingConnectionFactory.setVirtualHost(virtualHost);
         //设置连接工厂缓存模式：
@@ -207,17 +183,17 @@ public class RabbitConfig {
         RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory());
         rabbitTemplate.setMandatory(true);
         //发布确认
-//        rabbitTemplate.setConfirmCallback(confirmCallBackListener);
+        //        rabbitTemplate.setConfirmCallback(confirmCallBackListener);
         // 启用发布返回
-//        rabbitTemplate.setReturnCallback(returnCallBackListener);
+        //        rabbitTemplate.setReturnCallback(returnCallBackListener);
         logger.info("连接模板设置完成");
         return rabbitTemplate;
     }
-  /*  @Bean
+    /*  @Bean
     public TopicExchange topicExchange(){
         return new TopicExchange(TOPICEXCHANGE,true,false);
     }*/
-  /*
+    /*
 *//**
      * @return DirectExchange
      *//*
@@ -244,28 +220,33 @@ public class RabbitConfig {
 ```
 
 通过两种方式加载
-1 通过配置文件
-2 通过配置类
+
+1. 通过配置文件
+2. 通过配置类
+
 说明：上面是通过配置文件与配置类的方式去加载,常用的配置如上所示。实际使用中要生产方与消费方要分开配置，相关配置也会有小变动，大体配置不变。更多信息可查看官网配置。
 
-三十二、RabbitMQ-集群监控
-集群监控
-在广大的互联网行业中RabbitMQ几乎都会有集群,那么对于集群的监控就成了企业生态中必不可少的一环。接下来我们来将讲解主要的4种监控。
+## 2.RabbitMQ-集群监控
 
-1、管理界面监控
-管理界面监控需要我们开启对应的插件(rabbitmq-plugins enable rabbitmq_management)
-然后访问http://ip:15672
+在广大的互联网行业中 RabbitMQ 几乎都会有集群,那么对于集群的监控就成了企业生态中必不可少的一环。接下来我们来将讲解主要的 4 种监控。
+
+### 2.1 管理界面监控
+
+管理界面监控需要我们开启对应的插件（rabbitmq-plugins enable rabbitmq_management），然后访问http://ip:15672
 
 <img src="img/image-20220514200618430.png" alt="image-20220514200618430" style="zoom:80%;" />
 
 在管理控制台我们就可以直观的看到集群中的每一个节点是否正常,如果为红色则表示节点挂掉了,同时可以很方便的查看到各个节点的内存、磁盘等相关的信息，使用起来也是非常方便的。但是遗憾的该功能做的比较简陋,没有告警等一些列的个性化设置,同时如果想把他接入到公司其他的监控系统统一管理也是很难做到的,所以扩展性不强，一般在小型企业的小集群中使用。
 
-2、tracing日志监控
-对于企业级的应用开发来讲,我们通常都会比较关注我们的消息,甚至很多的场景把消息的可靠性放在第一位,但是我们的MQ集群难免会出现消息异常丢失或者客户端无法发送消息等异常情况,此时为了帮助开发人员快速的定位问题,我们就可以对消息的投递和消费过程进行监控,而tracing日志监控插件帮我们很好的实现了该功能
-消息中心的消息追踪需要使用Trace实现，Trace是Rabbitmq用于记录每一次发送的消息，方便使用Rabbitmq的开发者调试、排错。可通过插件形式提供可视化界面。Trace启动后会自动创建系统Exchange：amq.rabbitmq.trace ,每个队列会自动绑定该Exchange，绑定后发送到队列的消息都会记录到Trace日志。
+### 2.2 tracing日志监控
 
-消息追踪启用与查看
-以下是trace的相关命令和使用（要使用需要先rabbitmq启用插件，再打开开关才能使用）：
+对于企业级的应用开发来讲,我们通常都会比较关注我们的消息,甚至很多的场景把消息的可靠性放在第一位,但是我们的MQ集群难免会出现消息异常丢失或者客户端无法发送消息等异常情况,此时为了帮助开发人员快速的定位问题,我们就可以对消息的投递和消费过程进行监控,而tracing日志监控插件帮我们很好的实现了该功能。
+
+消息中心的消息追踪需要使用 Trace 实现，Trace 是 Rabbitmq 用于记录每一次发送的消息，方便使用 Rabbitmq 的开发者调试、排错。可通过插件形式提供可视化界面。Trace 启动后会自动创建系统 Exchange：amq.rabbitmq.trace，每个队列会自动绑定该 Exchange，绑定后发送到队列的消息都会记录到 Trace 日志。
+
+#### 1. 消息追踪启用与查看
+
+以下是 trace 的相关命令和使用（要使用需要先 rabbitmq 启用插件，再打开开关才能使用）：
 
 | 命令集 | 描述 |
 | ------ | ---- |
@@ -281,30 +262,31 @@ public class RabbitConfig {
 
 <img src="img/image-20220514200731172.png" alt="image-20220514200731172" style="zoom:80%;" />
 
-## 2、日志追踪
+#### 2.日志追踪
 
-1、发送消息
+**发送消息**
 
 ```java
 rabbitTemplate.convertAndSend("spring_queue", "只发队列spring_queue的消息--01。");
 ```
 
-2、查看trace
+**查看trace**
 
 <img src="img/image-20220514200747642.png" alt="image-20220514200747642" style="zoom:67%;" />
 
-点击Tracing查看Trace log files
+**点击Tracing查看Trace log files**
 
-3、点击Tracing查看Trace log files
+#### 3.点击Tracing查看Trace log files
 
 <img src="img/image-20220514200800825.png" alt="image-20220514200800825" style="zoom:80%;" />
 
-4、点击llp-trace.log确认消息轨迹正确性
+#### 4.点击llp-trace.log确认消息轨迹正确性
 
 <img src="img/image-20220514200812806.png" alt="image-20220514200812806" style="zoom:80%;" />
 
-3、定制自己的监控系统
-RabbitMQ提供了很丰富的restful风格的api接口,我们可以通过这些接口得到对应的集群数据,此时我们就可以定制我们的监控系统。
+### 2.3 定制自己的监控系统
+
+RabbitMQ 提供了很丰富的 restful 风格的 api 接口,我们可以通过这些接口得到对应的集群数据,此时我们就可以定制我们的监控系统。
 
 | HTTP API URL | HTTP 请求类型 | 接口含义 |
 | ------------ | ------------- | -------- |
@@ -324,11 +306,11 @@ RabbitMQ提供了很丰富的restful风格的api接口,我们可以通过这些�
 |/api/queues/{vhost}/{name}/get	|POST|	在指定虚拟机主机和队列名中获取消息，同时该动作会修改队列状态|
 |/api/healthchecks/node/{node}	|GET	|获取指定节点的健康检查状态|
 
-更多API的相关信息和描述可以访问http://ip:15672/api/
+更多API的相关信息和描述可以访问http://ip:15672/api/。
 
-接下来我们使用RabbitMQ Http API接口来获取集群监控数据
+接下来我们使用 RabbitMQ Http API 接口来获取集群监控数据。
 
-HttpClient以及Jackson的相关Jar
+HttpClient 以及 Jackson 的相关 Jar：
 
 ```xml
 <dependency>
@@ -354,28 +336,9 @@ HttpClient以及Jackson的相关Jar
 
 ```
 
-创建MonitorRabbitMQ类实现具体的代码
+创建 MonitorRabbitMQ 类实现具体的代码。
 
 ```java
-package com.llp.rabbitmq;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.http.HttpEntity;
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.auth.BasicScheme;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-/**
- * RabbitMQ的监控
- */
 public class MonitorRabbitMQ {
     //RabbitMQ的HTTP API——获取集群各个实例的状态信息，ip替换为自己部署相应实例的
     private static String RABBIT_NODES_STATUS_REST_URL = "http://192.168.13.111:15672/api/nodes";
@@ -389,14 +352,14 @@ public class MonitorRabbitMQ {
         try {
             //step1.获取rabbitmq集群各个节点实例的状态信息
             Map<String, ClusterStatus> clusterMap =
-                    fetchRabbtMQClusterStatus(RABBIT_NODES_STATUS_REST_URL, RABBIT_USER_NAME, RABBIT_USER_PWD);
+                fetchRabbtMQClusterStatus(RABBIT_NODES_STATUS_REST_URL, RABBIT_USER_NAME, RABBIT_USER_PWD);
             //step2.打印输出各个节点实例的状态信息
             for (Map.Entry entry : clusterMap.entrySet()) {
                 System.out.println(entry.getKey() + " : " + entry.getValue());
             }
             //step3.获取rabbitmq集群用户信息
             Map<String, User> userMap =
-                    fetchRabbtMQUsers(RABBIT_USERS_REST_URL, RABBIT_USER_NAME, RABBIT_USER_PWD);
+                fetchRabbtMQUsers(RABBIT_USERS_REST_URL, RABBIT_USER_NAME, RABBIT_USER_PWD);
             //step4.打印输出rabbitmq集群用户信息
             for (Map.Entry entry : userMap.entrySet()) {
                 System.out.println(entry.getKey() + " : " + entry.getValue());
@@ -482,9 +445,9 @@ public class MonitorRabbitMQ {
         @Override
         public String toString() {
             return "User{" +
-                    "name=" + name +
-                    ", tags=" + tags +
-                    '}';
+                "name=" + name +
+                ", tags=" + tags +
+                '}';
         }
         //GET/SET方法省略
         public String getName() {
@@ -575,41 +538,40 @@ public class MonitorRabbitMQ {
         @Override
         public String toString() {
             return "ClusterStatus{" +
-                    "diskFree=" + diskFree +
-                    ", diskLimit=" + diskLimit +
-                    ", fdUsed=" + fdUsed +
-                    ", fdTotal=" + fdTotal +
-                    ", socketUsed=" + socketUsed +
-                    ", socketTotal=" + socketTotal +
-                    ", memoryUsed=" + memoryUsed +
-                    ", memoryLimit=" + memoryLimit +
-                    ", procUsed=" + procUsed +
-                    ", procTotal=" + procTotal +
-                    '}';
+                "diskFree=" + diskFree +
+                ", diskLimit=" + diskLimit +
+                ", fdUsed=" + fdUsed +
+                ", fdTotal=" + fdTotal +
+                ", socketUsed=" + socketUsed +
+                ", socketTotal=" + socketTotal +
+                ", memoryUsed=" + memoryUsed +
+                ", memoryLimit=" + memoryLimit +
+                ", procUsed=" + procUsed +
+                ", procTotal=" + procTotal +
+                '}';
         }
     }
 }
 
 ```
 
-1. 启动测试
+### 2.4 Zabbix 监控RabbitMQ
 
-4、Zabbix 监控RabbitMQ
-Zabbix是一个基于WEB界面提供分布式系统监视以及网络监视功能的企业级开源解决方案,他也可以帮助我们搭建一个MQ集群的监控系统,同时提供预警等功能，但是由于其搭建配置要求比较高一般都是由运维人员负责搭建,感兴趣的同学可以访问https://www.zabbix.com/ 官网进行了解学习。
+Zabbix 是一个基于 WEB 界面提供分布式系统监视以及网络监视功能的企业级开源解决方案,他也可以帮助我们搭建一个MQ集群的监控系统,同时提供预警等功能，但是由于其搭建配置要求比较高一般都是由运维人员负责搭建,感兴趣的同学可以访问https://www.zabbix.com/ 官网进行了解学习。
 
-## RabbitMQ面试题分析
+## 3.RabbitMQ面试题分析
 
-面试题：1、Rabbitmq 为什么需要信道，为什么不是TCP直接通信
+面试题：
 
-1、TCP的创建和销毁，开销大，创建要三次握手，销毁要4次分手。
+Rabbitmq 为什么需要信道，为什么不是TCP直接通信
 
-2、如果不用信道，那应用程序就会TCP连接到Rabbit服务器，高峰时每秒成千上万连接就会造成资源的巨大浪费，而且==底层操作系统每秒处理tcp连接数也是有限制的，==必定造成性能瓶颈。
+- TCP的创建和销毁，开销大，创建要三次握手，销毁要4次分手
+- 如果不用信道，那应用程序就会TCP连接到Rabbit服务器，高峰时每秒成千上万连接就会造成资源的巨大浪费，而且==底层操作系统每秒处理tcp连接数也是有限制的，==必定造成性能瓶颈
+- 信道的原理是一条线程一条信道，多条线程多条信道同用一条TCP连接，一条TCP连接可以容纳无限的信道，即使每秒成千上万的请求也不会成为性能瓶颈
 
-3、信道的原理是一条线程一条信道，多条线程多条信道同用一条TCP连接，一条TCP连接可以容纳无限的信道，即使每秒成千上万的请求也不会成为性能瓶颈。
+queue 队列到底在消费者创建还是生产者创建？
 
-2：queue队列到底在消费者创建还是生产者创建？
-
-1： 一般建议是在rabbitmq操作面板创建。这是一种稳妥的做法。
-2：按照常理来说，确实应该消费者这边创建是最好，消息的消费是在这边。这样你承受一个后果，可能我生产在生产消息可能会丢失消息。
-3：在生产者创建队列也是可以，这样稳妥的方法，消息是不会出现丢失。
-4：如果你生产者和消费都创建的队列，谁先启动谁先创建，后面启动就覆盖前面的
+-  一般建议是在rabbitmq操作面板创建。这是一种稳妥的做法
+- 按照常理来说，确实应该消费者这边创建是最好，消息的消费是在这边。这样你承受一个后果，可能我生产在生产消息可能会丢失消息
+- 在生产者创建队列也是可以，这样稳妥的方法，消息是不会出现丢失
+- 如果你生产者和消费都创建的队列，谁先启动谁先创建，后面启动就覆盖前面的
