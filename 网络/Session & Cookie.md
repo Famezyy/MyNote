@@ -210,10 +210,10 @@ Payload 部分也是一个 Json 对象，用来存放实际需要传输的数据
 - iss (issuer)：签发人
 - exp (expiration time)：过期时间
 - sub (subject)：主题
-- aud (audience)：受众
-- nbf (Not Before)：生效时间
+- aud (audience)：接收 jwt 的一方
+- nbf (Not Before)：定义在什么时间之前，该 jwt 都是不可用的
 - iat (Issued At)：签发时间
-- jti (JWT ID)：编号
+- jti (JWT ID)：jwt 的唯一身份标识，用来作为一次性 token，保持幂等性
 
 当然除了官方提供的这几个字段我们也能够自己定义私有字段，下面就是一个例子
 
@@ -228,9 +228,11 @@ Payload 部分也是一个 Json 对象，用来存放实际需要传输的数据
 
 #### Signature
 
-Signature 部分是对前面的两部分的数据进行签名，防止数据篡改。
+这个部分需要 base64 加密后的 header 和 base64 加密后的 payload 使用。连接组成的字符串，然后通过 header 中声明的加密方式进行加盐 secret 组合加密，然后就构成了 jwt 的第三部分。
 
 首先需要定义一个秘钥，这个秘钥只有服务器才知道，不能泄露给用户，然后使用 Header 中指定的签名算法（默认情况是HMAC SHA256），算出签名以后将 Header、Payload、Signature 三部分拼成一个字符串，每个部分用`.`分割开来，就可以返给用户了。
+
+服务端会验证 token，如果验证通过就会从中获取信息。
 
 > HS256 可以使用单个密钥为给定的数据样本创建签名。当消息与签名一起传输时，接收方可以使用相同的密钥来验证签名是否与消息匹配。
 
@@ -248,7 +250,7 @@ compile('io.jsonwebtoken:jjwt:0.9.0')
 // 签名算法 ，将对token进行签名
 SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.HS256;
 // 通过秘钥签名JWT
-byte[] apiKeySecretBytes = DatatypeConverter.parseBase64Binary("SECRET");
+byte[] apiKeySecretBytes = DatatypeConverter.parseBase64Binary("SECRETkey");
 Key signingKey = new SecretKeySpec(apiKeySecretBytes, signatureAlgorithm.getJcaName());
 
 Map<String,Object> claimsMap = new HashMap<>();
