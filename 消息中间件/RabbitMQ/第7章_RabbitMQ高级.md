@@ -191,6 +191,7 @@
        @Autowired
        RabbitTemplate rabbitTemplate;
     
+       // 必须指定回调!
        @PostConstruct
        public void initRabbitTemplate(){
          rabbitTemplate.setConfirmCallback(this);
@@ -848,7 +849,7 @@ TCC 其实就是采用的补偿机制，其核心思想是：针对每个操作�
 
 通过本文我们总结并对比了几种分布式分解方案的优缺点，分布式事务本身是一个技术难题，是没有一种完美的方案应对所有场景的，具体还是要根据业务场景去抉择吧。阿里 RocketMQ 去实现的分布式事务，现在也有除了很多分布式事务的协调器，比如LCN等，大家可以多去尝试。
 
-### 6.2 具体实现
+### 6.2 可靠生产和消费的具体实现
 
 > **注意**
 >
@@ -1020,7 +1021,169 @@ class TaskService {
 
 #### 10.消息的定式重发
 
-### 6.3 总结
+### ==6.3 RPC调用实现==
+
+#### POJO类
+
+- User
+
+  ```java
+  @Data
+  @AllArgsConstructor
+  @NoArgsConstructor
+  public class User {
+      private int id;
+  }
+  ```
+
+- ReturnType
+
+  ```java
+  @Data
+  @AllArgsConstructor
+  @NoArgsConstructor
+  @ToString
+  public class ReturnType {
+      private int successCode;
+  }
+  ```
+
+#### 服务端实现
+
+- 配置文件：`application.properties`
+
+  ```properties
+  server.port=8080
+  spring.rabbitmq.addresses=192.168.11.101
+  spring.rabbitmq.port=5672
+  spring.rabbitmq.username=admin
+  spring.rabbitmq.password=admin
+  spring.rabbitmq.virtual-host=/
+  ```
+
+- 配置类
+
+  监听了`sms`队列，这个队列将会是客户端请求消息发送到的队列，配置了适配器，适配器中去调用服务，适配器返回的值就是服务端返回给客户端的RPC调用的结果
+
+  ```java
+  @Configuration
+  public class RabbitConf {
+  
+      @Autowired
+      ConsumerService consumerService;
+  
+      // 新建一个监听器用来监听 message 队列
+      @Bean
+      SimpleMessageListenerContainer simpleMessageListenerContainer(ConnectionFactory connectionFactory) {
+          SimpleMessageListenerContainer container = new SimpleMessageListenerContainer(connectionFactory);
+          // 设置监听队列名字
+          container.setQueueNames("rpc_message_queue");
+          // 新建一个适配器，传入 处理器 和 消息转换器
+          MessageListenerAdapter adapter = new MessageListenerAdapter(consumerService, new Jackson2JsonMessageConverter());
+          // 配置默认的处理方法名字
+          adapter.setDefaultListenerMethod("onMessage");
+          container.setMessageListener(adapter);
+  
+          return container;
+      }
+  }
+  ```
+
+- 处理器
+
+  处理器中调用具体的服务，返回结果
+
+  ```java
+  @Slf4j
+  @Service
+  public class ConsumerService {
+  
+      @Autowired
+      ObjectMapper objectMapper;
+  
+      public ReturnType onMessage(Map map) throws InterruptedException{
+          User user = objectMapper.convertValue(map, User.class);
+          log.info("body:" + user);
+          System.out.println("执行业务逻辑");
+          Thread.sleep(11000);
+          return new ReturnType(200);
+      }
+  }
+  ```
+
+  > - 使用 Jackson2JsonMessageConverter 处理器，客户端发送 JSON 类型数据，但是没有指定消息的`contentType`类型，那么 Jackson2JsonMessageConverter 就会将消息转换成`byte[]`类型的消息进行消费
+  > - 如果指定了`contentType`为`application/json`，那么消费端就会将消息转换成`Map`类型的消息进行消费
+  > - 如果指定了`contentType`为`application/json`，并且生产端是`List`类型的`JSON`格式，那么消费端就会将消息转换成`List`类型的消息进行消费
+
+#### 客户端实现
+
+- 配置文件 `application.properties`与客户端中的配置文件一致
+
+- 配置类
+
+  ```java
+  @Configuration
+  public class RabbitConf {
+  
+      public static final String RPC_EXCHANGE = "rpc_exchange";
+      public static final String RPC_MESSAGE_QUEUE = "rpc_message_queue";
+  
+      @Bean
+      DirectExchange rpcExchange() {
+          return new DirectExchange(RPC_EXCHANGE, true, false);
+      }
+  
+      @Bean
+      Queue messageQueue() {
+          return new Queue(RPC_MESSAGE_QUEUE, true, false, false);
+      }
+  
+      @Bean
+      Binding bindMessageQueue() {
+          return BindingBuilder.bind(messageQueue()).to(rpcExchange()).with(RPC_MESSAGE_QUEUE);
+      }
+  
+      @Bean
+      RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
+          RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory);
+          // 设置超时时间
+          rabbitTemplate.setReplyTimeout(10000);
+          return rabbitTemplate;
+      }
+  
+  }
+  ```
+
+- controller
+
+  ```java
+  public class ProducerController {
+  
+      @Autowired
+      RabbitTemplate rabbitTemplate;
+  
+      @Autowired
+      ObjectMapper objectMapper;
+  
+      @GetMapping("/makeOrder")
+      public ReturnType makeOrder(int message) throws JsonProcessingException {
+  
+          MessageProperties messageProperties = new MessageProperties();
+          messageProperties.setContentType("application/json");
+          User user = new User(message);
+          Message newMessage = MessageBuilder.withBody(objectMapper.writeValueAsBytes(user)).andProperties(messageProperties).build();
+  
+          // 客户端给消息队列发送消息，并返回响应结果
+          // 可以不传入 CorrelationID，底层会自动创建一个递增的 ID
+          Message result = rabbitTemplate.sendAndReceive(RabbitConf.RPC_EXCHANGE, RabbitConf.RPC_MESSAGE_QUEUE, newMessage);
+          String response = new String(result.getBody());
+  
+          return objectMapper.readValue(response, ReturnType.class);
+      }
+  }
+  ```
+
+### 6.4 总结
 
 基于 MQ 的分布式事务解决方案优点：
 
