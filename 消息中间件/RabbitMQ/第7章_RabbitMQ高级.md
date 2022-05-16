@@ -1083,7 +1083,10 @@ class TaskService {
           // 配置默认的处理方法名字
           adapter.setDefaultListenerMethod("onMessage");
           container.setMessageListener(adapter);
-  
+  		// 设置并发执行
+          container.setConcurrentConsumers(10);
+          container.setMaxConcurrentConsumers(10);
+          
           return container;
       }
   }
@@ -1114,6 +1117,27 @@ class TaskService {
   > - 使用 Jackson2JsonMessageConverter 处理器，客户端发送 JSON 类型数据，但是没有指定消息的`contentType`类型，那么 Jackson2JsonMessageConverter 就会将消息转换成`byte[]`类型的消息进行消费
   > - 如果指定了`contentType`为`application/json`，那么消费端就会将消息转换成`Map`类型的消息进行消费
   > - 如果指定了`contentType`为`application/json`，并且生产端是`List`类型的`JSON`格式，那么消费端就会将消息转换成`List`类型的消息进行消费
+  
+  > 多并发耶可以使用`@RabbitListener`实现
+  >
+  > - 配置`containerFactory`
+  >
+  >   ```java
+  >   @Bean("customContainerFactory")
+  >   public SimpleRabbitListenerContainerFactory containerFactory(SimpleRabbitListenerContainerFactoryConfigurer configurer, ConnectionFactory connectionFactory) {
+  >       SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
+  >       factory.setConcurrentConsumers(10);  //设置线程数
+  >       factory.setMaxConcurrentConsumers(10); //最⼤线程数
+  >       configurer.configure(factory, connectionFactory);
+  >       return factory;
+  >   }
+  >   ```
+  >
+  > - 在`@RabbitListener`注解中指定容器⼯⼚
+  >
+  >   ```java
+  >   @RabbitListener(queues = {"监听队列名"},containerFactory = "customContainerFactory"
+  >   ```
 
 #### 客户端实现
 
