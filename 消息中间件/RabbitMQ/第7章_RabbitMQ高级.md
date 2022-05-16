@@ -850,6 +850,10 @@ TCC 其实就是采用的补偿机制，其核心思想是：针对每个操作�
 
 ### 6.2 具体实现
 
+> **注意**
+>
+> 下面的案例只保证了生产者和消费者的**可靠生产**和**可靠消费**，并没有解决事务的回滚问题！
+
 分布式事务的完整架构图
 
 <img src="img/image-20220515204912047.png" alt="image-20220515204912047" style="zoom:67%;" />
@@ -862,37 +866,23 @@ TCC 其实就是采用的补偿机制，其核心思想是：针对每个操作�
 
 <img src="img/image-20220514200126332.png" alt="image-20220514200126332" style="zoom:67%;" />
 
-#### 2.事务回滚问题
+#### 2.事务生产者
 
 ```java
 @Service
 public class OrderService {
     @Autowired
     private OrderDataBaseService orderDataBaseService;
+    
+    @Autowired
+    private OrderMQService orderMQService;
+    
     // 创建订单
-    @Transactional(rollbackFor = Exception.class) // 订单创建整个方法添加事务
     public void createOrder(Order orderInfo) throws Exception {
         // 1: 订单信息--插入订单系统
         orderDataBaseService.saveOrder(orderInfo);
-        // 2：通過 Http 接口发送订单信息到运单系统
-        String result = dispatchHttpApi(orderInfo.getOrderId());
-        if(!"success".equals(result)) {
-            throw new Exception("订单创建失败,原因是运单接口调用失败!");
-        }
-    }
-    /**
-     *  模拟http请求接口发送，运单系统，将订单号传过去
-     */
-    private String dispatchHttpApi(String orderId) {
-        SimpleClientHttpRequestFactory factory  = new SimpleClientHttpRequestFactory();
-        // 链接超时 > 3秒
-        factory.setConnectTimeout(3000);
-        // 处理超时 > 2秒
-        factory.setReadTimeout(2000);
-        // 发送http请求
-        String url = "http://localhost:9000/dispatch/order?orderId="+orderId;
-        RestTemplate restTemplate = new RestTemplate(factory);//异常
-        String result = restTemplate.getForObject(url, String.class);
+        // 2：发送 MQ 消息
+        orderMQService.sendMessage(orderInfo);
     }
 }
 ```
