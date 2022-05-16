@@ -255,8 +255,8 @@
            // 4: 发送邮件，sms,短信
            System.out.println("用户：" + userId + ",购买了一个产品：" + productId + "保存订单是：" + orderId);
            // 发送消息
-           // 设置消息确认机制
-           rabbitTemplate.setConfirmCallback(messageConfirmCallback);
+           // 设置消息确认机制，配置类中设置了就不需要再设置了
+           // rabbitTemplate.setConfirmCallback(messageConfirmCallback);
            rabbitTemplate.convertAndSend(exchangeName, "email", orderId);
            rabbitTemplate.convertAndSend(exchangeName, "duanxin", orderId);
            return "success";
