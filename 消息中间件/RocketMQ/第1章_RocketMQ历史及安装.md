@@ -172,55 +172,53 @@ rocketmq:
 
    VIP 通道其实就是多监听一个端口用于接受处理消息，因为默认端口通道可能很多在用，为了防止某些很重要的业务堵塞，就再开一个端口处理。这对于老版本的 RocketMQ 有消息接收队列的时候，作用可能大一点，对于目前的 RocketMQ 的设计，作用没那么大了。所以，这个默认就不开启了，留着只是为了兼容老版本。
 
-2. **修改配置文件**
+2. ==修改配置文件==
 
-   记得 Linux 上修改文件权限：`chmod -R 777 /home/linux`
+   - 记得 Linux 上修改文件权限：`chmod -R 777 /home/linux`
 
-   RocketMQ 默认的虚拟机内存较大，启动 Broker 如果因为内存不足失败，需要**编辑如下两个配置文件**，修改 JVM 内存大小。（但是这个也仅仅是在测试环境中，RocketMQ 在生产上最低要求至少 8G 内存<官方推荐>才能确保 RocketMQ 的效果）
+   - RocketMQ 默认的虚拟机内存较大，启动 Broker 如果因为内存不足失败，需要**编辑如下两个配置文件**，修改 JVM 内存大小。（但是这个也仅仅是在测试环境中，RocketMQ 在生产上最低要求至少 8G 内存<官方推荐>才能确保 RocketMQ 的效果）
 
-   编辑`runbroker.sh`和`runserver.sh`修改默认`JVM`大小（windows 上对应 cmd 文件）
+     编辑`runbroker.sh`和`runserver.sh`修改默认`JVM`大小（windows 上对应 cmd 文件）
 
-   vi runbroker.sh      --broker 的配置
+     vi runbroker.sh      --broker 的配置
 
-   vi runserver.sh      --nameServer 的配置
+     vi runserver.sh      --nameServer 的配置
 
-   ```bash
-   JAVA_OPT="${JAVA_OPT} -server -Xms1024m -Xmx1024m -Xmn512m -XX:MetaspaceSize=128m -XX:MaxMetaspaceSize=320m"
-   ```
+     ```bash
+     JAVA_OPT="${JAVA_OPT} -server -Xms1024m -Xmx1024m -Xmn512m -XX:MetaspaceSize=128m -XX:MaxMetaspaceSize=320m"
+     ```
 
 **启动**
 
 在 RocketMQ 的架构中，都是需要先启动 NameServer 再启动 Broker 的。所以先启动 NameServer。
 
-- 启动 NameServer
+1. 启动 NameServer
 
-  进入至`MQ文件夹\bin`下，然后执行`nohup sh mqnamesrv &`，启动 NAMESERVER。
+   进入至`MQ文件夹\bin`下，然后执行`nohup sh mqnamesrv &`，启动 NAMESERVER。
 
-  查看日志的命令：`tail -f ~/logs/rocketmqlogs/namesrv.log`
+   查看日志的命令：`tail -f ~/logs/rocketmqlogs/namesrv.log`
 
-  <img src="img/image-20220516152708951.png" alt="image-20220516152708951" style="zoom: 67%;" />
+   <img src="img/image-20220516152708951.png" alt="image-20220516152708951" style="zoom: 67%;" />
 
-- 启动 Broker
+2. 启动 Broker
 
-  进入至`MQ文件夹\bin`下，启动 BROKER。
+   进入至`MQ文件夹\bin`下，启动 BROKER。
 
-  修改配置文件增加外网地址（你启动加载哪个配置文件就修改哪个，比如修改 broker.conf）
+   修改配置文件增加外网地址（你启动加载哪个配置文件就修改哪个，比如修改 broker.conf）
 
-  ```bash
-  brokerIP1=192.168.11.101
-  ```
+   ```bash
+   brokerIP1=192.168.11.101
+   ```
 
-  启动命令如下：
+   启动命令如下：
 
-  ```bash
-  nohup sh mqbroker -c ../conf/broker.conf -n 192.168.11.101:9876 autoCreateTopicEnable=true &  
-  ```
+   ```bash
+   nohup sh mqbroker -c ../conf/broker.conf -n 192.168.11.101:9876 autoCreateTopicEnable=true &  
+   ```
 
-  这样启动的服务器客户端可以自动创建主题。
+   这样启动的服务器客户端可以自动创建主题。查看日志的命令：`tail -f ~/logs/rocketmqlogs/broker.log`
 
-  查看日志的命令：`tail -f ~/logs/rocketmqlogs/broker.log`
-
-  <img src="img/image-20220516152759995.png" alt="image-20220516152759995" style="zoom:67%;" />
+   <img src="img/image-20220516152759995.png" alt="image-20220516152759995" style="zoom:67%;" />
 
 ##### 控制台插件
 

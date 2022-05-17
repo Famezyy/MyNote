@@ -455,6 +455,166 @@ DLX 也是一个正常的交换机，和一般的交换机没有区别，它能�
 
 
 
+## 4.延迟消息
+
+要实现 RabbitMQ 的消息队列延迟功能，一般采用官方提供的插件`rabbitmq_delayed_message_exchange`来实现。但 RabbitMQ 版本必须是`3.5.8`以上才支持该插件，否则得用其`死信`功能。
+
+> 设置 TTL 指定消息在延迟多久之后成为死信
+
+### 4.1 安装RabbitMQ延迟插件
+
+**检查插件**
+
+使用`rabbitmq-plugins list`命令查看 RabbitMQ 安装的插件
+
+**下载插件**
+
+如果没有安装插件，则直接访问官网进行下。
+
+官方下载地址：https://www.rabbitmq.com/community-plugins.html
+
+**安装插件**
+
+下载完成后，将其解压到 RabbitMQ 的 plugins 目录，如果系统已经配置 RabbitMQ 环境变量，则执行下面的命令进行安装。
+
+```bash
+rabbitmq-plugins enable rabbitmq_delayed_message_exchange
+```
+
+### 4.2 实现RabbitMQ消息队列延迟功能
+
+【示例】创建 SpringBoot 项目，实现 RabbitMQ 消息队列延迟功能。
+
+1. 使用 Maven 添加依赖文件
+
+   在 pom.xml 配置信息文件中，添加相关依赖文件：
+
+   ```xml
+   <!-- AMQP客户端 -->
+   <dependency>
+       <groupId>org.springframework.boot</groupId>
+       <artifactId>spring-boot-starter-amqp</artifactId>
+       <version>2.4.1</version>
+   </dependency>
+   ```
+
+2. RabbitMQ 的配置
+
+   在`application.yml`配置文件中配置 RabbitMQ 信息：
+
+   ```yaml
+   spring:
+     # 项目名称
+     application:
+       name: rabbitmq-delayed
+     # RabbitMQ服务配置
+     rabbitmq:
+       host: 127.0.0.1
+       port: 5672
+       username: guest
+       password: guest
+   ```
+
+3. RabbitMQ 配置类
+
+   ```java
+   @Configuration
+   public class RabbitMqConfig
+   {
+       public static final String DELAY_EXCHANGE_NAME = "delayed_exchange";
+       public static final String DELAY_QUEUE_NAME = "delay_queue_name";
+       public static final String DELAY_ROUTING_KEY = "delay_routing_key";
+   
+       @Bean
+       public CustomExchange delayExchange()
+       {
+           Map<String, Object> args = new HashMap<>();
+           // 配置交换机类型
+           args.put("x-delayed-type", "direct");
+           return new CustomExchange(DELAY_EXCHANGE_NAME, "x-delayed-message", true, false, args);
+       }
+   
+       @Bean
+       public Queue queue()
+       {
+           Queue queue = new Queue(DELAY_QUEUE_NAME, true);
+           return queue;
+       }
+   
+       @Bean
+       public Binding binding(Queue queue, CustomExchange delayExchange)
+       {
+           return BindingBuilder.bind(queue).to(delayExchange).with(DELAY_ROUTING_KEY).noargs();
+       }
+   }
+   ```
+
+4. 实现消息发送
+
+   实现消息发送，这里设置消息延迟 5s。
+
+   ```java
+   @Service
+   public class CustomSender
+   {
+       @Autowired
+       private RabbitTemplate rabbitTemplate;
+   
+       public void sendMsg(String msg)
+       {
+           SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+           System.out.println("消息发送时间：" + sdf.format(new Date()));
+           rabbitTemplate.convertAndSend(RabbitMqConfig.DELAY_EXCHANGE_NAME, RabbitMqConfig.DELAY_ROUTING_KEY, msg, 
+                                         new MessagePostProcessor(){
+                                             @Override
+                                             public Message postProcessMessage(Message message) throws AmqpException
+                                             {
+                                                 //消息延迟5秒
+                                                 message.getMessageProperties().setHeader("x-delay", 5000);
+                                                 return message;
+                                             }
+                                         });
+       }
+   }
+   ```
+
+5. 实现消息接收
+
+   ```java
+   @Component
+   public class CustomReceiver
+   {
+       @RabbitListener(queues = RabbitMqConfig.DELAY_QUEUE_NAME)
+       public void receive(String msg)
+       {
+           SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+           System.out.println(sdf.format(new Date())+msg);
+           System.out.println("Receiver：执行取消订单");
+       }
+   }
+   ```
+
+6. 测试发送延迟消息
+
+   ```java
+   @SpringBootTest
+   public class MQTest
+   {
+       @Autowired
+       private CustomSender customSender;
+    
+       @Test
+       public void send() throws Exception
+       {
+           //发送消息
+           customSender.sendMsg("支付超时，取消订单通知！");
+    
+           //程序延时15秒，否则程序立即执行完毕，则控制台无法看到消息队列延迟的结果
+           Thread.sleep(15000);
+       }
+   }
+   ```
+
 ## 4.持久化机制和内存磁盘的监控
 
 ### 4.1 RibbitMQ持久化
