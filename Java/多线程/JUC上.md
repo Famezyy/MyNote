@@ -1376,7 +1376,7 @@ public ThreadPoolExecutor(int corePoolSize, // 核心线程池大小
  * 四种拒绝策略：
  *
  * new ThreadPoolExecutor.AbortPolicy() 
- * 银行满了，还有人进来，不处理这个人的，抛出异常
+ * 银行满了，还有人进来，不处理这个人的，抛出异常，默认方法
  *
  * new ThreadPoolExecutor.CallerRunsPolicy() 
  * 哪来的去哪里！交由调用线程处理（例如 main 线程）

@@ -220,6 +220,20 @@ rocketmq:
 
    <img src="img/image-20220516152759995.png" alt="image-20220516152759995" style="zoom:67%;" />
 
+**关闭**
+
+- 关闭 namesrv
+
+  ```bash
+  ./mqshutdown namesrv
+  ```
+
+- 关闭 broker
+
+  ```bash
+  ./mqshutdown broker
+  ```
+
 ##### 控制台插件
 
 **下载**
@@ -416,19 +430,19 @@ mvn install -Dmaven.test.skip=true
   - 4 是读
   - 6 是读写
 
-状态 查询消息投递状态（投递到哪些 broker / 哪些 queue / 多少量等）
+`状态` 查询消息投递状态（投递到哪些 broker / 哪些 queue / 多少量等）
 
-路由 查看消息的路由（现在你发这个主题的消息会发往哪些 broker，对应 broker 的 queue 信息）
+`路由` 查看消息的路由（现在你发这个主题的消息会发往哪些 broker，对应 broker 的 queue 信息）
 
-CONSUMER 管理（这个 topic 都被哪些 group 消费了，消费情况何如）
+`CONSUMER管理` 这个 topic 都被哪些 group 消费了，消费情况何如
 
-topic 配置（查看变更当前的配置）
+`topic配置` 查看变更当前的配置
 
-发送消息（向这个主题发送一个测试消息）
+`发送消息` 向这个主题发送一个测试消息
 
-重置消费位点(分为在线和不在线两种情况，不过都需要检查重置是否成功)
+`重置消费位点` 分为在线和不在线两种情况，不过都需要检查重置是否成功
 
-删除主题 （会删除掉所有 broker 以及 namesrv 上的主题配置和路由信息）
+`删除主题` 会删除掉所有 broker 以及 namesrv 上的主题配置和路由信息
 
 <img src="img/image-20220516152243919.png" alt="image-20220516152243919" style="zoom: 80%;" />
 
@@ -445,19 +459,19 @@ topic 配置（查看变更当前的配置）
 - clusterName 创建在哪几个集群上
 - brokerName 创建在哪几个broker上
 - groupName 消费组名字
-- consumeEnable // 是否可以消费 FALSE 的话将无法进行消费
-- consumeBroadcastEnable // 是否可以广播消费
-- retryQueueNums // 重试队列的大小
-- brokerId // 正常情况从哪消费
-- whichBrokerWhenConsumeSlowly // 出问题了从哪消费
+- consumeEnable 是否可以消费 FALSE 的话将无法进行消费
+- consumeBroadcastEnable 是否可以广播消费
+- retryQueueNums 重试队列的大小
+- brokerId 正常情况从哪消费
+- whichBrokerWhenConsumeSlowly 出问题了从哪消费
 
-终端 在线的消费客户端查看，包括版本订阅信息和消费模式
+`终端` 在线的消费客户端查看，包括版本订阅信息和消费模式
 
-消费详情 对应消费组的消费明细查看，这个消费组订阅的所有 Topic 的消费情况，每个 queue 对应的消费 client 查看（包括 Retry 消息）
+`消费详情` 对应消费组的消费明细查看，这个消费组订阅的所有 Topic 的消费情况，每个 queue 对应的消费 client 查看（包括 Retry 消息）
 
-配置 查看变更消费组的配置
+`配置` 查看变更消费组的配置
 
-删除 在指定的 broker 上删除消费组
+`删除` 在指定的 broker 上删除消费组
 
 <img src="img/image-20220516152416112.png" alt="image-20220516152416112" style="zoom: 80%;" />
 

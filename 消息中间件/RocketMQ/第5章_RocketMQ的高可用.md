@@ -348,30 +348,40 @@ nohup java -jar rocketmq-console-ng-2.0.0.jar &
 
 RocketMQ 目前不支持把 Slave 自动转成 Master，如果机器资源不足， 需要把 Slave 转成 Master，则要手动停止 Slave 角色的 Broker，更改配置文件，用新的配置文件启动 Broker。（跟 RabbitMQ 相同）
 
-### 高可用消息生产流程
+### 2.1 高可用消息生产流程
 
 <img src="img/image-20220517193721234.png" alt="image-20220517193721234" style="zoom:80%;" />
 
 1. TopicA 创建在双主中，BrokerA 和 BrokerB 中，每一个 Broker 中有 4 个队列
+
 2. 选择队列时默认是使用轮训的方式，比如发送一条消息 A 时，选择 BrokerA 中的 Q4
+
 3. 如果发送成功，消息 A 发结束
+
 4. 如果消息发送失败，默认会采用重试机制
 
-```java
-// 同步模式下内部尝试发送消息的最大次数  默认值是2
-producer.setRetryTimesWhenSendFailed(2);
-// 异步模式下内部尝试发送消息的最大次数 默认值是2
-producer.setRetryTimesWhenSendAsyncFailed(2);
-```
+   ```java
+   // 同步模式下内部尝试发送消息的最大次数  默认值是2
+   producer.setRetryTimesWhenSendFailed(2);
+   // 异步模式下内部尝试发送消息的最大次数 默认值是2
+   producer.setRetryTimesWhenSendAsyncFailed(2);
+   ```
 
 5. 如果发生了消息发送失败，这里有一个规避策略（默认配置）：
 
-   默认不启用 Broker 故障延迟机制（规避策略）：如果是 BrokerA 宕机，上一次路由选择的是 BrokerA 中的 Q4，那么再次重发的队列选择是 BrokerA 中的 Q1。但是这里的问题就是消息发送很大可能再次失败，引发再次重复失败，带来不必要的性能损耗。
-
-   注意，这里的规避仅仅只针对消息重试，例如在一次消息发送过程中如果遇到消息发送失败，规避 BrokerA，但是在下一次消息发送时，即再次调用 DefaultMQProducer 的 send 方法发送消息时，还是会选择 BrokerA 的消息进行发送，只有继续发送失败后，重试时才规避 BrokerA。
-
+   ```java
+   // 默认 false
+   producer.setSendLatencyFaultEnable(true);
+   ```
+   
+   设置为`false`：默认值，不开启，延迟规避策略只在重试时生效，例如在一次消息发送过程中如果遇到消息发送失败，规避 broekr-a，但是在下一次消息发送时，即再次调用 DefaultMQProducer 的 send 方法发送消息时，还是会选择 broker-a 的消息进行发送，只要继续发送失败后，重试时才会规避 broker-a。
+   
+   设置为`true`：开启延迟规避机制，一旦消息发送失败会将 broker-a “悲观”地认为在接下来的一段时间内该 Broker 不可用，在为未来某一段时间内所有的客户端不会向该 Broker 发送消息。这个延迟时间就是通过 notAvailableDuration、latencyMax 共同计算的，首先先计算本次消息发送失败所耗的时延，然后对应 latencyMax 中哪个区间，即计算在 latencyMax 的下标，然后返回 notAvailableDuration 同一个下标对应的延迟值。
+   
+   > 温馨提示：如果所有的 Broker 都触发了故障规避，并且 Broker 只是那一瞬间压力大，那岂不是明明存在可用的 Broker，但经过你这样规避，反倒是没有 Broker 可用来，那岂不是更糟糕了？针对这个问题，会退化到队列轮循机制，即不考虑故障规避这个因素，按自然顺序进行选择进行兜底。
+   
    为什么会默认这么设计？
-
+   
    - 某一时间段，从 NameServer 中读到的路由中包含了不可用的主机
    - 不正常的路由信息也是只是一个短暂的时间而已
    - 生产者每隔 30s 更新一次路由信息，而 NameServer 认为 broker 不可用需要经过 120s。
@@ -380,32 +390,17 @@ producer.setRetryTimesWhenSendAsyncFailed(2);
 
 所以生产者要发送时认为 broker 不正常（从 NameServer 拿到）和实际 Broker 不正常有延迟。
 
-```java
-// 默认 false
-producer.setSendLatencyFaultEnable(true);
-```
-
-开启延迟规避机制，一旦消息发送失败（不是重试的）会将 BrokerA “悲观”地认为在接下来的一段时间内该 Broker 不可用，在为未来某一段时间内所有的客户端不会向该 Broker 发送消息。这个延迟时间就是通过 notAvailableDuration、latencyMax 共同计算的，就首先先计算本次消息发送失败所耗的时间，然后对应 latencyMax 中哪个区间，即计算在 latencyMax 的下标，然后返回 notAvailableDuration 同一个下标对应的延迟值。
-
-这个里面涉及到一个算法，源码部分进行详细讲解。
-
-比如：在发送失败后，在接下来的固定时间（比如 5 分钟）内，发生错误的 BrokeA 中的队列将不再参加队列负载，发送时只选择 BrokerB 服务器上的队列。
-
-如果所有的 Broker 都触发了故障规避，并且 Broker 只是那一瞬间压力大，那岂不是明明存在可用的 Broker，但经过你这样规避，反倒是没有 Broker 可用来，那岂不是更糟糕了。所以 RocketMQ 默认不启用 Broker 故障延迟机制。
-
 ## 3.消息消费的高可用机制
 
 ### 3.1 主从的高可用原理
 
-在 Consumer 的配置文件中，并不需要设置是从 Master 读还是从 Slave 读，当 Master 不可用或者繁忙的时候，Consumer 会被**自动切换**到从 Slave 读。有了自动切换 Consumer 这种机制，当一个 Master 角色的机器出现故障后，Consumer 仍然可以从 Slave 读取消息，不影响 Consumer 程序。这就达到了消费端的高可用性。
+在 Consumer 的配置文件中，并不需要设置是从 Master 读还是从 Slave 读，当 Master 不可用或者繁忙的时候，Consumer 会被自动切换到从 Slave 读。有了自动切换 Consumer 这种机制，当一个 Master 角色的机器出现故障后，Consumer 仍然可以从 Slave 读取消息，不影响 Consumer 程序。这就达到了消费端的高可用性。
 
 Master 不可用这个很容易理解，那什么是 Master 繁忙呢？
 
 这个繁忙其实是 RocketMQ 服务器的内存不够导致的。
 
-源码分析：**org.apache.rocketmq.store. DefaultMessageStore#getMessage**方法
-
-<img src="img/image-20220517193908848.png" alt="image-20220517193908848" style="zoom: 67%;" />
+![img](img/clip_image002-16528792167181.jpg)
 
 当前需要拉取的消息已经超过常驻内存的大小，表示主服务器繁忙，此时才建议从从服务器拉取。
 
@@ -413,17 +408,15 @@ Master 不可用这个很容易理解，那什么是 Master 繁忙呢？
 
 消费端如果发生消息失败，没有提交成功，消息默认情况下会进入重试队列中。
 
-<img src="img/image-20220517193921988.png" alt="image-20220517193921988" style="zoom: 67%;" />
+![img](file:///C:/Users/ADMINI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image004.jpg)
 
-**注意重试队列的名字其实是跟消费groupID有关，不是主题，因为一个主题可以有多个群组消费，所以要注意**
+**注意重试队列的名字其实是跟消费群组有关，不是主题，因为一个主题可以有多个群组消费，所以要注意**
 
-<img src="img/image-20220517193940985.png" alt="image-20220517193940985" style="zoom:80%;" />
+![img](file:///C:/Users/ADMINI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image006.jpg)
 
 #### 1.顺序消息的重试
 
 对于顺序消息，当消费者消费消息失败后，消息队列 RocketMQ 会自动不断进行消息重试（每次间隔时间为 1 秒），这时，应用会出现消息消费被阻塞的情况。因此，在使用顺序消息时，务必保证应用能够及时监控并处理消费失败的情况，避免阻塞现象的发生。
-
- 所以 consume 消费消息失败时，不能返回 reconsume later，这样会导致乱序，应该返回`suspend_current_queue_a_moment`，意思是先等一会，一会儿再处理这批消息，而不是放到重试队列里。
 
 #### 2.无序消息的重试
 
@@ -444,27 +437,23 @@ Master 不可用这个很容易理解，那什么是 Master 繁忙呢？
 
 如果消息重试 16 次后仍然失败，消息将不再投递。如果严格按照上述重试时间间隔计算，某条消息在一直消费失败的前提下，将会在接下来的 4 小时 46 分钟之内进行 16 次重试，超过这个时间范围消息将不再重试投递。
 
-> 注意
->
-> 一条消息无论重试多少次，这些重试消息的`Message ID`不会改变。
+注意： 一条消息无论重试多少次，这些重试消息的 Message ID 不会改变。
 
 #### 4.重试配置
 
 集群消费方式下，消息消费失败后期望消息重试，需要在消息监听器接口的实现中明确进行配置（三种方式任选一种）：
 
-- 返回`RECONSUME_LATER`（推荐）
-
-  <img src="img/image-20220517194027712.png" alt="image-20220517194027712" style="zoom: 50%;" />
-
+- 返回 RECONSUME_LATER （推荐）
 - 返回 Null
-
-  <img src="img/image-20220517194034252.png" alt="image-20220517194034252" style="zoom: 50%;" />
-
 - 抛出异常
 
-  <img src="img/image-20220517194036871.png" alt="image-20220517194036871" style="zoom: 50%;" />
+![img](file:///C:/Users/ADMINI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image008.jpg)
 
-集群消费方式下，消息失败后期望消息不重试，需要捕获消费逻辑中可能抛出的异常，最终返回`CONSUME_SUCCESS`，此后这条消息将不会再重试。
+![img](img/clip_image010.jpg)
+
+![img](file:///C:/Users/ADMINI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image012.jpg)
+
+集群消费方式下，消息失败后期望消息不重试，需要捕获消费逻辑中可能抛出的异常，最终返回 CONSUME_SUCCESS，此后这条消息将不会再重试。
 
 #### 5.自定义消息最大重试次数
 
@@ -474,62 +463,21 @@ Master 不可用这个很容易理解，那什么是 Master 繁忙呢？
 
 - 最大重试次数大于 16 次，超过 16 次的重试时间间隔均为每次 2 小时
 
-<img src="img/image-20220517194043763.png" alt="image-20220517194043763" style="zoom:50%;" />
+![img](img/clip_image014.jpg)
 
-> 消息最大重试次数的设置对**相同 Group ID 下的所有 Consumer 实例有效**。
->
-> 即如果只对相同 Group ID 下两个 Consumer 实例中的其中一个设置了 MaxReconsumeTimes，那么该配置对两个 Consumer 实例均生效。
->
-> 配置采用覆盖的方式生效，即最后启动的 Consumer 实例会覆盖之前的启动实例的配置。
+消息最大重试次数的设置对相同 Group ID 下的所有 Consumer 实例有效。
 
-#### 6.消息幂等
+如果只对相同 Group ID 下两个 Consumer 实例中的其中一个设置了 MaxReconsumeTimes，那么该配置对两个 Consumer 实例均生效。
 
-RocketMQ并不保证一条消息只会被推送一次，因此一条消息就有可能被消费多次。消费者在接收到消息以后，有必要根据业务上的唯一 Key 对消息做幂等处理的必要性。
-
-**消费幂等的必要性**
-
-在互联网应用中，尤其在网络不稳定的情况下，RocketMQ 的消息有可能会出现重复，这个重复简单可以概括为以下情况：
-
-- 发送时消息重复
-
-  当一条消息已被成功发送到服务端并完成持久化，此时出现了网络闪断或者客户端宕机，导致服务端对客户端应答失败。 如果此时生产者意识到消息发送失败并尝试再次发送消息，消费者后续会收到两条内容相同并且 Message ID 也相同的消息。
-
-- 投递时消息重复
-
-  消息消费的场景下，消息已投递到消费者并完成业务处理，当客户端给服务端反馈应答的时候网络闪断。 为了保证消息至少被消费一次，消息队列 RocketMQ 的服务端将在网络恢复后再次尝试投递之前已被处理过的消息，消费者后续会收到两条内容相同并且 Message ID 也相同的消息。
-
-- 负载均衡时消息重复（包括但不限于网络抖动、Broker 重启以及订阅方应用重启）
-
-  当 RocketMQ 的 Broker 或客户端重启、扩容或缩容时，会触发 Rebalance，此时消费者可能会收到重复消息。
-
-**处理方式**
-
-因为 Message ID 有可能出现冲突（重复）的情况，所以真正安全的幂等处理，不建议以 Message ID 作为处理依据。 最好的方式是以业务唯一标识作为幂等处理的关键依据，而业务的唯一标识可以通过消息 Key 进行设置：
-
-```java
-Message message = new Message();
-message.setKey("ORDERID_100");
-SendResult sendResult = producer.send(message);
-```
-
-消费方收到消息时可以根据消息的 Key 进行幂等处理：
-
-```java
-consumer.subscribe("test", "*", new MessageListener() {
-    public Action consume(Message message, ConsumeContext context) {
-        String key = message.getKey()
-        // 根据业务唯一标识的 key 做幂等处理
-    }
-});
-```
+配置采用覆盖的方式生效，即最后启动的 Consumer 实例会覆盖之前的启动实例的配置。
 
 ### 3.3 死信队列
 
 当一条消息初次消费失败，消息队列 RocketMQ 会自动进行消息重试；达到最大重试次数后，若消费依然失败，则表明消费者在正常情况下无法正确地消费该消息，此时，消息队列 RocketMQ 不会立刻将消息丢弃，而是将其发送到该消费者对应的特殊队列中。
 
-在消息队列 RocketMQ 中，这种正常情况下无法被消费的消息称为`死信消息`（Dead-Letter Message），存储死信消息的特殊队列称为死信队列（Dead-Letter Queue）。
+在消息队列 RocketMQ 中，这种正常情况下无法被消费的消息称为死信消息（Dead-Letter Message），存储死信消息的特殊队列称为死信队列（Dead-Letter Queue）。
 
-#### 死信特性
+#### 1.死信特性
 
 **死信消息具有以下特性：**
 
@@ -543,25 +491,15 @@ consumer.subscribe("test", "*", new MessageListener() {
 - 如果一个 Group ID 未产生死信消息，消息队列 RocketMQ 不会为其创建相应的死信队列
 - 一个死信队列包含了对应 Group ID 产生的所有死信消息，不论该消息属于哪个 Topic
 
-#### 查看死信消息
+#### 2.查看死信消息
 
 在控制台查询出现死信队列的主题信息
 
-<img src="img/image-20220517194055087.png" alt="image-20220517194055087" style="zoom: 50%;" />
+![img](file:///C:/Users/ADMINI~1/AppData/Local/Temp/msohtmlclip1/01/clip_image016.jpg)
 
 在消息界面根据主题查询死信消息
 
-<img src="img/image-20220517204927503.png" alt="image-20220517204927503" style="zoom:67%;" />
-
 选择重新发送消息
-
-- 单条重发
-
-  在消息队列 RocketMQ 版控制台按任意方式查询到死信消息后，在某条死信消息的**操作**列，单击**更多**，然后在下拉列表中，选择**重新发送**，重发该条死信消息。
-
-- 批量重发
-
-  在消息队列 RocketMQ 版控制台按 Group ID 查询到死信消息后，勾选目标死信消息，然后单击**批量重新发送消息**，重新发送所有勾选的死信消息。
 
 一条消息进入死信队列，意味着某些因素导致消费者无法正常消费该消息，因此，通常需要您对其进行特殊处理。排查可疑因素并解决问题后，可以在消息队列 RocketMQ 控制台重新发送该消息，让消费者重新消费一次。
 
