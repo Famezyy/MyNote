@@ -1223,7 +1223,7 @@ class TaskService {
 
 - 配置类
 
-  监听了`sms`队列，这个队列将会是客户端请求消息发送到的队列，配置了适配器，适配器中去调用服务，适配器返回的值就是服务端返回给客户端的RPC调用的结果
+  监听了`rpc_message_queue`队列，这个队列将会是客户端请求消息发送到的队列，配置了适配器，适配器中去调用服务，适配器返回的值就是服务端返回给客户端的RPC调用的结果
 
   ```java
   @Configuration
@@ -1278,7 +1278,7 @@ class TaskService {
   > - 如果指定了`contentType`为`application/json`，那么消费端就会将消息转换成`Map`类型的消息进行消费
   > - 如果指定了`contentType`为`application/json`，并且生产端是`List`类型的`JSON`格式，那么消费端就会将消息转换成`List`类型的消息进行消费
   
-  > 多并发耶可以使用`@RabbitListener`实现
+  > 多并发也可以使用`@RabbitListener`实现
   >
   > - 配置`containerFactory`
   >
@@ -1296,7 +1296,7 @@ class TaskService {
   > - 在`@RabbitListener`注解中指定容器⼯⼚
   >
   >   ```java
-  >   @RabbitListener(queues = {"监听队列名"},containerFactory = "customContainerFactory"
+  >   @RabbitListener(queues = {"监听队列名"},containerFactory = "customContainerFactory")
   >   ```
 
 #### 客户端实现

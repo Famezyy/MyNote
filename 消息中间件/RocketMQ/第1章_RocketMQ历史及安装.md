@@ -312,7 +312,7 @@ http://rocketmq.apache.org/dowloading/releases/
 导入后执行 Maven 命令 install
 
 ```bash
-mvn install -Dmaven.test.skip=true
+mvn install -D maven.test.skip=true
 ```
 
 <img src="img/image-20220516163159034.png" alt="image-20220516163159034" style="zoom:67%;" />

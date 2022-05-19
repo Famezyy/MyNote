@@ -300,7 +300,7 @@ flushDiskType=ASYNC_FLUSH
   tail -f ~/logs/rocketmqlogs/namesrv.log
   ```
 
--  在机器 B，启动第 2 台 NameServer：103 服务器进入至`MQ文件夹/bin`下：然后执行相同命令
+-  在机器 B，启动第 2 台 NameServer：103 服务器进入至`MQ文件夹/bin`下执行相同命令
 
 ##### II 启动Broker
 
