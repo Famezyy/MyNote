@@ -1038,7 +1038,7 @@ public void exist() throws Exception {
 
 ---
 
-## 五、ZooKeeper 分布式锁案例
+## <a id="distributionLock" style=color:#273849>五、ZooKeeper 分布式锁案例</a>
 
 > 什么叫做分布式锁？
 >
