@@ -557,3 +557,69 @@ public class ScheduledTaskV3 {
 }
 ```
 
+## 10.配置元数据的应用
+
+在使用Spring Boot开发应用的时候，你是否有发现这样的情况：自定义属性是有高量背景的，鼠标放上去，有一个`Cannot resolve configuration property`的配置警告。
+
+<img src="img/pasted-416.png" alt="img" style="zoom:80%;" />
+
+如果不对于这个警告觉得烦，想要去掉，那么可以通过设置来去除：
+
+<img src="img/pasted-417.png" alt="img" style="zoom:80%;" />
+
+但是，我的建议是不要去掉，因为这个警告正好可以通过高亮来区分你的自定义配置以及框架配置，可以让你快速的分辨哪些是自定义的。
+
+如果你实在想去掉，那么也不建议用上面说的方法，而是建议通过完善配置元数据的方式来完成。所以，今天就来具体说说配置元数据的应用！
+
+### 啥是配置元数据？
+
+我们不妨打开一个已经创建好的Spring Boot项目，查看一下它的Spring Boot依赖包，可以找到如下图的一个json文件：
+
+<img src="img/pasted-418.png" alt="img" style="zoom:80%;" />
+
+这里报错的就是配置的元数据信息。有没有发现这些`name`的值都很熟悉？其中`description`是不是也很熟悉？对，这些就是我们常用的Spring Boot原生配置的元数据信息。
+
+这下知道配置元数据可以用来做啥了吧？它可以帮助IDE来完成配置联想和配置提示的展示。
+
+而我们自定义配置之所以会报警告，同时也没有提示信息，就是因为没有这个元数据的配置文件！
+
+### 配置元数据的自动生成
+
+既然知道了原理，那么接下来我们尝试用一下配置元数据试试！
+
+**第一步**：创建一个配置类，定义一个自定义配置
+
+```java
+@Data
+@Configuration
+@ConfigurationProperties(prefix = "com.didispace")
+public class DidiProperties {
+    
+    /**
+     * 这是一个测试配置
+     */
+    private String from;
+
+}
+```
+
+**第二步**：在`pom.xml`中添加自动生成配置元数据的依赖
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-configuration-processor</artifactId>
+</dependency>
+```
+
+**第三步**：`mvn install`下这个项目。
+
+此时我们可以在工程target目录下找到元数据文件：
+
+<img src="img/pasted-419.png" alt="img" style="zoom:80%;" />
+
+同时，我们在配置文件中尝试编写这个自定义的配置项时，可以看到编译器给出了联想和提示：
+
+<img src="img/pasted-420.png" alt="img" style="zoom:80%;" />
+
+并且，编写完配置之后，也没有高亮警告了！
