@@ -478,7 +478,7 @@ dubbo 本身并不是一个服务软件。它其实就是一个 jar 包能够帮
 >     public static void main(String[] args) throws IOException {
 >         ClassPathXmlApplicationContext context = 
 >             new ClassPathXmlApplicationContext("classpath:spring-beans.xml");
->               
+>                 
 >         System.in.read(); 
 >     }
 >     ```
@@ -851,7 +851,6 @@ Dubbo 缺省会在启动时检查依赖的服务是否可用，不可用时会�
   UserService userService;
   ```
 
-  
 
 ### 4.超时时间
 

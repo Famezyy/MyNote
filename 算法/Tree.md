@@ -123,10 +123,10 @@ class Solution {
 
     public List<Integer> postorderTraversal(TreeNode root) {
         TreeNode cur, pre = null;
-        Deque<TreeNode> stack = new LinkedList<>();
         List<Integer> result = new ArrayList<>();
-        stack.push(root);
         if (root == null) return result;
+        Deque<TreeNode> stack = new LinkedList<>();
+        stack.push(root);
 
         while (!stack.isEmpty()) {
             cur = stack.peek();
