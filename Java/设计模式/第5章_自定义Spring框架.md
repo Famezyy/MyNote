@@ -2,9 +2,9 @@
 
 ## 1.spring使用回顾
 
-自定义spring框架前，先回顾一下spring框架的使用，从而分析spring的核心，并对核心功能进行模拟。
+自定义 spring 框架前，先回顾一下 spring 框架的使用，从而分析 spring 的核心，并对核心功能进行模拟。
 
-* 数据访问层。定义UserDao接口及其子实现类
+* 数据访问层。定义 UserDao 接口及其子实现类
 
   ```java
   public interface UserDao {
@@ -19,7 +19,7 @@
   }
   ```
 
-* 业务逻辑层。定义UserService接口及其子实现类
+* 业务逻辑层。定义 UserService 接口及其子实现类
 
   ```java
   public interface UserService {
@@ -41,7 +41,7 @@
   }
   ```
 
-* 定义UserController类，使用main方法模拟controller层
+* 定义 UserController 类，使用 main 方法模拟 controller 层
 
   ```java
   public class UserController {
@@ -56,7 +56,7 @@
   }
   ```
 
-* 编写配置文件。在类路径下编写一个名为ApplicationContext.xml的配置文件
+* 编写配置文件。在类路径下编写一个名为 ApplicationContext.xml 的配置文件
 
   ```java
   <?xml version="1.0" encoding="UTF-8"?>
@@ -83,35 +83,35 @@
 
 通过上面代码及结果可以看出：
 
-* userService对象是从applicationContext容器对象获取到的，也就是userService对象交由spring进行管理。
-* 上面结果可以看到调用了UserDao对象中的add方法，也就是说UserDao子实现类对象也交由spring管理了。
-* UserService中的userDao变量我们并没有进行赋值，但是可以正常使用，说明spring已经将UserDao对象赋值给了userDao变量。
+* userService 对象是从 applicationContext 容器对象获取到的，也就是 userService 对象交由 spring 进行管理。
+* 上面结果可以看到调用了 UserDao 对象中的 add 方法，也就是说 UserDao 子实现类对象也交由 spring 管理了。
+* UserService 中的 userDao 变量我们并没有进行赋值，但是可以正常使用，说明 spring 已经将 UserDao 对象赋值给了 userDao 变量。
 
-上面三点体现了Spring框架的IOC（Inversion of Control）和DI（Dependency Injection, DI）
+上面三点体现了 Spring 框架的 IOC（Inversion of Control）和 DI（Dependency Injection, DI）。
 
 ## 2.spring核心功能结构
 
-Spring大约有20个模块，由1300多个不同的文件构成。这些模块可以分为:
+Spring 大约有 20 个模块，由 1300 多个不同的文件构成。这些模块可以分为：
 
-核心容器、AOP和设备支持、数据访问与集成、Web组件、通信报文和集成测试等，下面是 Spring 框架的总体架构图：
+核心容器、AOP 和设备支持、数据访问与集成、Web 组件、通信报文和集成测试等，下面是 Spring 框架的总体架构图：
 
-<img src="img/image-20200429111324770.png" style="zoom:40%;" />
+<img src="img/image-20200429111324770.png" style="zoom: 67%;" />
 
 
 
-核心容器由 beans、core、context 和 expression（Spring Expression Language，SpEL）4个模块组成。
+核心容器由**beans**、**core**、**context**和**expression**（Spring Expression Language，SpEL）4个模块组成。
 
-* spring-beans和spring-core模块是Spring框架的核心模块，包含了控制反转（Inversion of Control，IOC）和依赖注入（Dependency Injection，DI）。BeanFactory使用控制反转对应用程序的配置和依赖性规范与实际的应用程序代码进行了分离。BeanFactory属于延时加载，也就是说在实例化容器对象后并不会自动实例化Bean，只有当Bean被使用时，BeanFactory才会对该 Bean 进行实例化与依赖关系的装配。
-* spring-context模块构架于核心模块之上，扩展了BeanFactory，为它添加了Bean生命周期控制、框架事件体系及资源加载透明化等功能。此外，该模块还提供了许多企业级支持，如邮件访问、远程访问、任务调度等，ApplicationContext 是该模块的核心接口，它的超类是 BeanFactory。与BeanFactory不同，ApplicationContext实例化后会自动对所有的单实例Bean进行实例化与依赖关系的装配，使之处于待用状态。
-* spring-context-support模块是对Spring IoC容器及IoC子容器的扩展支持。
-* spring-context-indexer模块是Spring的类管理组件和Classpath扫描组件。
-* spring-expression 模块是统一表达式语言（EL）的扩展模块，可以查询、管理运行中的对象，同时也可以方便地调用对象方法，以及操作数组、集合等。它的语法类似于传统EL，但提供了额外的功能，最出色的要数函数调用和简单字符串的模板函数。EL的特性是基于Spring产品的需求而设计的，可以非常方便地同Spring IoC进行交互。
+* `spring-beans`和`spring-core`模块是`Spring`框架的核心模块，包含了**控制反转**（Inversion of Control，IOC）和依赖注入（Dependency Injection，DI）。`BeanFactory`使用控制反转对应用程序的配置和依赖性规范与实际的应用程序代码进行了分离。`BeanFactory`属于延时加载，也就是说在实例化容器对象后并不会自动实例化`Bean`，只有当`Bean`被使用时，`BeanFactory`才会对该`Bean`进行实例化与依赖关系的装配。
+* `spring-context`模块构架于核心模块之上，扩展了`BeanFactory`，为它添加了`Bean`生命周期控制、框架事件体系及资源加载透明化等功能。此外，该模块还提供了许多企业级支持，如邮件访问、远程访问、任务调度等，`ApplicationContext`是该模块的核心接口，它的超类是`BeanFactory`。与`BeanFactory`不同，`ApplicationContext`实例化后会自动对所有的单实例`Bean`进行实例化与依赖关系的装配，使之处于待用状态。
+* `spring-context-support`模块是对`Spring IOC`容器及`IOC`子容器的扩展支持。
+* `spring-context-indexer`模块是`Spring`的类管理组件和`Classpath`扫描组件。
+* `spring-expression`模块是统一表达式语言（EL）的扩展模块，可以查询、管理运行中的对象，同时也可以方便地调用对象方法，以及操作数组、集合等。它的语法类似于传统`EL`，但提供了额外的功能，最出色的要数函数调用和简单字符串的模板函数。`EL`的特性是基于`Spring`产品的需求而设计的，可以非常方便地同`Spring IOC`进行交互。
 
 ### bean概述
 
-Spring 就是面向 `Bean` 的编程（BOP,Bean Oriented Programming），Bean 在 Spring 中处于核心地位。Bean对于Spring的意义就像Object对于OOP的意义一样，Spring中没有Bean也就没有Spring存在的意义。Spring IoC容器通过配置文件或者注解的方式来管理bean对象之间的依赖关系。
+Spring 就是面向`Bean`的编程（BOP，Bean Oriented Programming），Bean 在 Spring 中处于核心地位。Bean 对于 Spring 的意义就像 Object 对于 OOP 的意义一样，Spring 中没有 Bean 也就没有 Spring 存在的意义。Spring IoC 容器通过配置文件或者注解的方式来管理 bean 对象之间的依赖关系。
 
-spring中bean用于对一个类进行封装。如下面的配置：
+spring 中 Bean 用于对一个类进行封装，如下面的配置：
 
 ```xml
 <bean id="userService" class="com.itheima.service.impl.UserServiceImpl">
@@ -120,32 +120,30 @@ spring中bean用于对一个类进行封装。如下面的配置：
 <bean id="userDao" class="com.itheima.dao.impl.UserDaoImpl"></bean>
 ```
 
-为什么Bean如此重要呢？
+为什么 Bean 如此重要呢？
 
-* spring 将bean对象交由一个叫IOC容器进行管理。
-* bean对象之间的依赖关系在配置文件中体现，并由spring完成。
-
-
+* spring 将 bean 对象交由一个叫 IOC 容器进行管理。
+* bean 对象之间的依赖关系在配置文件中体现，并由 spring 完成。
 
 ## 3.Spring IOC相关接口分析
 
 ### 3.1 BeanFactory解析
 
-Spring中Bean的创建是典型的工厂模式，这一系列的Bean工厂，即IoC容器，为开发者管理对象之间的依赖关系提供了很多便利和基础服务，在Spring中有许多IoC容器的实现供用户选择，其相互关系如下图所示。
+Spring中Bean 的创建是典型的工厂模式，这一系列的 Bean 工厂，即 IOC 容器，为开发者管理对象之间的依赖关系提供了很多便利和基础服务，在 Spring 中有许多 IOC 容器的实现供用户选择，其相互关系如下图所示。
 
 <img src="img/image-20200429185050396.png" style="zoom:60%;" />
 
-其中，BeanFactory作为最顶层的一个接口，定义了IoC容器的基本功能规范，BeanFactory有三个重要的子接口：ListableBeanFactory、HierarchicalBeanFactory和AutowireCapableBeanFactory。但是从类图中我们可以发现最终的默认实现类是DefaultListableBeanFactory，它实现了所有的接口。
+其中，BeanFactory 作为最顶层的一个接口，定义了 IOC 容器的基本功能规范，BeanFactory 有三个重要的子接口：**ListableBeanFactory**、**HierarchicalBeanFactory**和**AutowireCapableBeanFactory**。但是从类图中我们可以发现最终的默认实现类是**DefaultListableBeanFactory**，它实现了所有的接口。
 
 那么为何要定义这么多层次的接口呢？
 
-每个接口都有它的使用场合，主要是为了区分在Spring内部操作过程中对象的传递和转化，对对象的数据访问所做的限制。例如，
+每个接口都有它的使用场合，主要是为了区分在 Spring 内部操作过程中对象的传递和转化，对对象的数据访问所做的限制。例如，
 
-* ListableBeanFactory接口表示这些Bean可列表化。
-* HierarchicalBeanFactory表示这些Bean 是有继承关系的，也就是每个 Bean 可能有父 Bean
-* AutowireCapableBeanFactory 接口定义Bean的自动装配规则。
+* `ListableBeanFactory`接口表示这些 Bean 可列表化。
+* `HierarchicalBeanFactory`表示这些 Bean 是有继承关系的，也就是每个 Bean 可能有父 Bean
+* `AutowireCapableBeanFactory`接口定义 Bean 的自动装配规则。
 
-这三个接口共同定义了Bean的集合、Bean之间的关系及Bean行为。最基本的IoC容器接口是BeanFactory，来看一下它的源码：
+这三个接口共同定义了 Bean 的集合、Bean 之间的关系及 Bean 行为。最基本的 IOC 容器接口是 BeanFactory，来看一下它的源码：
 
 ```java
 public interface BeanFactory {
@@ -187,8 +185,6 @@ BeanFactory有一个很重要的子接口，就是ApplicationContext接口，该
 * ClasspathXmlApplicationContext : 根据类路径加载xml配置文件，并创建IOC容器对象。
 * FileSystemXmlApplicationContext ：根据系统路径加载xml配置文件，并创建IOC容器对象。
 * AnnotationConfigApplicationContext ：加载注解类配置，并创建IOC容器。
-
-
 
 ### 3.2 BeanDefinition解析
 
@@ -239,8 +235,6 @@ public interface BeanDefinitionReader {
 }
 ```
 
-
-
 ### 3.4 BeanDefinitionRegistry解析
 
 BeanDefinitionReader用来解析bean定义，并封装BeanDefinition对象，而我们定义的配置文件中定义了很多bean标签，所以就有一个问题，解析的BeanDefinition对象存储到哪儿？答案就是BeanDefinition的注册中心，而该注册中心顶层接口就是BeanDefinitionRegistry。
@@ -290,8 +284,6 @@ public interface BeanDefinitionRegistry extends AliasRegistry {
   ```java
   private final Map<String, BeanDefinition> beanDefinitionMap = new ConcurrentHashMap<>(64);
   ```
-
-
 
 ### 3.5 创建容器
 

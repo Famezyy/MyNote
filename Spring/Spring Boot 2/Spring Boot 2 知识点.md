@@ -124,7 +124,11 @@ private HandlerMethodArgumentResolver getArgumentResolver(MethodParameter parame
 
 ---
 
-## 3.事务传播行为
+## 3.事务
+
+Spring 中并没有提供事务，只是提供了对数据库事务的一个管理的封装。开发人员不需要关系事务的提交和回滚，更加聚焦在业务开发上。且主要针对单个数据库的多个数据表的操作。没有提供分布式事务的场景支持。
+
+### 事务传播行为
 
 用来描述这样一个现象：`methodA`开启了一个事务，调用了`methodB`，`methodB`是继续在`methodA`的事务中进行还是开启一个新的事物。
 
@@ -207,7 +211,19 @@ public void methodB() {
 
 ---
 
-## 6.注入 Bean 的七种方式
+## 6.Bean
+
+Spring 中的核心功能是 IOC 容器，本质上就是一个 Bean 的容器，或者说是一个 Bean 的工厂，它能够根据 xml 中声明的 Bean 的配置进行 Bean 的加载和初始化，通过 BeanFactory 生产需要的各种 Bean。
+
+- **BeanFactory**
+
+  是所有 Spring Bean 容器的顶级接口，为 Spring 容器定义了一套规范，并提供像`getBean`等方法从容器中获取指定的 Bean 实例。同时提供解决 Bean 之间依赖注入的能力，也就是所谓的 DI（依赖注入）。
+
+- **FactoryBean**
+
+  是一个工厂 Bean 接口，创建自定义 Bean 的一种方式，一般用于复杂 Bean 的创建。我们可以自定义一个 Bean，然后存放到 IOC 容器中。其中有个重要的方法`getObject()`，用来实现动态构建 Bean 的一个过程。
+
+### 注入 Bean 的七种方式
 
 - 使用`xml`的方式声明`Bean`的定义，`Spring容器`在启动时会加载并解析这个 xml，把 Bean 装载到`IOC容器`中
 - 使用`@ComponentScan`注解扫描声明了`@Controller`、`@Service`、`@Repository`、`@COmponent`注解的类
