@@ -109,7 +109,7 @@ Spring 大约有 20 个模块，由 1300 多个不同的文件构成。这些模
 
 ### bean概述
 
-Spring 就是面向`Bean`的编程（BOP，Bean Oriented Programming），Bean 在 Spring 中处于核心地位。Bean 对于 Spring 的意义就像 Object 对于 OOP 的意义一样，Spring 中没有 Bean 也就没有 Spring 存在的意义。Spring IoC 容器通过配置文件或者注解的方式来管理 bean 对象之间的依赖关系。
+Spring 就是面向`Bean`的编程（BOP，Bean Oriented Programming），Bean 在 Spring 中处于核心地位。Bean 对于 Spring 的意义就像 Object 对于 OOP 的意义一样，Spring 中没有 Bean 也就没有 Spring 存在的意义。Spring IOC 容器通过配置文件或者注解的方式来管理 bean 对象之间的依赖关系。
 
 spring 中 Bean 用于对一个类进行封装，如下面的配置：
 
@@ -133,15 +133,15 @@ Spring中Bean 的创建是典型的工厂模式，这一系列的 Bean 工厂，
 
 <img src="img/image-20200429185050396.png" style="zoom:60%;" />
 
-其中，BeanFactory 作为最顶层的一个接口，定义了 IOC 容器的基本功能规范，BeanFactory 有三个重要的子接口：**ListableBeanFactory**、**HierarchicalBeanFactory**和**AutowireCapableBeanFactory**。但是从类图中我们可以发现最终的默认实现类是**DefaultListableBeanFactory**，它实现了所有的接口。
+其中，`BeanFactory`作为最顶层的一个接口，**定义了 IOC 容器的基本功能规范**，BeanFactory 有三个重要的子接口：`ListableBeanFactory`、`HierarchicalBeanFactory`和`AutowireCapableBeanFactory`。但是从类图中我们可以发现最终的默认实现类是`DefaultListableBeanFactory`，它实现了所有的接口。
 
 那么为何要定义这么多层次的接口呢？
 
 每个接口都有它的使用场合，主要是为了区分在 Spring 内部操作过程中对象的传递和转化，对对象的数据访问所做的限制。例如，
 
-* `ListableBeanFactory`接口表示这些 Bean 可列表化。
-* `HierarchicalBeanFactory`表示这些 Bean 是有继承关系的，也就是每个 Bean 可能有父 Bean
-* `AutowireCapableBeanFactory`接口定义 Bean 的自动装配规则。
+* `ListableBeanFactory`接口：表示这些 Bean 可列表化。
+* `HierarchicalBeanFactory`接口：表示这些 Bean 是有继承关系的，也就是每个 Bean 可能有父 Bean。
+* `AutowireCapableBeanFactory`接口：定义 Bean 的自动装配规则。
 
 这三个接口共同定义了 Bean 的集合、Bean 之间的关系及 Bean 行为。最基本的 IOC 容器接口是 BeanFactory，来看一下它的源码：
 
@@ -174,42 +174,42 @@ public interface BeanFactory {
 }
 ```
 
-在BeanFactory里只对IoC容器的基本行为做了定义，根本不关心你的Bean是如何定义及怎样加载的。正如我们只关心能从工厂里得到什么产品，不关心工厂是怎么生产这些产品的。
+在 BeanFactory 里只对 IOC 容器的基本行为做了定义，根本不关心你的 Bean 是如何定义及怎样加载的。正如我们只关心能从工厂里得到什么产品，不关心工厂是怎么生产这些产品的。
 
-BeanFactory有一个很重要的子接口，就是ApplicationContext接口，该接口主要来规范容器中的bean对象是非延时加载，即在创建容器对象的时候就对象bean进行初始化，并存储到一个容器中。
+BeanFactory 有一个很重要的子接口，就是 ApplicationContext 接口，该接口主要来规范容器中的 Bean 对象是非延时加载，即在创建容器对象的时候就对象 Bean 进行初始化，并存储到一个容器中。
 
 <img src="img/image-20200430220155371.png" style="zoom:60%;" />
 
-要知道工厂是如何产生对象的，我们需要看具体的IoC容器实现，Spring提供了许多IoC容器实现，比如：
+要知道工厂是如何产生对象的，我们需要看具体的IOC容器实现，Spring提供了许多IOC容器实现，比如：
 
-* ClasspathXmlApplicationContext : 根据类路径加载xml配置文件，并创建IOC容器对象。
-* FileSystemXmlApplicationContext ：根据系统路径加载xml配置文件，并创建IOC容器对象。
-* AnnotationConfigApplicationContext ：加载注解类配置，并创建IOC容器。
+* `ClasspathXmlApplicationContext`：根据类路径加载 xml 配置文件，并创建 IOC 容器对象。
+* `FileSystemXmlApplicationContext`：根据系统路径加载 xml 配置文件，并创建 IOC 容器对象。
+* `AnnotationConfigApplicationContext`：加载注解类配置，并创建 IOC 容器。
 
 ### 3.2 BeanDefinition解析
 
-Spring IoC容器管理我们定义的各种Bean对象及其相互关系，而Bean对象在Spring实现中是以BeanDefinition来描述的，如下面配置文件
+Spring IOC 容器管理我们定义的各种 Bean 对象及其相互关系，而 Bean 对象在 Spring 实现中是以`BeanDefinition`来**描述和封装**的，如下面配置文件
 
 ```xml
 <bean id="userDao" class="com.itheima.dao.impl.UserDaoImpl"></bean>
 
+<!--
 bean标签还有很多属性：
 	scope、init-method、destory-method等。
+-->
 ```
 
 其继承体系如下图所示。
 
 <img src="img/image-20200429204239868.png" style="zoom:60%;" />
 
-
-
 ### 3.3 BeanDefinitionReader解析
 
-Bean的解析过程非常复杂，功能被分得很细，因为这里需要被扩展的地方很多，必须保证足够的灵活性，以应对可能的变化。Bean的解析主要就是对Spring配置文件的解析。这个解析过程主要通过BeanDefinitionReader来完成，看看Spring中BeanDefinitionReader的类结构图，如下图所示。
+Bean 的解析过程非常复杂，功能被分得很细，因为这里需要被扩展的地方很多，必须保证足够的灵活性，以应对可能的变化。**Bean的解析**主要就是对 Spring 配置文件的解析。这个解析过程主要通过`BeanDefinitionReader`来完成，看看 Spring 中`BeanDefinitionReader`的类结构图，如下图所示。
 
 <img src="img/image-20200429204700956.png" style="zoom:60%;" />
 
-看看BeanDefinitionReader接口定义的功能来理解它具体的作用：
+看看`BeanDefinitionReader`接口定义的功能来理解它具体的作用：
 
 ```java
 public interface BeanDefinitionReader {
@@ -237,7 +237,7 @@ public interface BeanDefinitionReader {
 
 ### 3.4 BeanDefinitionRegistry解析
 
-BeanDefinitionReader用来解析bean定义，并封装BeanDefinition对象，而我们定义的配置文件中定义了很多bean标签，所以就有一个问题，解析的BeanDefinition对象存储到哪儿？答案就是BeanDefinition的注册中心，而该注册中心顶层接口就是BeanDefinitionRegistry。
+**BeanDefinitionReader用来解析Bean定义，并封装BeanDefinition对象**，而我们定义的配置文件中定义了很多 bean 标签，所以就有一个问题，**解析的 BeanDefinition 对象存储**到哪儿？答案就是 BeanDefinition 的注册中心，而该注册中心顶层接口就是`BeanDefinitionRegistry`。
 
 ```java
 public interface BeanDefinitionRegistry extends AliasRegistry {
@@ -267,19 +267,19 @@ public interface BeanDefinitionRegistry extends AliasRegistry {
 
 <img src="img/image-20200429211132185.png" style="zoom:60%;" />
 
-从上面类图可以看到BeanDefinitionRegistry接口的子实现类主要有以下几个：
+从上面类图可以看到 BeanDefinitionRegistry 接口的子实现类主要有以下几个：
 
-* DefaultListableBeanFactory
+* `DefaultListableBeanFactory`
 
-  在该类中定义了如下代码，就是用来注册bean
+  在该类中定义了如下代码，就是用来注册 Bean
 
   ```java
   private final Map<String, BeanDefinition> beanDefinitionMap = new ConcurrentHashMap<>(256);
   ```
 
-* SimpleBeanDefinitionRegistry
+* `SimpleBeanDefinitionRegistry`
 
-  在该类中定义了如下代码，就是用来注册bean
+  在该类中定义了如下代码，就是用来注册 Bean
 
   ```java
   private final Map<String, BeanDefinition> beanDefinitionMap = new ConcurrentHashMap<>(64);
@@ -287,11 +287,11 @@ public interface BeanDefinitionRegistry extends AliasRegistry {
 
 ### 3.5 创建容器
 
-ClassPathXmlApplicationContext对Bean配置资源的载入是从refresh（）方法开始的。refresh（）方法是一个模板方法，规定了 IoC 容器的启动流程，有些逻辑要交给其子类实现。它对 Bean 配置资源进行载入，ClassPathXmlApplicationContext通过调用其父类AbstractApplicationContext的refresh（）方法启动整个IoC容器对Bean定义的载入过程。
+`ClassPathXmlApplicationContext`对`Bean`配置资源的载入是从`refresh()`方法开始的。`refresh()`方法是一个模板方法，规定了 IOC 容器的启动流程，有些逻辑要交给其子类实现。它对 Bean 配置资源进行载入，`ClassPathXmlApplicationContext`通过调用其父类`AbstractApplicationContext`的`refresh()`方法启动整个 IOC 容器对 Bean 定义的载入过程。
 
 ## 4.自定义SpringIOC
 
-现要对下面的配置文件进行解析，并自定义Spring框架的IOC对涉及到的对象进行管理。
+现要对下面的配置文件进行解析，并自定义 Spring 框架的 IOC 对涉及到的对象进行管理。
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -307,7 +307,7 @@ ClassPathXmlApplicationContext对Bean配置资源的载入是从refresh（）方
 
 #### 1.PropertyValue类
 
-用于封装bean的属性，体现到上面的配置文件就是封装bean标签的子标签property标签数据。
+用于封装 bean 的属性，体现到上面的配置文件就是封装 bean 标签的子标签 property 标签数据。
 
 ```java
 public class PropertyValue {
@@ -319,7 +319,7 @@ public class PropertyValue {
   public PropertyValue() {
   }
 
-  public PropertyValue(String name, String ref,String value) {
+  public PropertyValue(String name, String ref, String value) {
     this.name = name;
     this.ref = ref;
     this.value = value;
@@ -351,11 +351,9 @@ public class PropertyValue {
 }
 ```
 
-
-
 #### 2.MutablePropertyValues类
 
-一个bean标签可以有多个property子标签，所以再定义一个MutablePropertyValues类，用来存储并管理多个PropertyValue对象。
+一个 bean 标签可以有多个 property 子标签，所以再定义一个 MutablePropertyValues 类，用来存储并管理多个 PropertyValue 对象。
 
 ```java
 public class MutablePropertyValues implements Iterable<PropertyValue> {
@@ -370,10 +368,12 @@ public class MutablePropertyValues implements Iterable<PropertyValue> {
         this.propertyValueList = (propertyValueList != null ? propertyValueList : new ArrayList<PropertyValue>());
     }
 
+    //获取所有 PropertyValue 对象，返回数组形式
     public PropertyValue[] getPropertyValues() {
         return this.propertyValueList.toArray(new PropertyValue[0]);
     }
 
+    //根据 name 属性名获取 PropertyValue 对象
     public PropertyValue getPropertyValue(String propertyName) {
         for (PropertyValue pv : this.propertyValueList) {
             if (pv.getName().equals(propertyName)) {
@@ -392,11 +392,12 @@ public class MutablePropertyValues implements Iterable<PropertyValue> {
         return this.propertyValueList.isEmpty();
     }
 
+    //添加获取所有 PropertyValue 对象
     public MutablePropertyValues addPropertyValue(PropertyValue pv) {
         for (int i = 0; i < this.propertyValueList.size(); i++) {
             PropertyValue currentPv = this.propertyValueList.get(i);
             if (currentPv.getName().equals(pv.getName())) {
-                this.propertyValueList.set(i, new PropertyValue(pv.getName(),pv.getRef(), pv.getValue()));
+                this.propertyValueList.set(i, new PropertyValue(pv.getName(), pv.getRef(), pv.getValue()));
                 return this;
             }
         }
@@ -410,17 +411,14 @@ public class MutablePropertyValues implements Iterable<PropertyValue> {
 }
 ```
 
-
-
 #### 3.BeanDefinition类
 
-BeanDefinition类用来封装bean信息的，主要包含id（即bean对象的名称）、class（需要交由spring管理的类的全类名）及子标签property数据。
+BeanDefinition 类用来封装 bean 信息的，主要包含 id（即 bean 对象的名称）、class（需要交由 spring 管理的类的全类名）及子标签 property 数据。
 
 ```java
 public class BeanDefinition {
     private String id;
     private String className;
-
     private MutablePropertyValues propertyValues;
 
     public BeanDefinition() {
@@ -453,22 +451,21 @@ public class BeanDefinition {
 }
 ```
 
-
-
 ### 4.2 定义注册表相关类
 
 #### 1.BeanDefinitionRegistry接口
 
-BeanDefinitionRegistry接口定义了注册表的相关操作，定义如下功能：
+BeanDefinitionRegistry 接口定义了注册表的相关操作，定义如下功能：
 
-* 注册BeanDefinition对象到注册表中
-* 从注册表中删除指定名称的BeanDefinition对象
-* 根据名称从注册表中获取BeanDefinition对象
-* 判断注册表中是否包含指定名称的BeanDefinition对象
-* 获取注册表中BeanDefinition对象的个数
-* 获取注册表中所有的BeanDefinition的名称
+* 注册 BeanDefinition 对象到注册表中
+* 从注册表中删除指定名称的 BeanDefinition 对象
+* 根据名称从注册表中获取 BeanDefinition 对象
+* 判断注册表中是否包含指定名称的 BeanDefinition 对象
+* 获取注册表中 BeanDefinition 对象的个数
+* 获取注册表中所有的 BeanDefinition 的名称
 
 ```java
+//注册表对象
 public interface BeanDefinitionRegistry {
 
     //注册BeanDefinition对象到注册表中
@@ -488,15 +485,14 @@ public interface BeanDefinitionRegistry {
 }
 ```
 
-
-
 #### 2.SimpleBeanDefinitionRegistry类
 
-该类实现了BeanDefinitionRegistry接口，定义了Map集合作为注册表容器。
+该类实现了 BeanDefinitionRegistry 接口，定义了 Map 集合作为注册表容器。
 
 ```java
 public class SimpleBeanDefinitionRegistry implements BeanDefinitionRegistry {
 
+    //用来存储 BeanDefinition 对象，IOC 容器
     private Map<String, BeanDefinition> beanDefinitionMap = new HashMap<String, BeanDefinition>();
 
     @Override
@@ -526,21 +522,19 @@ public class SimpleBeanDefinitionRegistry implements BeanDefinitionRegistry {
 
     @Override
     public String[] getBeanDefinitionNames() {
-        return beanDefinitionMap.keySet().toArray(new String[1]);
+        return beanDefinitionMap.keySet().toArray(new String[0]);
     }
 }
 ```
-
-
 
 ### 4.3 定义解析器相关类
 
 #### 1.BeanDefinitionReader接口
 
-BeanDefinitionReader是用来解析配置文件并在注册表中注册bean的信息。定义了两个规范：
+BeanDefinitionReader 是用来解析配置文件并在注册表中注册 bean 的信息。定义了两个规范：
 
 * 获取注册表的功能，让外界可以通过该对象获取注册表对象。
-* 加载配置文件，并注册bean数据。
+* 加载配置文件，并注册 bean 数据。
 
 ```java
 public interface BeanDefinitionReader {
@@ -554,7 +548,7 @@ public interface BeanDefinitionReader {
 
 #### 2.XmlBeanDefinitionReader类
 
-XmlBeanDefinitionReader类是专门用来解析xml配置文件的。该类实现BeanDefinitionReader接口并实现接口中的两个功能。
+XmlBeanDefinitionReader 类是专门用来解析 xml 配置文件的。该类实现 BeanDefinitionReader 接口并实现接口中的两个功能。
 
 ```java
 public class XmlBeanDefinitionReader implements BeanDefinitionReader {
@@ -562,7 +556,7 @@ public class XmlBeanDefinitionReader implements BeanDefinitionReader {
     private BeanDefinitionRegistry registry;
 
     public XmlBeanDefinitionReader() {
-        this.registry = new SimpleBeanDefinitionRegistry();
+        registry = new SimpleBeanDefinitionRegistry();
     }
 
     @Override
@@ -573,47 +567,62 @@ public class XmlBeanDefinitionReader implements BeanDefinitionReader {
     @Override
     public void loadBeanDefinitions(String configLocation) throws Exception {
 
+        //获取类路径下的配置文件的字节输入流
         InputStream is = this.getClass().getClassLoader().getResourceAsStream(configLocation);
+        //引入 dom4j jar 包解析 XML 文件
         SAXReader reader = new SAXReader();
         Document document = reader.read(is);
+        //获取根标签对象（beans）
         Element rootElement = document.getRootElement();
         //解析bean标签
         parseBean(rootElement);
     }
 
+    /**
+        <beans>
+            <bean id="userService" class="com.itheima.service.impl.UserServiceImpl">
+                <property name="userDao" ref="userDao"></property>
+            </bean>
+            <bean id="userDao" class="com.itheima.dao.impl.UserDaoImpl"></bean>
+        </beans>
+     */
+    
     private void parseBean(Element rootElement) {
 
         List<Element> elements = rootElement.elements();
         for (Element element : elements) {
+            //获取 id 和 className
             String id = element.attributeValue("id");
             String className = element.attributeValue("class");
+            //创建 BeanDefinition 并传入值
             BeanDefinition beanDefinition = new BeanDefinition();
             beanDefinition.setId(id);
             beanDefinition.setClassName(className);
+            //获取 bean 标签下的所有 property 标签
             List<Element> list = element.elements("property");
             MutablePropertyValues mutablePropertyValues = new MutablePropertyValues();
+            //解析 property 标签
             for (Element element1 : list) {
                 String name = element1.attributeValue("name");
                 String ref = element1.attributeValue("ref");
                 String value = element1.attributeValue("value");
-                PropertyValue propertyValue = new PropertyValue(name,ref,value);
+                PropertyValue propertyValue = new PropertyValue(name, ref, value);
                 mutablePropertyValues.addPropertyValue(propertyValue);
             }
+            //将 property 标签对象传入该 bean 的 BeanDefinition 对象
             beanDefinition.setPropertyValues(mutablePropertyValues);
-
-            registry.registerBeanDefinition(id,beanDefinition);
+			//将 BeanDefinition 注册到注册表中
+            registry.registerBeanDefinition(id, beanDefinition);
         }
     }
 }
 ```
 
-
-
 ### 4.4 IOC容器相关类
 
 #### 1.BeanFactory接口
 
-在该接口中定义IOC容器的统一规范即获取bean对象。
+在该接口中定义 IOC 容器的统一规范即获取 bean 对象。
 
 ```java
 public interface BeanFactory {
@@ -626,10 +635,10 @@ public interface BeanFactory {
 
 #### 2.ApplicationContext接口
 
-该接口的所以的子实现类对bean对象的创建都是非延时的，所以在该接口中定义 `refresh()` 方法，该方法主要完成以下两个功能：
+该接口的所以的子实现类对 bean 对象的创建都是非延时的，所以在该接口中定义`refresh()`方法，该方法主要完成以下两个功能：
 
-* 加载配置文件。
-* 根据注册表中的BeanDefinition对象封装的数据进行bean对象的创建。
+* 加载配置文件
+* 根据注册表中的 BeanDefinition 对象封装的数据进行 bean 对象的创建
 
 ```java
 public interface ApplicationContext extends BeanFactory {
@@ -640,11 +649,11 @@ public interface ApplicationContext extends BeanFactory {
 
 #### 3.AbstractApplicationContext类
 
-* 作为ApplicationContext接口的子类，所以该类也是非延时加载，所以需要在该类中定义一个Map集合，作为bean对象存储的容器。
+* 作为 ApplicationContext 接口的子类，所以该类也是非延时加载，所以需要在该类中定义一个 Map 集合，作为 bean 对象存储的容器。
 
-* 声明BeanDefinitionReader类型的变量，用来进行xml配置文件的解析，符合单一职责原则。
+* 声明 BeanDefinitionReader 类型的变量，用来进行 xml 配置文件的解析，符合单一职责原则。
 
-  BeanDefinitionReader类型的对象创建交由子类实现，因为只有子类明确到底创建BeanDefinitionReader哪儿个子实现类对象。
+  BeanDefinitionReader 类型的对象创建交由子类实现，因为只有子类明确到底创建 BeanDefinitionReader 哪儿个子实现类对象。
 
 ```java
 public abstract class AbstractApplicationContext implements ApplicationContext {
@@ -667,29 +676,28 @@ public abstract class AbstractApplicationContext implements ApplicationContext {
 
     //bean的初始化
     private void finishBeanInitialization() throws Exception {
+        //获取注册类
         BeanDefinitionRegistry registry = beanDefinitionReader.getRegistry();
         String[] beanNames = registry.getBeanDefinitionNames();
-
         for (String beanName : beanNames) {
-            BeanDefinition beanDefinition = registry.getBeanDefinition(beanName);
-            getBean(beanName);
+            getBean(beanName); //用到了模板方法
         }
     }
 }
 ```
 
-> 注意：该类finishBeanInitialization()方法中调用getBean()方法使用到了模板方法模式。
+> 注意：该类`finishBeanInitialization()`方法中调用 getBean() 方法使用到了模板方法模式。
 
 #### 4.ClassPathXmlApplicationContext类
 
-该类主要是加载类路径下的配置文件，并进行bean对象的创建，主要完成以下功能：
+该类主要是加载类路径下 XML 格式的配置文件，并进行 bean 对象的创建，主要完成以下功能：
 
-* 在构造方法中，创建BeanDefinitionReader对象。
-* 在构造方法中，调用refresh()方法，用于进行配置文件加载、创建bean对象并存储到容器中。
-* 重写父接口中的getBean()方法，并实现依赖注入操作。
+* 在构造方法中，创建`BeanDefinitionReader`对象。
+* 在构造方法中，调用 refresh() 方法，用于进行配置文件加载、创建 bean 对象并存储到容器中。
+* 重写父接口中的 getBean() 方法，并实现依赖注入操作。
 
 ```java
-public class ClassPathXmlApplicationContext extends AbstractApplicationContext{
+public class ClassPathXmlApplicationContext extends AbstractApplicationContext {
 
     public ClassPathXmlApplicationContext(String configLocation) {
         this.configLocation = configLocation;
@@ -711,37 +719,45 @@ public class ClassPathXmlApplicationContext extends AbstractApplicationContext{
             return obj;
         }
 
+        //获取 BeanDefinition 对象
         BeanDefinitionRegistry registry = beanDefinitionReader.getRegistry();
         BeanDefinition beanDefinition = registry.getBeanDefinition(name);
         if(beanDefinition == null) {
             return null;
         }
+        //通过反射创建对象
         String className = beanDefinition.getClassName();
         Class<?> clazz = Class.forName(className);
         Object beanObj = clazz.newInstance();
+        //获取所有 property 并依赖注入
         MutablePropertyValues propertyValues = beanDefinition.getPropertyValues();
         for (PropertyValue propertyValue : propertyValues) {
             String propertyName = propertyValue.getName();
             String value = propertyValue.getValue();
             String ref = propertyValue.getRef();
+            //注入引用类型
             if(ref != null && !"".equals(ref)) {
-
                 Object bean = getBean(ref);
-                String methodName = StringUtils.getSetterMethodNameByFieldName(propertyName);
+                //自定义获取对应属性的 setter 方法名
+                String methodName = getSetterMethodNameByFieldName(propertyName);
                 Method[] methods = clazz.getMethods();
                 for (Method method : methods) {
                     if(method.getName().equals(methodName)) {
-                        method.invoke(beanObj,bean);
+                        //执行 beanObj 的 method，传入 bean
+                        method.invoke(beanObj, bean);
+                        break;
                     }
                 }
             }
 
+            //注入基本类型
             if(value != null && !"".equals(value)) {
                 String methodName = StringUtils.getSetterMethodNameByFieldName(propertyName);
                 Method method = clazz.getMethod(methodName, String.class);
-                method.invoke(beanObj,value);
+                method.invoke(beanObj, value);
             }
         }
+        //放入 bean 容器中
         singletonObjects.put(name,beanObj);
         return beanObj;
     }
@@ -755,10 +771,29 @@ public class ClassPathXmlApplicationContext extends AbstractApplicationContext{
         }
         return null;
     }
+    
+    private String getSetterMethodByFileIdName(String fieldName) {
+        String methodName = "set" + fieldName.substring(0, 1).toUpperCase() + fieldName.sbuString(1);
+        return methodName;
+    }
 }
 ```
 
-### 4.5 自定义Spring IOC总结
+### 4.5 测试
+
+```java
+public class Test {
+    public static void main(String[] args) {
+        ApplicationContext applicationContext = new ClasspathXmlApplicationContext("applicationContext.xml");
+        UserService userService = applicationContext.getBean("userService", UserService.class);
+        userSerivce.add();
+    }
+}
+```
+
+### 4.6 自定义SpringIOC总结
+
+<img src="img/IOC容器UML.png" alt="IOC容器UML"  />
 
 #### 1.使用到的设计模式
 
@@ -768,27 +803,27 @@ public class ClassPathXmlApplicationContext extends AbstractApplicationContext{
 
 * **单例模式**
 
-  Spring IOC管理的bean对象都是单例的，此处的单例不是通过构造器进行单例的控制的，而是spring框架对每一个bean只创建了一个对象。
+  Spring IOC 管理的 bean 对象都是单例的，此处的单例不是通过构造器进行单例的控制的，而是 spring 框架对每一个 bean 只创建了一个对象。
 
 * **模板方法模式**
 
-  AbstractApplicationContext类中的finishBeanInitialization()方法调用了子类的getBean()方法，因为getBean()的实现和环境息息相关。
+  AbstractApplicationContext 类中的 finishBeanInitialization() 方法调用了子类的 getBean() 方法，因为 getBean() 的实现和环境息息相关。
 
 * **迭代器模式**
 
-  对于MutablePropertyValues类定义使用到了迭代器模式，因为此类存储并管理PropertyValue对象，也属于一个容器，所以给该容器提供一个遍历方式。
+  对于 MutablePropertyValues 类定义使用到了迭代器模式，因为此类存储并管理 PropertyValue 对象，也属于一个容器，所以给该容器提供一个遍历方式。
 
-spring框架其实使用到了很多设计模式，如AOP使用到了代理模式，选择JDK代理或者CGLIB代理使用到了策略模式，还有适配器模式，装饰者模式，观察者模式等。
+spring 框架其实使用到了很多设计模式，如 AOP 使用到了代理模式，选择 JDK 代理或者 CGLIB 代理使用到了策略模式，还有适配器模式，装饰者模式，观察者模式等。
 
 #### 2.符合大部分设计原则
 
 #### 3.整个设计和Spring的设计还是有一定的出入
 
-spring框架底层是很复杂的，进行了很深入的封装，并对外提供了很好的扩展性。而我们自定义SpringIOC有以下几个目的：
+spring 框架底层是很复杂的，进行了很深入的封装，并对外提供了很好的扩展性。而我们自定义 SpringIOC 有以下几个目的：
 
-* 了解Spring底层对对象的大体管理机制
+* 了解 spring 底层对对象的大体管理机制
 * 了解设计模式在具体的开发中的使用
-* 以后学习spring源码，通过该案例的实现，可以降低spring学习的入门成本
+* 以后学习 spring 源码，通过该案例的实现，可以降低 spring 学习的入门成本
 
 
 

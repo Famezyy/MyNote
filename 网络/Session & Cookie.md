@@ -72,11 +72,11 @@ public String cookies(HttpServletResponse response){
 
 ## Session
 
-> Cookie 是存储在**客户端**方，Session 是存储在**服务端**方，客户端只存储`SessionId`
+> Cookie 是存储在**客户端**方，Session 是存储在**服务端**方，底层是一个 ConcurrentMap，用来识别每个用户，客户端只存储`SessionId`
 
 在上面我们了解了什么是`Cookie`，既然浏览器已经通过`Cookie`实现了有状态这一需求，那么为什么又来了一个`Session`呢？这里我们想象一下，如果将账户的一些信息都存入`Cookie`中的话，一旦信息被拦截，那么我们所有的账户信息都会丢失掉。所以就出现了`Session`，在一次会话中将重要信息保存在`Session`中，浏览器只记录`SessionId`一个`SessionId`对应一次会话请求。
 
-<img src="img/image-20220515172329432.png" alt="image-20220515172329432" style="zoom:80%;" />
+<img src="img/image-20220603195550541.png" alt="image-20220603195550541" style="zoom:80%;" />
 
 ```java
 @RequestMapping("/testSession") 
