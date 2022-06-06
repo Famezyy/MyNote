@@ -133,7 +133,7 @@ public class ThreadLocalTest {
     }
 }
 ```
-### 2.1 ThreadLocal 源码
+### 2.1 ThreadLocal源码
 ```java
 // ThreadLocal 的 set() 方法
 public void set(T value) {
@@ -143,6 +143,7 @@ public void set(T value) {
         // 将 value 放到 map 中，key 是当前的 ThreadLocal 对象
         map.set(this, value);
     } else {
+        // 只有当赋值或获取值时才会创建 map
         createMap(t, value);
     }
 }
@@ -158,52 +159,96 @@ ThreadLocal.ThreadLocalMap threadLocals = null;
 ```java
 // ThreadLocal 的静态内部类
 static class ThreadLocalMap {
-    
+
     // Entry 继承了弱引用
     static class Entry extends WeakReference<ThreadLocal<?>> {
-            /** The value associated with this ThreadLocal. */
-            Object value;
+        /** The value associated with this ThreadLocal. */
+        Object value;
 
-            Entry(ThreadLocal<?> k, Object v) {
-                // 相当于 new WeakReference<ThreadLocal<?>>(k);
-                super(k);
-                value = v;
-            }
+        Entry(ThreadLocal<?> k, Object v) {
+            // 相当于 new WeakReference<ThreadLocal<?>>(k);
+            super(k);
+            value = v;
         }
+    }
+    // ----------------------------- 存入 -----------------------------
 
     // ThreadLocal.ThreadLocalMap 的 set() 方法，最终存储到了继承了弱引用的 Entry 数组
     private void set(ThreadLocal<?> key, Object value) {
         Entry[] tab = table;
         int len = tab.length;
         int i = key.threadLocalHashCode & (len-1);
-        ...
         // 先看数组中是否已经存储了该键值对
+        // ThreadLocalMap 的存放策略为：当出现键冲突时，会依次向后查找第一个为 null 的键然后存入
         for (Entry e = tab[i];
-            e != null;
-            e = tab[i = nextIndex(i, len)]) {
+             e != null;
+             e = tab[i = nextIndex(i, len)]) {
             ThreadLocal<?> k = e.get();
 
             if (k == key) {
                 e.value = value;
-                    return;
-                }
-            
+                return;
+            }
+
             // 如果 key 为 null 说明该 key 已经被回收，则会重复利用该位置
             if (k == null) {
                 replaceStaleEntry(key, value, i);
                 return;
             }
         }
-
         // 如果数组中没有该键值对，将 entry 存放到 tab（Entry数组）
         tab[i] = new Entry (key, value);
-        ...
+
+        int sz = ++size;
+        // 如果长度大于 threshold（默认 Entry 数组长度的 2/3），进行扩容
+        if (!cleanSomeSlots(i, sz) && sz >= threshold)
+            rehash();
+    }
+
+    private void rehash() {
+        // 先删除 key 为 null 的 Entry
+        expungeStaleEntries();
+        // Use lower threshold for doubling to avoid hysteresis
+        if (size >= threshold - threshold / 4)
+            resize();
+    }
+    // ----------------------------- 查找 -----------------------------
+
+    // 查找 key 对应的 Entry
+    private Entry getEntry(ThreadLocal<?> key) {
+        int i = key.threadLocalHashCode & (table.length - 1);
+        Entry e = table[i];
+        if (e != null && e.get() == key)
+            return e;
+        else
+            return getEntryAfterMiss(key, i, e);
+    }
+
+    // 在第一次索引时没找到（存在键冲突或该 Entry 已被删除）
+    private Entry getEntryAfterMiss(ThreadLocal<?> key, int i, Entry e) {
+        Entry[] tab = table;
+        int len = tab.length;
+
+        while (e != null) {
+            ThreadLocal<?> k = e.get();
+            if (k == key)
+                return e;
+            if (k == null)
+                // 当存在 key 为 null 时，删除该 Entry 直到出现为 null 的 Entry 为止
+                expungeStaleEntry(i);
+            	// 然后继续遍历查找索引
+            else
+                i = nextIndex(i, len);
+            e = tab[i];
+        }
+        return null;
     }
 }
 ```
 ### 2.2 为什么要用弱引用？
 如果使用了强引用作为 key 去创建一个线程私有的变量，那么这个私有变量的生命周期就与`ThreadLocals`这个 map 绑定了，也就是与该线程绑定了，直到线程结束前都不会被回收。如果是个弱引用，一旦`tl`与`new`出来的`ThreadLocal`切断了联系，当下次 GC 时该`ThreadLocal`对象就会被回收。
 <img src="img/image-20220525224019756.png" alt="image-20220525224019756" style="zoom:80%;" />
+
 ### 2.3 内存泄漏
 但是此时只有`key`被回收了，`Entry`对象中的`value`却永远被保存下来了，这就是内存泄漏的问题。设想如果这发生在**线程池**中：一个线程被使用并创建了`ThreadLocal`变量，但是发生了内存泄露并返回给了线程池。甚者`key`也没有被回收并回到了线程池中。
 所以线程池在回收线程后，会首先清理`threadLocals`。

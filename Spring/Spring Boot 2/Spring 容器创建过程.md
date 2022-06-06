@@ -259,68 +259,117 @@ public abstract class AbstractApplicationContext {
 
      2. 先执行实现了**PriorityOrdered**接口的 BeanDefinitionRegistryPostProcessor
 
-        > **加载注解标注的 BeanDefinition**
+        > **加载 BeanDefinition（解析配置类一步一步加载所有其他的）**
         >
         > 注解启动时，通过**ConfigurationClassPostProcessor**在这里加载了所有的`BeanDefinition`，该类实现了`BeanDefinitionRegistryPostProcessor`、`PriorityOrdered`接口。
         >
         > ```java
         > public class ConfigurationClassPostProcessor {
         >     public void processConfigBeanDefinitions(BeanDefinitionRegistry registry) {
-        >         // 第一次加载参数为配置类的`BeandefinitionHolder`
-        >         parser.parse(candidates);
-        >     }
-        >     public void parse(Set<BeanDefinitionHolder> configCandidates) {
-        >         for (BeanDefinitionHolder holder : configCandidates) {
-        >             BeanDefinition bd = holder.getBeanDefinition();
-        >             // 里面调用 ConfigurationClassParser()
-        >             parse(bd.getBeanClassName(), holder.getBeanName());
-        >         }
-        >         this.deferredImportSelectorHandler.process();
-        >     }
-        > }
-        > ```
-        >
-        > ```java
-        > class ConfigurationClassParser {
-        >     protected void processConfigurationClass(ConfigurationClass configClass, Predicate<String> filter) throws IOException {
-        >         // 1.解析配置类
         >         do {
-        >             sourceClass = doProcessConfigurationClass(configClass, sourceClass, filter);
-        >         } while (sourceClass != null);
-        >         // 2.加载 Bean 的 resource 信息，并存放在配置缓存 configurationClasses 中
-        >         this.configurationClasses.put(configClass, configClass);
+        >             StartupStep processConfig = this.applicationStartup.start("spring.context.config-classes.parse");
+        >             // 1.解析配置候选类，注册其 BeanDefinition
+        >             // 2.将配置候选类的 MetaData、resource 等信息存放在缓存 configurationClasses 中
+        >             // 配置候选类是标注了 Confiugration、Component、Serivce、Controller 等注解的类的 BeandefinitionHolder
+        >             // 不包括配置类中的 Bean 注解标注的类
+        >             parser.parse(candidates); // ↓
+        >             parser.validate();
+        >             // 3.从 configurationClasses 中获取所有的配置候选类
+        >             Set<ConfigurationClass> configClasses = new LinkedHashSet<>(parser.getConfigurationClasses());
+        >             configClasses.removeAll(alreadyParsed);
+        > 
+        >             if (this.reader == null) {
+        >                 this.reader = new ConfigurationClassBeanDefinitionReader(
+        >                     registry, this.sourceExtractor, this.resourceLoader, this.environment,
+        >                     this.importBeanNameGenerator, parser.getImportRegistry());
+        >             }
+        >             // 4.加载注册其他 BeanDefinitions
+        >             this.reader.loadBeanDefinitions(configClasses);
+        >             ...
+        >         }
         >     }
+        >     while (!candidates.isEmpty());
+        > }
+        > 
+        > // 解析配置类
+        > public void parse(Set<BeanDefinitionHolder> configCandidates) {
+        >     for (BeanDefinitionHolder holder : configCandidates) {
+        >         BeanDefinition bd = holder.getBeanDefinition();
+        >         // 里面调用 ConfigurationClassParser 的 processConfigurationClass()
+        >         parse(bd.getBeanClassName(), holder.getBeanName());
+        >     }
+        >     this.deferredImportSelectorHandler.process();
         > }
         > ```
         >
-        > 1. 执行`ConfigurationClassParser`的`doProcessConfigurationClass()`来解析配置类。
+        > 1. 解析**配置候选类**并注册其`BeanDefinition`。
+        >
+        >    ```java
+        >    class ConfigurationClassParser {
+        >        protected void processConfigurationClass(ConfigurationClass configClass, Predicate<String> filter) throws IOException {
+        >            do {
+        >                // 1.解析配置候选类
+        >                sourceClass = doProcessConfigurationClass(configClass, sourceClass, filter);
+        >            } while (sourceClass != null);
+        >            // 2.将配置候选类的 MetaData、resource 等信息存放在缓存 configurationClasses 中
+        >            this.configurationClasses.put(configClass, configClass);
+        >        }
+        >    }
+        >    ```
         >
         >    ```java
         >    class ConfigurationClassParser {
         >        protected final SourceClass doProcessConfigurationClass() {
-        >            // 解析 @ComponentScan
+        >            // 1.1 解析 @Component
+        >            if (configClass.getMetadata().isAnnotated(Component.class.getName())) {
+        >                // 解析内部类
+        >    			processMemberClasses(configClass, sourceClass, filter);
+        >    		}
+        >            // 1.2 解析 @PropertySource
+        >            // 1.3 解析 @ComponentScan
         >            Set<AnnotationAttributes> componentScans = AnnotationConfigUtils.attributesForRepeatable(
         >                sourceClass.getMetadata(), ComponentScans.class, ComponentScan.class);
         >            if (!componentScans.isEmpty() &&
         >                !this.conditionEvaluator.shouldSkip(sourceClass.getMetadata(), ConfigurationPhase.REGISTER_BEAN)) {
         >                for (AnnotationAttributes componentScan : componentScans) {
-        >                    // 执行扫描
+        >                    // 执行扫描并注册 BeanDefinition
         >                    Set<BeanDefinitionHolder> scannedBeanDefinitions =
         >                        this.componentScanParser.parse(componentScan, sourceClass.getMetadata().getClassName());
+        >                    // 解析所有扫描到的配置类
         >                    for (BeanDefinitionHolder holder : scannedBeanDefinitions) {
         >                        BeanDefinition bdCand = holder.getBeanDefinition().getOriginatingBeanDefinition();
         >                        if (bdCand == null) {
         >                            bdCand = holder.getBeanDefinition();
         >                        }
-        >                        // 判断是否是 configuration 的候选类（Controller 也是 true）
+        >                        // 是否是 configuration 的候选类
         >                        if (ConfigurationClassUtils.checkConfigurationClassCandidate(bdCand, this.metadataReaderFactory)) {
-        >                            // 如果是则再次调用 parse 来解析
-        >                            parse(bdCand.getBeanClassName(), holder.getBeanName());
+        >                            // 是则调用 parse 来解析
+        >                            parse(bdCand.getBeanClassName(), holder.getBeanName()); // ↓
         >                        }
         >                    }
         >                }
         >            }
+        >            // 1.4 解析 @Import
+        >            	// 递归判断是否有 @Import 注解，将有该注解的所有 sourceClass 存入 set
+        >            	// 解析 sourceClassSet
+        >                	//if -> 判断是否是 ImportSelector 的子实现类
+        >            			//yes -> 调用自己来解析 ImportSelector 导入的类（如果是普通的 Bean，则会执行最后）
+        >            		//if ->判断是否是 ImportBeanDefinitionRegistrar 的子实现类，是的话存入 importBeanDefinitionRegistrars map 中
+        >            		//else -> 按照配置类处理，将其封装为 ConfigurationClass，将导入该类的 configClass 加入 importedBy
+        >            		//		  而后调用最开始的 processConfigurationClass()
+        >            
+        >            // 1.5 Process any @ImportResource annotations
+        >            
+        >            // 1.6 解析 BeanMethod，将其添加到封装了配置候选类的 SourceClass 中
+        >            configClass.addBeanMethod(new BeanMethod(methodMetadata, configClass));
+        >            // others
         >        }
+        >        protected final void parse(@Nullable String className, String beanName) throws IOException {
+        >    		// 获取文件的元数据
+        >    		MetadataReader reader = this.metadataReaderFactory.getMetadataReader(className);
+        >            // 当成配置类来嵌套解析
+        >    		processConfigurationClass(new ConfigurationClass(reader, beanName), DEFAULT_EXCLUSION_FILTER);
+        >    	}
         >    }
         >    ```
         >
@@ -340,14 +389,15 @@ public abstract class AbstractApplicationContext {
         >            for (Class<?> clazz : componentScan.getClassArray("basePackageClasses")) {
         >                basePackages.add(ClassUtils.getPackageName(clazz));
         >            }
-        >            // 1.2 如果 basePackages 属性为空，则设置为启动类所在包
+        >            // 1.2 如果 basePackages 属性为空，则设置为当前配置候选类所在包
         >            if (basePackages.isEmpty()) {
         >                basePackages.add(ClassUtils.getPackageName(declaringClass));
         >            }
         >            // 1.3 扫描 basePackages
-        >            return scanner.doScan(StringUtils.toStringArray(basePackages));
+        >            return scanner.doScan(StringUtils.toStringArray(basePackages)); // ↓
         >        }
-        >    
+        >    }
+        >    public class ClassPathBeanDefinitionScanner {
         >        protected Set<BeanDefinitionHolder> doScan(String... basePackages) {
         >            Assert.notEmpty(basePackages, "At least one base package must be specified");
         >            Set<BeanDefinitionHolder> beanDefinitions = new LinkedHashSet<>();
@@ -355,6 +405,7 @@ public abstract class AbstractApplicationContext {
         >                // 扫描路径下每一个目录里的 class 文件
         >                // 最终会调用 PathMatchingResourcePatternResolver 的 doRetrieveMatchingFiles()
         >                Set<BeanDefinition> candidates = findCandidateComponents(basePackage);
+        >    
         >                for (BeanDefinition candidate : candidates) {
         >                    ScopeMetadata scopeMetadata = this.scopeMetadataResolver.resolveScopeMetadata(candidate);
         >                    candidate.setScope(scopeMetadata.getScopeName());
@@ -380,9 +431,49 @@ public abstract class AbstractApplicationContext {
         >    }
         >    ```
         >
-        > 2. 加载 Bean 的 resource 信息，并存放在配置缓存`configurationClasses`中
+        > 2. 将**配置候选类**的 MetaData、resource 等信息存放在配置缓存`configurationClasses`中
         >
-        > 3. 在`refresh()`的`finishBeanFactoryInitialization()`时加载所有的 bean
+        > 3. 从 configurationClasses 中获取所有的配置候选类
+        >
+        > 4. 加载注册其他 BeanDefinitions
+        >
+        >    例如，被`@import`导入的 Bean、`ImportBeanDefinitionRegistrar`中导入的 Bean、`@Bean`修饰的 Bean 等的`BeanDefinition`。
+        >
+        >    底层就是放入`beanDefinitionMap`中。
+        >
+        >    ```java
+        >    class ConfigurationClassBeanDefinitionReader {
+        >        public void loadBeanDefinitions(Set<ConfigurationClass> configurationModel) {
+        >    		TrackedConditionEvaluator trackedConditionEvaluator = new TrackedConditionEvaluator();
+        >    		for (ConfigurationClass configClass : configurationModel) {
+        >    			loadBeanDefinitionsForConfigurationClass(configClass, trackedConditionEvaluator); // ↓
+        >    		}
+        >    	}
+        >    
+        >        private void loadBeanDefinitionsForConfigurationClass(
+        >    			ConfigurationClass configClass, TrackedConditionEvaluator trackedConditionEvaluator) {
+        >    
+        >            // other operation
+        >            // 判断当前配置候选类是否由其他类 import 导入或者是否是某个配置类的 Bean
+        >            // Import 导入的类在这里完成 Beandefinition 加载
+        >    		if (configClass.isImported()) {
+        >    			registerBeanDefinitionForImportedConfigurationClass(configClass);
+        >    		}
+        >            // 调用 getBeanMethods 获取所有存储的 BeanMethod 对象
+        >            // 注册 @Bean 注解标注的 Bean 的 BeanDefinition！
+        >    		for (BeanMethod beanMethod : configClass.getBeanMethods()) {
+        >    			loadBeanDefinitionsForBeanMethod(beanMethod);
+        >    		}
+        >    		loadBeanDefinitionsFromImportedResources(configClass.getImportedResources());
+        >            // 注册 ImportBeanDefinitionRegistrar 导入的 Beandefinition（在解析 Import 注解时会检查该类是否是 ImportBeanDefinitionRegistrar -> 1.3）
+        >            // 遍历 importBeanDefinitionRegistrars map
+        >    		loadBeanDefinitionsFromRegistrars(configClass.getImportBeanDefinitionRegistrars());
+        >    	}
+        >    
+        >    }
+        >    ```
+        >
+        > 最终在`refresh()`中执行`finishBeanFactoryInitialization()`时加载所有的 bean
   
      3. 再执行实现了**Ordered**接口的 BeanDefinitionRegistryPostProcessor
   
