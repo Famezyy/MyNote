@@ -379,30 +379,35 @@ class MyFactoryBean implements FactoryBean<Red> {
 >
 > 2. 实现 `InitializingBean` 接口定义初始化逻辑，实现 `DisposableBean` 接口定义销毁逻辑
 >
+>    在`initializeBean()`初始化方法中调用了`invokeInitMethods()`方法，执行了`((InitializingBean) bean).afterPropertiesSet();`
+>
 > 3. 使用**JSR250**，由 **InitDestroyAnnotationBeanPostProcessor** 处理实现
 >
-> * @PostConstruct：在 bean 创建完成并且属性赋值完成时执行
->* @PreDestroy：在容器销毁 bean 之前执行
-> 
->4. `BeanPostProcessor`（interface）：bean 的后置处理器，在bean初始化前后进行处理
-> 
->* postProcessBeforeInitialization：在所有初始化方法调用前
+> * `@PostConstruct`：修饰的方法会在服务器加载 Servlet 的时候运行，并且只会被服务器执行一次。PostConstruct 在构造函数之后执行，init()方法之前执行
+>
+>   `Constructor(构造方法)` -> `@Autowired(依赖注入)` -> `@PostConstruct(注释的方法)`，准确来说，`BeanPostProcessor`有个实现类`CommonAnnotationBeanPostProcessor`，就是专门处理`@PostConstruct`、`@PreDestroy`注解，执行`postProcessBeforeInitialization()`时会执行被该注解修饰的方法。
+>
+> * `@PreDestroy`：在容器销毁 bean 之前执行
+>
+> 4. `BeanPostProcessor`（interface）：bean 的后置处理器，在bean初始化前后进行处理
+>
+> * postProcessBeforeInitialization：在所有初始化方法调用前
 > * postProcessAfterInitialization：在所有初始化方法调用后
 >
 > ==源码==
 >
 > ```java
->AbstractAutowireCapableBeanFactory.class -> doCreateBean()
+> AbstractAutowireCapableBeanFactory.class -> doCreateBean()
 > // 对 bean 进行属性赋值
->this.populateBean(beanName, mbd, instanceWrapper);
+> this.populateBean(beanName, mbd, instanceWrapper);
 > exposedObject = this.initializeBean(beanName, exposedObject, mbd);
->
+> 
 > AbstractAutowireCapableBeanFactory.class -> initializeBean()
->// 遍历得到容器中所有的 BeanPostProcessor：挨个执行 beforeInitialization 方法，一旦返回 null，跳出循环，不会执行后面的 applyBeanPostProcessorsBeforeInitialization 方法
+> // 遍历得到容器中所有的 BeanPostProcessor：挨个执行 beforeInitialization 方法，一旦返回 null，跳出循环，不会执行后面的 applyBeanPostProcessorsBeforeInitialization 方法
 > wrappedBean = this.applyBeanPostProcessorsBeforeInitialization(bean, beanName);
->// 执行初始化方法
+> // 执行初始化方法
 > this.invokeInitMethods(beanName, wrappedBean, mbd); 
->wrappedBean = this.applyBeanPostProcessorsAfterInitialization(wrappedBean, beanName);
+> wrappedBean = this.applyBeanPostProcessorsAfterInitialization(wrappedBean, beanName);
 > ```
 
 ```java
@@ -983,21 +988,21 @@ prop.users[0].name=test
 >   ```java
 >   @Component
 >   public class Red implements ApplicationContextAware, BeanNameAware, EmbeddedValueResolverAware {
->                                               
+>                                                     
 >       private ApplicationContextAware applicationContextAware;
->                                               
+>                                                     
 >       // 传入 ioc 上下文
 >       @Override
 >       public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
 >           this.applicationContextAware = applicationContextAware;
 >       }
->                                               
+>                                                     
 >       // 当前 bean 的名字
 >       @Override
 >       public void setBeanName(String s) {
 >           System.out.println("当前bean的名字：" + s);
 >       }
->                                               
+>                                                     
 >   	// 解析特殊符号
 >       @Override
 >       public void setEmbeddedValueResolver(StringValueResolver resolver) {
@@ -1032,20 +1037,20 @@ prop.users[0].name=test
 >   @PropertySource("classpath:/dbconfig.properties")
 >   @Configuration
 >   public class MainConfigProfile implements EmbeddedValueResolverAware {
->                                               
+>                                                     
 >       @Value("${db.user}")
 >       private String user;
->                                               
+>                                                     
 >       private StringValueResolver stringValueResolver;
->                                               
+>                                                     
 >       private String driverClass;
->                                               
+>                                                     
 >       @Override
 >       public void setEmbeddedValueResolver(StringValueResolver resolver) {
 >           this.stringValueResolver = stringValueResolver;
 >           this.driverClass = stringValueResolver.resolveStringValue("${db.driverClass}");
 >       }
->                                               
+>                                                     
 >       @Profile("test")
 >       @Bean("testDataSource")
 >       public DataSource dataSourceTest(@Value("${db.password}") String password) {
@@ -1056,7 +1061,7 @@ prop.users[0].name=test
 >           source.setDriverClass(driverClass);
 >           return source;
 >       }
->                                               
+>                                                     
 >       @Profile("dev")
 >       @Bean("devDataSource")
 >       public DataSource dataSourceDev(@Value("${db.password}") String password) {
@@ -1067,7 +1072,7 @@ prop.users[0].name=test
 >           source.setDriverClass(driverClass);
 >           return source;
 >       }
->                                               
+>                                                     
 >       @Profile("prod")
 >       @Bean("prodDataSource")
 >       public DataSource dataSourceProd(@Value("${db.password}") String password) {
@@ -1092,16 +1097,16 @@ prop.users[0].name=test
 >    ```java
 >    @Test
 >    public void testProfile() {
->                                                                      
+>                                                                               
 >        // 利用空参构造器创建 applicationContext
 >        AnnotationConfigApplicationContext applicationContext = new AnnotationConfigApplicationContext();
->                                                                      
+>                                                                               
 >        // 设置需要激活的环境（有参构造器中没有这一项，所有以需要自己注入）
 >        applicationContext.getEnvironment().setActiveProfiles("test", "dev");
->                                                                      
+>                                                                               
 >        // 注册主配置类
 >        applicationContext.register(MainConfigProfile.class);
->                                                                      
+>                                                                               
 >        // 启动刷新容器
 >        applicationContext.refresh();
 >    }
@@ -1154,6 +1159,7 @@ prop.users[0].name=test
 >     * 切入类
 >     */
 >    @Aspect
+>    @Component
 >    public class LogAspects {
 >    
 >        // 抽取公共切入点
@@ -1200,17 +1206,17 @@ prop.users[0].name=test
 > - 配置类方式：`@EnableAspectJAutoProxy`
 >
 >   - 在 Spring 中有很多的 `@Enablexxx`
->   
+>
 >     ```java
 >     @EnableAspectJAutoProxy
 >     @Configuration
 >     public class MainConfigOfAOP {
->                                                                                             
+>             
 >         @Bean
 >         public MathCalculator mathCalculator() {
 >             return new MathCalculator();
 >         }
->                                                                                             
+>             
 >         @Bean
 >         public LogAspects logAspects() {
 >             return new LogAspects();
@@ -1305,14 +1311,14 @@ class AspectJAutoProxyRegistrar implements ImportBeanDefinitionRegistrar {
 >
 >    ```java
 >    AbstractApplicationContext.class -> refresh()
->                                                                   
+>                                                                            
 >    // Register bean processors that intercept bean creation.
 >    registerBeanPostProcessors(beanFactory);
 >    ```
 >
 >    ```java
 >    AbstractApplicationContext.class
->                                                                   
+>                                                                            
 >    protected void registerBeanPostProcessors(ConfigurableListableBeanFactory beanFactory) {
 >        PostProcessorRegistrationDelegate.registerBeanPostProcessors(beanFactory, this);
 >    }
@@ -1320,7 +1326,7 @@ class AspectJAutoProxyRegistrar implements ImportBeanDefinitionRegistrar {
 >
 >    ```java
 >    PostProcessorRegistrationDelegate.class -> registerBeanPostProcessors()
->                                                                   
+>                                                                            
 >    // 先获取 IOC 容器中已经定义了的需要创建对象的所有 BeanPostProcessor
 >    String[] postProcessorNames = beanFactory.getBeanNamesForType(BeanPostProcessor.class, true, false);
 >    // 给容器中添加其他的 BeanPostProcessor
@@ -1337,7 +1343,7 @@ class AspectJAutoProxyRegistrar implements ImportBeanDefinitionRegistrar {
 >
 >    ```java
 >    PostProcessorRegistrationDelegate.class -> registerBeanPostProcessors()
->                                                                   
+>                                                                            
 >    // 在注册 orderd 接口的 BeanPostProcessors 之前先获取所有的实现了 order 接口的 BeanPostProcessors
 >    List<BeanPostProcessor> orderedPostProcessors = new ArrayList<>(orderedPostProcessorNames.size());
 >    for (String ppName : orderedPostProcessorNames) {
@@ -1356,7 +1362,7 @@ class AspectJAutoProxyRegistrar implements ImportBeanDefinitionRegistrar {
 >    AbstractAutowireCapableBeanFactory.class -> doCreateBean()
 >    // 最终调用
 >    AbstractAdvisorAutoProxyCreator.class -> setBeanFactory()
->                                                                   
+>                                                                            
 >    // 注册 BeanPostProcessor，实际上就是创建 BeanPostProcessor 对象，保存在容器中
 >       // 创建 internalAutoProxyCreator 的 BeanPostProcessor --> AnnotationAwareAspectJAutoProxyCreator
 >          // 1. 创建 Bean 的实例
@@ -1371,7 +1377,7 @@ class AspectJAutoProxyRegistrar implements ImportBeanDefinitionRegistrar {
 >    
 >    ```java
 >    PostProcessorRegistrationDelegate.class
->                                                                   
+>                                                                            
 >    // 把 BeanPostProcessor 注册到 BeanFactory 中
 >    private static void registerBeanPostProcessors(
 >        ConfigurableListableBeanFactory beanFactory, List<BeanPostProcessor> postProcessors) {
@@ -1409,7 +1415,7 @@ class AspectJAutoProxyRegistrar implements ImportBeanDefinitionRegistrar {
 >
 >        ```java
 >        AbstractAutowireCapableBeanFactory.class
->                                                                                                                                                           
+>                                                                                                                                                                                
 >        protected Object createBean(String beanName, RootBeanDefinition mbd, @Nullable Object[] args) throws BeanCreationException {
 >        	try {
 >                	// 希望后置处理器返回一个代理对象
@@ -1478,7 +1484,7 @@ class AspectJAutoProxyRegistrar implements ImportBeanDefinitionRegistrar {
 >
 >   ```java
 >   AbstractAutoProxyCreator.class
->                                             
+>                                                   
 >   public Object postProcessAfterInitialization(@Nullable Object bean, String beanName) {
 >       if (bean != null) {
 >           Object cacheKey = this.getCacheKey(bean.getClass(), beanName);
@@ -1493,7 +1499,7 @@ class AspectJAutoProxyRegistrar implements ImportBeanDefinitionRegistrar {
 >
 >   ```java
 >   AbstractAutoProxyCreator.class
->                                             
+>                                                   
 >   protected Object wrapIfNecessary(Object bean, String beanName, Object cacheKey) {
 >       if (StringUtils.hasLength(beanName) && this.targetSourcedBeans.contains(beanName)) {
 >           return bean;
@@ -1519,12 +1525,12 @@ class AspectJAutoProxyRegistrar implements ImportBeanDefinitionRegistrar {
 >           return bean;
 >       }
 >   }
->                                             
+>                                                   
 >   protected Object createProxy(Class<?> beanClass, @Nullable String beanName, @Nullable Object[] specificInterceptors, TargetSource targetSource) {
 >           if (this.beanFactory instanceof ConfigurableListableBeanFactory) {
 >               AutoProxyUtils.exposeTargetClass((ConfigurableListableBeanFactory)this.beanFactory, beanName, beanClass);
 >           }
->                                             
+>                                                   
 >           ProxyFactory proxyFactory = new ProxyFactory();
 >           proxyFactory.copyFrom(this);
 >           if (!proxyFactory.isProxyTargetClass()) {
@@ -1552,13 +1558,13 @@ class AspectJAutoProxyRegistrar implements ImportBeanDefinitionRegistrar {
 >   
 >   ```java
 >   AbstractAdvisorAutoProxyCreator.class
->                                             
+>                                                   
 >   protected Object[] getAdvicesAndAdvisorsForBean(Class<?> beanClass, String beanName, @Nullable TargetSource targetSource) {
 >       // 找到有效的增强器
 >       List<Advisor> advisors = this.findEligibleAdvisors(beanClass, beanName);
 >       return advisors.isEmpty() ? DO_NOT_PROXY : advisors.toArray();
 >   }
->                                             
+>                                                   
 >   protected List<Advisor> findEligibleAdvisors(Class<?> beanClass, String beanName) {
 >       List<Advisor> candidateAdvisors = this.findCandidateAdvisors();
 >       // 找到能在当前 bean 中使用的增强器
@@ -1570,7 +1576,7 @@ class AspectJAutoProxyRegistrar implements ImportBeanDefinitionRegistrar {
 >       }
 >       return eligibleAdvisors;
 >   }
->                                             
+>                                                   
 >   protected List<Advisor> findAdvisorsThatCanApply(List<Advisor> candidateAdvisors, Class<?> beanClass, String beanName) {
 >       ProxyCreationContext.setCurrentProxiedBeanName(beanName);
 >       List var4;
@@ -1588,7 +1594,7 @@ class AspectJAutoProxyRegistrar implements ImportBeanDefinitionRegistrar {
 >   
 >   ```java
 >   DefaultAopProxyFactory.class
->                                             
+>                                                   
 >   public AopProxy createAopProxy(AdvisedSupport config) throws AopConfigException {
 >           if (!config.isOptimize() && !config.isProxyTargetClass() && !this.hasNoUserSuppliedProxyInterfaces(config)) {
 >               return new JdkDynamicAopProxy(config);
@@ -1677,14 +1683,14 @@ class AspectJAutoProxyRegistrar implements ImportBeanDefinitionRegistrar {
 >
 >    ```java
 >    ReflectiveMethodInvocation.class -> proceed()
->                                                                       
+>                                                                                
 >    public Object proceed() throws Throwable {
 >        // We start with an index of -1 and increment early.
 >        if (this.currentInterceptorIndex == this.interceptorsAndDynamicMethodMatchers.size() - 1) {
 >            // 若拦截器的索引和拦截器数组 -1 大小一样（即执行到最后一个拦截器），执行目标方法
 >            return invokeJoinpoint();
 >        }
->                                                                   
+>                                                                            
 >        Object interceptorOrInterceptionAdvice =
 >            this.interceptorsAndDynamicMethodMatchers.get(++this.currentInterceptorIndex);
 >        if (interceptorOrInterceptionAdvice instanceof InterceptorAndDynamicMethodMatcher) {
@@ -1710,7 +1716,7 @@ class AspectJAutoProxyRegistrar implements ImportBeanDefinitionRegistrar {
 >    }
 >    =======================================================================================
 >    ExposeInvocationInterceptor.class
->                                                                       
+>                                                                                
 >    public Object invoke(MethodInvocation mi) throws Throwable {
 >        MethodInvocation oldInvocation = invocation.get();
 >        invocation.set(mi);
@@ -1721,19 +1727,19 @@ class AspectJAutoProxyRegistrar implements ImportBeanDefinitionRegistrar {
 >            invocation.set(oldInvocation);
 >        }
 >    }
->                                                                   
+>                                                                            
 >    ========================================================================================
 >    MethodBeforeAdviceInterceptor.class
->                                                                       
+>                                                                                
 >    public Object invoke(MethodInvocation mi) throws Throwable {
 >        // 执行前置通知
 >        this.advice.before(mi.getMethod(), mi.getArguments(), mi.getThis());
 >        return mi.proceed();
 >    }
->                                                                   
+>                                                                            
 >    ========================================================================================
 >    AspectJAfterAdvice.class
->                                                                   
+>                                                                            
 >    @Override
 >    public Object invoke(MethodInvocation mi) throws Throwable {
 >        try {
@@ -1744,20 +1750,20 @@ class AspectJAutoProxyRegistrar implements ImportBeanDefinitionRegistrar {
 >            invokeAdviceMethod(getJoinPointMatch(), null, null);
 >        }
 >    }
->                                                                       
+>                                                                                
 >    ========================================================================================
 >    AfterReturningAdviceInterceptor.class
->                                                                   
+>                                                                            
 >    public Object invoke(MethodInvocation mi) throws Throwable {
 >        Object retVal = mi.proceed();
 >        // 无异常则执行返回值通知
 >        this.advice.afterReturning(retVal, mi.getMethod(), mi.getArguments(), mi.getThis());
 >        return retVal;
 >    }
->                                                                   
+>                                                                            
 >    ========================================================================================
 >    AspectJAfterThrowingAdvice.class
->                                                                       
+>                                                                                
 >    public Object invoke(MethodInvocation mi) throws Throwable {
 >        try {
 >            return mi.proceed();
@@ -2063,7 +2069,7 @@ public void test01() {
 >        // publishEvent() 方法用来发布事件
 >        applicationContext.publishEvent(new ApplicationEvent(new String("my event")) {
 >        });
->                                                          
+>                                                                   
 >        applicationContext.close();
 >    }
 >    ```
@@ -2080,10 +2086,10 @@ public void test01() {
 >
 >         ```java
 >         AbstractApplicationContext.class
->                                                                                                
+>                                                                                                               
 >         protected void publishEvent(Object event, @Nullable ResolvableType eventType) {
 >             Assert.notNull(event, "Event must not be null");
->                                                                                                
+>                                                                                                               
 >             // Decorate event as an ApplicationEvent if necessary
 >             ApplicationEvent applicationEvent;
 >             if (event instanceof ApplicationEvent) {
@@ -2095,7 +2101,7 @@ public void test01() {
 >                     eventType = ((PayloadApplicationEvent<?>) applicationEvent).getResolvableType();
 >                 }
 >             }
->                                                                                                
+>                                                                                                               
 >             // Multicast right now if possible - or lazily once the multicaster is initialized
 >             if (this.earlyApplicationEvents != null) {
 >                 this.earlyApplicationEvents.add(applicationEvent);
@@ -2105,7 +2111,7 @@ public void test01() {
 >                 // 调用 multicastEvent() 派发事件
 >                 getApplicationEventMulticaster().multicastEvent(applicationEvent, eventType);
 >             }
->                                                                                                
+>                                                                                                               
 >             // Publish event via parent context as well...
 >             if (this.parent != null) {
 >                 if (this.parent instanceof AbstractApplicationContext) {
@@ -2120,7 +2126,7 @@ public void test01() {
 >
 >         ```java
 >         SimpleApplicationEventMulticaster.class
->                                                                                                
+>                                                                                                               
 >         @Override
 >         public void multicastEvent(final ApplicationEvent event, @Nullable ResolvableType eventType) {
 >             ResolvableType type = (eventType != null ? eventType : resolveDefaultEventType(event));

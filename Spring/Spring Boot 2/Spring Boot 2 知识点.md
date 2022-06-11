@@ -43,7 +43,7 @@ love.they=78
 
 ### 3.文件处理器
 
-​    使用文件处理器，我们可以创建任意名字的配置文件，如 haha.properties,同时也不需要在application配置文件中引入，我们可以直接使用，不过有一个前提就是在引入它的属性值的类上，加上注解 @PropertySource("classpath:haha.properties") ，这样我们依旧可以使用，把之前active的引入删除
+​    使用文件处理器，我们可以创建任意名字的配置文件，如 haha.properties，同时也不需要在 application 配置文件中引入，我们可以直接使用，不过有一个前提就是在引入它的属性值的类上，加上注解`@PropertySource("classpath:haha.properties")` ，这样我们依旧可以使用，把之前active的引入删除
 
 ```java
 @RestController

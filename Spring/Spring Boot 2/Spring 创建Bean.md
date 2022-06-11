@@ -455,6 +455,7 @@ public abstract class AbstractAutowireCapableBeanFactory {
         // 3.3.2 调用 InstantiationAwareBeanPostProcessor 的 postProcessProperties()
         for(Iterator var9 = this.getBeanPostProcessorCache().instantiationAware.iterator(); var9.hasNext(); pvs = pvsToUse) {
             InstantiationAwareBeanPostProcessor bp = (InstantiationAwareBeanPostProcessor)var9.next();
+            // 由 AutowiredAnnotationBeanPostProcessor 来进行常量和正常依赖的属性注入
             pvsToUse = bp.postProcessProperties((PropertyValues)pvs, bw.getWrappedInstance(), beanName);
         }
         ...
@@ -464,11 +465,17 @@ public abstract class AbstractAutowireCapableBeanFactory {
 }
 ```
 
-#### 3.3.1【执行后置处理器实例化之后的方法】
+#### 3.3.1【执行后置处理器的实例化之后的方法】
 
 #### 3.3.2【执行后置处理器的`ProcessProperties()`】
 
 #### 3.3.3 利用setter方法为【属性赋值】
+
+```java
+protected void applyPropertyValues(String beanName, BeanDefinition mbd, BeanWrapper bw, PropertyValues pvs) {
+    bw.setPropertyValues(new MutablePropertyValues(deepCopy));
+}
+```
 
 ### ==3.4【Bean初始化】==
 
@@ -512,7 +519,7 @@ public abstract class AbstractAutowireCapableBeanFactory {
 
 `BeanNameAware`、`BeanClassLoaderAware`、`BeanFactoryAware`。
 
-#### 3.4.2【执行后置处理器初始化之前的方法】
+#### 3.4.2【执行后置处理器的初始化之前的方法】
 
 `BeanPostProcessor.postProcessBeforeInitialization()`
 
@@ -523,7 +530,7 @@ public abstract class AbstractAutowireCapableBeanFactory {
 
 `InitializingBean.afterPropertiesSet()`
 
-#### 3.4.4【执行后置处理器初始化之后的方法】
+#### 3.4.4【执行后置处理器的初始化之后的方法】
 
 `BeanPostProcessor.postProcessAfterInitialization()`
 
