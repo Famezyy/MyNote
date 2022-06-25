@@ -28,13 +28,13 @@ I/O 模型：就是用什么样的通道或者说是通信模式和架构进行�
 
 同步并阻塞(传统阻塞型)，服务器实现模式为一个连接一个线程，即客户端有连接请求时服务器端就需要启动一个线程进行处理，如果这个连接不做任何事情会造成不必要的线程开销
 
-<img src="..\img\image-20220201003935222.png" alt="image-20220201003935222" style="zoom:67%;" />
+<img src="img/BIO、NIO、AIO/image-20220201003935222.png" alt="image-20220201003935222" style="zoom:67%;" />
 
 ### Java NIO
 
 同步非阻塞，服务器实现模式为一个线程处理多个请求(连接)，即客户端发送的连接请求都会注册到多路复用器（选择器）上，多路复用器轮询到连接有 I/O 请求就进行处理
 
-<img src="..\img\image-20220201004033258.png" alt="image-20220201004033258" style="zoom: 67%;" />
+<img src="img/BIO、NIO、AIO/image-20220201004033258.png" alt="image-20220201004033258" style="zoom: 67%;" />
 
 ###  Java AIO
 
@@ -63,7 +63,7 @@ Java AIO(NIO.2)：异步异步非阻塞，服务器实现模式为一个有效�
 
 ## 3.2 Java BIO 工作机制
 
-<img src="..\img\image-20220202223935304.png" alt="image-20220202223935304" style="zoom: 80%;" />
+<img src="img/BIO、NIO、AIO/image-20220202223935304.png" alt="image-20220202223935304" style="zoom: 80%;" />
 
 **对 BIO  编程流程的梳理**
 
@@ -358,7 +358,7 @@ class ServerReadThread extends Thread{
 
 图示如下：
 
-<img src="..\img\image-20220201230956992.png" alt="image-20220201230956992" style="zoom:67%;" />
+<img src="img/BIO、NIO、AIO/image-20220201230956992.png" alt="image-20220201230956992" style="zoom:67%;" />
 
 ### 客户端源码分析
 
@@ -596,7 +596,7 @@ public class ServerReaderThread extends Thread {
 
 需求：需要实现一个客户端的消息可以发送给所有的客户端去接收。（群聊实现）
 
-<img src="..\img\image-20220202000029876.png" alt="image-20220202000029876" style="zoom:67%;" />
+<img src="img/BIO、NIO、AIO/image-20220202000029876.png" alt="image-20220202000029876" style="zoom:67%;" />
 
 ### 客户端开发
 
@@ -1815,7 +1815,7 @@ class ClientReader extends Thread {
 * Java NIO 的非阻塞模式，使一个线程从某通道发送请求或者读取数据，但是它仅能得到目前可用的数据，如果目前没有数据可用时，就什么都不会获取，而不是保持线程阻塞，所以直至数据变的可以读取之前，该线程可以继续做其他的事情。 非阻塞写也是如此，一个线程请求写入一些数据到某通道，但不需要等待它完全写入，这个线程同时可以去做别的事情
 * 通俗理解：NIO 是可以做到用一个线程来处理多个操作的。假设有 1000 个请求过来，根据实际情况，可以分配 20 或者 80 个线程来处理。不像之前的阻塞 IO 那样，非得分配 1000 个
 
-<img src="..\img\image-20220202223908046.png" alt="image-20220202223908046" style="zoom: 80%;" />
+<img src="img/BIO、NIO、AIO/image-20220202223908046.png" alt="image-20220202223908046" style="zoom: 80%;" />
 
 ## 4.2 NIO 和 BIO 的比较
 
@@ -1846,7 +1846,7 @@ NIO 有三大核心部分：**Channel(通道) ，Buffer(缓冲区)，Selector(�
 
 ​    Selector 是一个 Java NIO 组件，可以能够检查一个或多个 NIO 通道，并确定哪些通道已经准备好进行读取或写入。这样，一个单独的线程可以管理多个 channel，从而管理多个网络连接，提高效率。
 
-<img src="..\img\image-20220202224143497.png" alt="image-20220202224143497" style="zoom:67%;" />
+<img src="img/BIO、NIO、AIO/image-20220202224143497.png" alt="image-20220202224143497" style="zoom:67%;" />
 
 * 每个 channel 都会对应一个 Buffer
 * 一个线程对应 Selector ， 一个 Selector 对应多个 channel(通道)
@@ -1862,7 +1862,7 @@ NIO 有三大核心部分：**Channel(通道) ，Buffer(缓冲区)，Selector(�
 
 ​    一个用于特定基本数据类 型的容器。由 java.nio 包定义的，所有缓冲区 都是 Buffer 抽象类的子类.。Java NIO 中的 Buffer 主要用于与 NIO 通道进行 交互，数据是从通道读入缓冲区，从缓冲区写入通道中的。
 
-<img src="..\img\image-20220202224429384.png" alt="image-20220202224429384" style="zoom:67%;" />
+<img src="img/BIO、NIO、AIO/image-20220202224429384.png" alt="image-20220202224429384" style="zoom:67%;" />
 
 ### **Buffer 类及其子类**
 
@@ -1898,11 +1898,11 @@ Buffer 中的重要概念：
    
 * **图示：**
 
-   <img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220202224815931.png" alt="image-20220202224815931" style="zoom:67%;" />
+   <img src="img/BIO、NIO、AIO/image-20220202224815931.png" alt="image-20220202224815931" style="zoom:67%;" />
 
-   <img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220202224840433.png" alt="image-20220202224840433" style="zoom:67%;" />
+   <img src="img/BIO、NIO、AIO/image-20220202224840433.png" alt="image-20220202224840433" style="zoom:67%;" />
 
-   <img src="..\img\image-20220202224952835.png" alt="image-20220202224952835" style="zoom:67%;" />
+   <img src="img/BIO、NIO、AIO/image-20220202224952835.png" alt="image-20220202224952835" style="zoom:67%;" />
 
 ### Buffer常见方法
 
@@ -2345,7 +2345,7 @@ public void test02() throws Exception {
 
 ​    选择器（Selector） 是 SelectableChannle 对象的多路复用器，Selector 可以同时监控多个 SelectableChannel 的 IO 状况，也就是说，利用 Selector 可使一个单独的线程管理多个 Channel，Selector 是非阻塞 IO 的核心
 
-<img src="..\img\image-20220203203330951.png" alt="image-20220203203330951" style="zoom:67%;" />
+<img src="img/BIO、NIO、AIO/image-20220203203330951.png" alt="image-20220203203330951" style="zoom:67%;" />
 
 * Java 的 NIO，用非阻塞的 IO 方式，可以用一个线程，处理多个的客户端连接，就会使用到 Selector（选择器）
 * Selector 能够检测多个注册的通道上是否有事件发生（注意：多个 Channel 以事件的方式可以注册到同一个 Selector），如果有事件发生，便获取事件然后针对每个事件进行相应的处理，这样就可以只用一个单线程去管理多个通道，也就是管理多个连接和请求
@@ -2397,7 +2397,7 @@ ssChannel.register(selector, SelectionKey.OP_ACCEPT);
 
 Selector可以实现： 一个 I/O 线程可以并发处理 N 个客户端连接和读写操作，这从根本上解决了传统同步阻塞 I/O 一连接一线程模型，架构的性能、弹性伸缩能力和可靠性都得到了极大的提升。
 
-<img src="..\img\image-20220203203825234.png" alt="image-20220203203825234" style="zoom:67%;" />
+<img src="img/BIO、NIO、AIO/image-20220203203825234.png" alt="image-20220203203825234" style="zoom:67%;" />
 
 ### 服务端流程
 
