@@ -345,11 +345,22 @@ public class MyRequestBodyAdvice implements RequestBodyAdvice {
 }
 ```
 
-
-
 ##### 8.`RedirectAttributes`
 
 重定向携带参数。
+
+```java
+@GetMapping("/user/delete/{id}")
+public String deleteUser(@PathVariable("id") Long id, @RequestParam(value="pn", defaultValue="1") Integer pn, RedirectAttributes ra) {
+    ra.addAttribute("pn", pn);
+    return "redirect:/dynamic_table";
+}
+
+@GetMapping("/dynamic_table")
+public String dynamic_table(@RequestParam(value="pn", defaultValue="1") Integer pn) {
+    
+}
+```
 
 ##### 9.`RequestAttribute`
 
@@ -1488,9 +1499,7 @@ public class DispatcherServletAutoConfiguration {
   }
   ```
 
-- SpringBoot 应用启动时发现当前是 web 应用
-
-- web 应用会创建一个 web 版的 IOC 容器`ServletWebServerApplicationContext`
+- SpringApplication 执行 run() 时发现当前是 web 应用，会创建一个 web 版的 IOC 容器`ServletWebServerApplicationContext`
 
 - `ServletWebServerApplicationContext`启动的时候寻找`ServletWebServerFactory`，并创建相应的 webServer
 

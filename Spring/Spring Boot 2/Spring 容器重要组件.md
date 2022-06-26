@@ -153,6 +153,8 @@ public interface BeanDefinitionRegistryPostProcessor extends BeanFactoryPostProc
 }
 ```
 
+**例子**
+
 ```java
 @Component
 public class MyBeanDefinitionRegistryPostProcessor implements BeanDefinitionRegistryPostProcessor {
@@ -371,7 +373,7 @@ public class MyApplicationListener implements ApplicationListener {
   }
   ```
 
-  派发器
+  **派发器原理**
 
   ```java
   class SimpleApplicationEventMulticaster {
@@ -447,3 +449,117 @@ public class UserService {
 **原理**
 
 【调用`SmartInitializingSingleton`的`afterSingletonsInstantiated()`】时，由`EventListenerMethodProcessor`来解析方法并创建`applicationListener`对象。
+
+## 6.Application Events and Listeners
+
+```java
+public class MyApplicationContextInitializer implements ApplicationContextInitializer {
+    @Override
+    public void initialize(ConfigurableApplicationContext applicationContext) {
+        System.out.println("initializing..");
+    }
+}
+```
+
+```java
+public class MyApplicationListener implements ApplicationListener {
+    @Override
+    public void onApplicationEvent(ApplicationEvent event) {
+        System.out.println("reveived event:" + event.getSource());
+    }
+}
+```
+
+```java
+public class MySpringApplicationRunListener implements SpringApplicationRunListener {
+
+    private SpringApplication springApplication;
+    private String[] args;
+
+    // 需要一个构造参数
+    public MySpringApplicationRunListener(SpringApplication springApplication, String[] args) {
+        this.springApplication = springApplication;
+        this.args = args;
+    }
+
+    @Override
+    public void starting(ConfigurableBootstrapContext bootstrapContext) {
+        System.out.println("start");
+        SpringApplicationRunListener.super.starting(bootstrapContext);
+    }
+
+    @Override
+    public void environmentPrepared(ConfigurableBootstrapContext bootstrapContext, ConfigurableEnvironment environment) {
+        System.out.println("environmentPrepared");
+        SpringApplicationRunListener.super.environmentPrepared(bootstrapContext, environment);
+    }
+
+    @Override
+    public void contextPrepared(ConfigurableApplicationContext context) {
+        System.out.println("contextPrepared");
+        SpringApplicationRunListener.super.contextPrepared(context);
+    }
+
+    @Override
+    public void contextLoaded(ConfigurableApplicationContext context) {
+        System.out.println("contextPrepared");
+        SpringApplicationRunListener.super.contextLoaded(context);
+    }
+
+    @Override
+    public void started(ConfigurableApplicationContext context, Duration timeTaken) {
+        System.out.println("started");
+        SpringApplicationRunListener.super.started(context, timeTaken);
+    }
+
+    @Override
+    public void ready(ConfigurableApplicationContext context, Duration timeTaken) {
+        System.out.println("ready");
+        SpringApplicationRunListener.super.ready(context, timeTaken);
+    }
+
+    @Override
+    public void failed(ConfigurableApplicationContext context, Throwable exception) {
+        System.out.println("failed");
+        SpringApplicationRunListener.super.failed(context, exception);
+    }
+}
+```
+
+在`META-INF/spring.factories`中配置以上三个监听器：
+
+```bash
+org.springframework.boot.SpringApplicationRunListener=com.youyi.hello.MySpringApplicationRunListener
+org.springframework.context.ApplicationListener=com.youyi.hello.MyApplicationListener
+org.springframework.context.ApplicationContextInitializer=com.youyi.hello.MyApplicationContextInitializer
+```
+
+## 7.CommandLineRunner
+
+```java
+@Order(2) // 数字越大优先级越高
+@Component
+public class MyCommandLineRunner implements CommandLineRunner {
+
+    @Override
+    public void run(String... args) throws Exception {
+        System.out.println("String");
+    }
+}
+```
+
+## 8.ApplicationRunner
+
+```java
+@Order(2)
+@Component
+public class MyApplicationRunner implements ApplicationRunner {
+
+    @Override
+    public void run(ApplicationArguments args) {
+        System.out.println("ApplicationArguments");
+    }
+
+}
+```
+

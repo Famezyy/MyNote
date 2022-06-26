@@ -1,72 +1,4 @@
-## 1.Spring Configuration Processor
-
->   它的作用和 主配置文件 application.properties 或者 application.yml 里面的 spring.profiles.active 有着相似的作用，但是不同的是，使用 spring.profiles.avtive，你添加的其他配置文件命名格式只能是 application-{name}.properties 或者 application-{name}.yml，而使用文件处理器这个依赖，则对文件名没有任何约束
-
-### 1.pom依赖
-
-```xml
-<dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-configuration-processor</artifactId>
-    <optional>true</optional>
-</dependency>
-```
-
-### 2.创建其他配置文件
-
-```properties
-love.you=aoxin
-love.me=mdxl
-love.they=78
-```
-
-- 这个配置文件先命名为 application-haha.properties，然后如果想要使用里面的属性值的时候，只能在 application.properties 中加入
-
-  ```properties
-  spring.profiles.active=haha
-  ```
-
-- 这样，我们才能在代码类中获取到该值，如下
-
-  ```java
-  @RestController
-  public class DockerController {
-      @Value("${love.you}")
-      private String name;
-  
-      @GetMapping("/test1")
-      public String test1(){
-          return name;
-      }
-  }
-  ```
-
-### 3.文件处理器
-
-​    使用文件处理器，我们可以创建任意名字的配置文件，如 haha.properties，同时也不需要在 application 配置文件中引入，我们可以直接使用，不过有一个前提就是在引入它的属性值的类上，加上注解`@PropertySource("classpath:haha.properties")` ，这样我们依旧可以使用，把之前active的引入删除
-
-```java
-@RestController
-@PropertySource("classpath:haha.properties")
-public class DockerController {
-
-    @Value("${love.you}")
-    private String name;
-
-    @GetMapping("/test1")
-    public String test1(){
-        return name;
-    }
-}
-```
-
-### 4、为什么使用它？
-
-​    那么看上去也并没有区别么，倒是有一点费劲的感觉，其实不然，因为有些配置文件里面的属性，有些开发工程师是直接想在配置类中使用，不想在主配置文件 spring.profiles.active 依赖，而这种属性值往往也不分开发环境、仿真环境和线上环境的，所以会有一小部分开发工程师乐意去使用它。
-
----
-
-## 2.application/x-www-form-urlencoded 类型的请求
+## application/x-www-form-urlencoded 类型的请求
 
 由 RequestParamMethodArgumentResolver 参数解析器解析
 
@@ -122,64 +54,7 @@ private HandlerMethodArgumentResolver getArgumentResolver(MethodParameter parame
 </dependency>
 ```
 
----
-
-## 3.事务
-
-Spring 中并没有提供事务，只是提供了对数据库事务的一个管理的封装。开发人员不需要关系事务的提交和回滚，更加聚焦在业务开发上。且主要针对单个数据库的多个数据表的操作。没有提供分布式事务的场景支持。
-
-### 事务传播行为
-
-用来描述这样一个现象：`methodA`开启了一个事务，调用了`methodB`，`methodB`是继续在`methodA`的事务中进行还是开启一个新的事物。
-
-```java
-@Transaction(Propagation=REQUIRED)
-public void methodA() {
-    methodB();
-    //doSomething
-}
-
-@Transaction(Propagation=REQUIRED_NEW)
-public void methodB() {
-    //doSomething
-}
-```
-
-**七种传播行为**
-
-- `REQUIRED`（默认）
-
-  如果当前有事务，则继续在事务中进行， 如果没有则开启一个新的事务
-
-- `REQUIRED_NEW`
-
-  无论是否存在事务，都会开启一个新的事务来执行，新老事务相互独立，一个事务抛出异常不会影响另一个事务的提交
-
-- `NESTED`
-
-  如果当前存在事务，则嵌套在当前事务中执行，如果没有事务则新建一个事务
-
-  外部事务抛出异常会导致嵌套事务回滚，嵌套事务回滚不会影响外部事务
-
-- `SUPPORTS`
-
-  支持当前事务，如果当前不存在事务，就以非事务的方式进行
-
-- `NOT_SUPPORTED`
-
-  以非事务的方式执行，如果当前存在事务，则把当前事务挂起
-
-- `MANDATORY`
-
-  强制的事务执行，如果不存在事务就抛出异常
-
-- `NEVER`
-
-  以非事务的方式执行，如果存在事务则抛出异常
-
----
-
-## 4.spring、springMVC、springboot的区别
+## spring、springMVC、springboot的区别
 
 `spring`是一个 IOC 容器，用来管理 Bean，使用依赖注入实现控制反转，可以方便的整合各种框架，提供 AOP 机制弥补 OOP 的代码重复问题，更方便地将不同类不同方法中的共同处理抽取成切面，自动注入给方法执行，比如日志、异常等。
 
@@ -189,7 +64,7 @@ public void methodB() {
 
 ---
 
-## 5.IOC
+## IOC
 
 `IOC容器`，实际上就是个`map(key, value)`，里面存的是`各种对象`（在 xml 里配置的 bean 节点、@Repository、@Service、@Controller、@Component），在项目启动的时候会读取配置文件里面的 bean 节点，根据全限定类名使用反射创建对象放到 map 里。
 
@@ -209,7 +84,7 @@ public void methodB() {
 
 获得依赖对象的过程由自身管理变成了由`IOC容器`主动注入，依赖注入是实现`IOC`的方法，就是由`IOC容器`在运行期间，动态地将某种依赖关系注入到对象之中。
 
-## 7.一个注解，优雅的实现循环重试功能
+## 一个注解，优雅的实现循环重试功能
 
 在实际工作中，重处理是一个非常常见的场景，比如：
 
@@ -302,7 +177,9 @@ public int recover(Exception e, int code){
 - 方法内不能使用`try catch`，只能往外抛异常
 - `@Recover`注解来开启重试失败后调用的方法(注意，需跟重处理方法在同一个类中)，此注解注释的方法参数一定要是`@Retryable`抛出的异常，否则无法识别，可以在该方法中进行日志处理。
 
-## 8.如何理解starter
+## starter
+
+### 1.简介
 
 为了让开发者在开发 spring 生态下的企业级应用的时候，只需要关心业务逻辑，减少对配置和外部环境的依赖。
 
@@ -356,9 +233,230 @@ public int recover(Exception e, int code){
 > - 官方维护的 starter：spring-boot-starter-xxx
 > - 第三方维护的 starter：xxx-spring-boot-starter
 
-## 9.定时任务
+### 2.启动原理
 
-### 9.1 简单定时任务
+`starter -- autoconfigure -- spring-boot-starter`
+
+autoconfigure 包中配置使用`META-INF/spring.factories`中`EnableAutoConfiguration`的值，使得项目启动加载指定的自动配置类。
+
+> 在 3.0 版本后发生了改变：在`META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`文件中配置。
+
+### 3.自定义starter
+
+1. `youyi-zhao-spring-boot-starter-autoconfigure`：自动配置包
+
+   **编写逻辑**
+
+   ```java
+   @Configuration
+   @EnableConfigurationProperties(HelloProperties.class)
+   public class HelloAutoConfiguration {
+   
+       @ConditionalOnMissingBean(HelloUtil.class)
+       @Bean
+       public HelloUtil helloUtil(HelloProperties helloProperties) {
+           HelloUtil helloUtil = new HelloUtil();
+           helloUtil.setPrefix(helloProperties.getPrefix());
+           helloUtil.setSuffix(helloProperties.getSuffix());
+           return helloUtil;
+       }
+   
+   }
+   
+   @ConfigurationProperties("youyi.zhao.hello")
+   @Data
+   @AllArgsConstructor
+   @NoArgsConstructor
+   public class HelloProperties {
+       private String prefix;
+       private String suffix;
+   }
+   
+   @Data
+   @AllArgsConstructor
+   @NoArgsConstructor
+   public class HelloUtil {
+       private String prefix;
+       private String suffix;
+   
+       public String sayHello(String username) {
+           return prefix + ":<" + username + ">" + suffix;
+       }
+   }
+   ```
+
+   **在 sources/META-INF 下新建一个 spring.factories **
+
+   ```properties
+   org.springframework.boot.autoconfigure.EnableAutoConfiguration=com.youyi.hello.HelloAutoConfiguration
+   ```
+
+   **配置 pom 文件**
+
+   ```xml
+   <project xmlns="http://maven.apache.org/POM/4.0.0"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+       <modelVersion>4.0.0</modelVersion>
+   
+       <groupId>com.youyi.hello</groupId>
+       <artifactId>youyi-zhao-spring-boot-starter-autoconfigure</artifactId>
+       <version>1.0-SNAPSHOT</version>
+   
+       <properties>
+           <maven.compiler.source>8</maven.compiler.source>
+           <maven.compiler.target>8</maven.compiler.target>
+       </properties>
+   
+       <dependencies>
+           <dependency>
+               <groupId>org.springframework.boot</groupId>
+               <artifactId>spring-boot-starter</artifactId>
+               <version>2.7.0</version>
+           </dependency>
+           <dependency>
+               <groupId>org.springframework.boot</groupId>
+               <artifactId>spring-boot-configuration-processor</artifactId>
+               <version>2.7.0</version>
+           </dependency>
+           <dependency>
+               <groupId>org.projectlombok</groupId>
+               <artifactId>lombok</artifactId>
+               <version>RELEASE</version>
+               <scope>compile</scope>
+           </dependency>
+       </dependencies>
+   
+       <build>
+           <plugins>
+               <plugin>
+                   <groupId>org.springframework.boot</groupId>
+                   <artifactId>spring-boot-maven-plugin</artifactId>
+                   <version>2.7.0</version>
+               </plugin>
+           </plugins>
+       </build>
+   
+   </project>
+   ```
+
+   构成如下：
+
+   <img src="img/SpringBoot2知识点/image-20220626204240534.png" alt="image-20220626204240534" style="zoom:80%;" />
+
+2. `youyi-zhao-spring-boot-starter`：启动器
+
+   仅放入一个 pom 文件：
+
+   ```xml
+   <?xml version="1.0" encoding="UTF-8"?>
+   <project xmlns="http://maven.apache.org/POM/4.0.0"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+       <modelVersion>4.0.0</modelVersion>
+   
+       <groupId>com.youyi.hello</groupId>
+       <artifactId>youyi-zhao-spring-boot-starter</artifactId>
+       <version>1.0-SNAPSHOT</version>
+   
+       <properties>
+           <maven.compiler.source>8</maven.compiler.source>
+           <maven.compiler.target>8</maven.compiler.target>
+           <youyi-zhao-spring-boot-starter-autoconfigure>1.0-SNAPSHOT</youyi-zhao-spring-boot-starter-autoconfigure>
+       </properties>
+   
+       <!-- 指定 autoconfigure 包 -->
+       <dependencies>
+           <dependency>
+               <groupId>com.youyi.hello</groupId>
+               <artifactId>youyi-zhao-spring-boot-starter-autoconfigure</artifactId>
+               <version>${youyi-zhao-spring-boot-starter-autoconfigure}</version>
+           </dependency>
+       </dependencies>
+   
+   </project>
+   ```
+
+接下来在自己的包中导入 starter 即可：
+
+```xml
+<dependency>
+    <groupId>com.youyi.hello</groupId>
+    <artifactId>youyi-zhao-spring-boot-starter</artifactId>
+    <version>1.0-SNAPSHOT</version>
+</dependency>
+```
+
+### 4.配置元数据的应用
+
+在使用Spring Boot开发应用的时候，你是否有发现这样的情况：自定义属性是有高量背景的，鼠标放上去，有一个`Cannot resolve configuration property`的配置警告。
+
+<img src="img/SpringBoot2知识点/pasted-416.png" alt="img" style="zoom: 33%;" />
+
+如果不对于这个警告觉得烦，想要去掉，那么可以通过设置来去除：
+
+<img src="img/SpringBoot2知识点/pasted-417.png" alt="img" style="zoom: 33%;" />
+
+但是，我的建议是不要去掉，因为这个警告正好可以通过高亮来区分你的自定义配置以及框架配置，可以让你快速的分辨哪些是自定义的。
+
+如果你实在想去掉，那么也不建议用上面说的方法，而是建议通过完善配置元数据的方式来完成。所以，今天就来具体说说配置元数据的应用！
+
+#### 啥是配置元数据？
+
+我们不妨打开一个已经创建好的 Spring Boot 项目，查看一下它的 Spring Boot 依赖包，可以找到如下图的一个 json 文件：
+
+<img src="img/SpringBoot2知识点/pasted-418.png" alt="img" style="zoom: 33%;" />
+
+这里报错的就是配置的元数据信息。有没有发现这些`name`的值都很熟悉？其中`description`是不是也很熟悉？对，这些就是我们常用的 Spring Boot 原生配置的元数据信息。
+
+这下知道配置元数据可以用来做啥了吧？它可以帮助 IDE 来完成配置联想和配置提示的展示。
+
+而我们自定义配置之所以会报警告，同时也没有提示信息，就是因为没有这个元数据的配置文件！
+
+#### 配置元数据的自动生成
+
+既然知道了原理，那么接下来我们尝试用一下配置元数据试试！
+
+**第一步**：创建一个配置类，定义一个自定义配置
+
+```java
+@Data
+@Configuration
+@ConfigurationProperties(prefix = "com.didispace")
+public class DidiProperties {
+    
+    /**
+     * 这是一个测试配置
+     */
+    private String from;
+
+}
+```
+
+**第二步**：在`pom.xml`中添加自动生成配置元数据的依赖
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-configuration-processor</artifactId>
+</dependency>
+```
+
+**第三步**：`mvn install`下这个项目。
+
+此时我们可以在工程target目录下找到元数据文件：
+
+<img src="img/SpringBoot2知识点/pasted-419.png" alt="img" style="zoom: 33%;" />
+
+同时，我们在配置文件中尝试编写这个自定义的配置项时，可以看到编译器给出了联想和提示：
+
+<img src="img/SpringBoot2知识点/pasted-420.png" alt="img" style="zoom: 33%;" />
+
+并且，编写完配置之后，也没有高亮警告了！
+
+## 定时任务
+
+### 1.简单定时任务
 
 对于一些比较简单的定时任务，比如固定时间间隔执行固定方法，在标准 Java 方法上注解`@Scheduled`即可
 
@@ -418,7 +516,7 @@ public class SpringBootDemoApplication {
 >
 > 对于`fixedDelay`来说，不管业务代码执行时间与定时任务间隔时间熟长熟短，定时任务都会等业务代码执行完成后再开启新一轮定时。
 
-### 9.2 corn表达式
+### 2.corn表达式
 
 corn 表达式格式：秒 分 时 日 月 星期 年（可选）
 
@@ -472,7 +570,7 @@ corn 表达式格式：秒 分 时 日 月 星期 年（可选）
 
 0 11,22,33 * * * ? 每小时11分、22分、33分触发
 
-### 9.3 配置定时任务
+### 3.配置定时任务
 
 对于上面那些简单的定时任务，定时任务的 corn 表达式写死在代码里，如果要改动表达式，需要修改代码，重新打包发布，比较麻烦。因此，我们可以把 corn 表达式配置在配置文件中，然后程序读取配置，当需要修改表达式时，只需要修改配置文件即可。
 
@@ -496,7 +594,7 @@ public class ScheduledTask {
 }
 ```
 
-### 9.4 动态修改定时任务
+### 4.动态修改定时任务
 
 对于有些情况，我们需要在代码中，通过方法动态修改定时任务corn表达式
 
@@ -543,7 +641,7 @@ public class ScheduledTaskV2 implements SchedulingConfigurer {
 }
 ```
 
-### 9.5 并发执行定时任务
+### 5.并发执行定时任务
 
 定时任务类添加注解`@EnableAsync`，需并发执行的定时任务方法添加注解`@Async`
 
@@ -586,76 +684,7 @@ public class ScheduledTaskV3 {
 }
 ```
 
-## 10.配置元数据的应用
-
-在使用Spring Boot开发应用的时候，你是否有发现这样的情况：自定义属性是有高量背景的，鼠标放上去，有一个`Cannot resolve configuration property`的配置警告。
-
-<img src="img/SpringBoot2知识点/pasted-416.png" alt="img" style="zoom:80%;" />
-
-如果不对于这个警告觉得烦，想要去掉，那么可以通过设置来去除：
-
-<img src="img/SpringBoot2知识点/pasted-417.png" alt="img" style="zoom: 50%;" />
-
-但是，我的建议是不要去掉，因为这个警告正好可以通过高亮来区分你的自定义配置以及框架配置，可以让你快速的分辨哪些是自定义的。
-
-如果你实在想去掉，那么也不建议用上面说的方法，而是建议通过完善配置元数据的方式来完成。所以，今天就来具体说说配置元数据的应用！
-
-### 啥是配置元数据？
-
-我们不妨打开一个已经创建好的 Spring Boot 项目，查看一下它的 Spring Boot 依赖包，可以找到如下图的一个 json 文件：
-
-<img src="img/SpringBoot2知识点/pasted-418.png" alt="img" style="zoom:80%;" />
-
-这里报错的就是配置的元数据信息。有没有发现这些`name`的值都很熟悉？其中`description`是不是也很熟悉？对，这些就是我们常用的 Spring Boot 原生配置的元数据信息。
-
-这下知道配置元数据可以用来做啥了吧？它可以帮助 IDE 来完成配置联想和配置提示的展示。
-
-而我们自定义配置之所以会报警告，同时也没有提示信息，就是因为没有这个元数据的配置文件！
-
-### 配置元数据的自动生成
-
-既然知道了原理，那么接下来我们尝试用一下配置元数据试试！
-
-**第一步**：创建一个配置类，定义一个自定义配置
-
-```java
-@Data
-@Configuration
-@ConfigurationProperties(prefix = "com.didispace")
-public class DidiProperties {
-    
-    /**
-     * 这是一个测试配置
-     */
-    private String from;
-
-}
-```
-
-**第二步**：在`pom.xml`中添加自动生成配置元数据的依赖
-
-```xml
-<dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-configuration-processor</artifactId>
-</dependency>
-```
-
-**第三步**：`mvn install`下这个项目。
-
-此时我们可以在工程target目录下找到元数据文件：
-
-<img src="img/SpringBoot2知识点/pasted-419.png" alt="img" style="zoom:80%;" />
-
-同时，我们在配置文件中尝试编写这个自定义的配置项时，可以看到编译器给出了联想和提示：
-
-<img src="img/SpringBoot2知识点/pasted-420.png" alt="img" style="zoom:80%;" />
-
-并且，编写完配置之后，也没有高亮警告了！
-
-## 
-
-## 11.热部署
+## 热部署
 
 ```xml
 <dependency>
@@ -666,4 +695,22 @@ public class DidiProperties {
 ```
 
 项目或者页面修改以后：`ctrl+F9`
+
+## 兼容Junit4及之前版本
+
+SpringBoot 2.2.0 版本开始后引入 Junit5 作为单元测试默认库，要想兼容 Junit4，需要引入一下依赖：
+
+```xml
+<dependency>
+	<groupId>org.junit.vintage</groupId>
+    <artifactId>junit-vintage-engine</artifactId>
+    <scope>test</scope>
+    <exclusions>
+    	<exclusion>
+        	<groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest-core</artifactId>
+        </exclusion>
+    </exclusions>
+</dependency>
+```
 
