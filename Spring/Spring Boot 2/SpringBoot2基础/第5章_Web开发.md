@@ -314,37 +314,6 @@ public class WebConfig {
 @RequestBody Content content,
 ```
 
-**RequestBodyAdvice**
-
-允许在读取请求体并将其转换为对象之前自定义请求，还允许在将结果对象作为`@RequestBody`或`HttpEntity`方法参数传递给控制器方法之前对其进行处理。
-
-该合约的实现可以直接使用`RequestMappingHandlerAdapter`注册，或者更可能使用`@ControllerAdvice`进行注释，在这种情况下它们会被自动检测到。
-
-```java
-@RestControllerAdvice
-public class MyRequestBodyAdvice implements RequestBodyAdvice {
-    @Override
-    public boolean supports(MethodParameter methodParameter, Type targetType, Class<? extends HttpMessageConverter<?>> converterType) {
-        return false;
-    }
-
-    @Override
-    public HttpInputMessage beforeBodyRead(HttpInputMessage inputMessage, MethodParameter parameter, Type targetType, Class<? extends HttpMessageConverter<?>> converterType) throws IOException {
-        return null;
-    }
-
-    @Override
-    public Object afterBodyRead(Object body, HttpInputMessage inputMessage, MethodParameter parameter, Type targetType, Class<? extends HttpMessageConverter<?>> converterType) {
-        return null;
-    }
-
-    @Override
-    public Object handleEmptyBody(Object body, HttpInputMessage inputMessage, MethodParameter parameter, Type targetType, Class<? extends HttpMessageConverter<?>> converterType) {
-        return null;
-    }
-}
-```
-
 ##### 8.`RedirectAttributes`
 
 重定向携带参数。
@@ -389,7 +358,7 @@ WebRequst、ServletRequest、MultipartRequest、HttpSession、javax.servlet.http
 
 `Map`、`Model`（Map 和 Model 类型的参数会被放在 request 请求域中`request.setAttribute`，获取时调用了`mavContainer.getModel()`，例如错误页面的信息就是先存储在 request 域中的）、Errors/BindingResult、ServletResponse、SessionStatus、UrlComponentsBuilder、ServletUrlComponentsBuilder
 
-##### 12.自定义对象参数
+##### 12.POJO参数
 
 GET、POST 请求数据都可以和对象属性进行绑定。
 
@@ -405,13 +374,28 @@ public Person saveUser(Person person) {
 }
 ```
 
-#### 2.2.2 自定义对象参数处理原理
+#### 2.2.2 原理
+
+##### 1.自定义对象
 
 由`ServletModelAttributeMethodProcessor`进行解析和绑定，其`supportsParameter()`方法在默认解析模式下，对于任何非简单类型的方法参数，则返回 true。
 
-在`resolveArgument()`方法中会创建一个原始对象，然后创建数据绑定器，默认`ExtendedServletRequestDataBinder`，在绑定数据前进行类型转换。
+在`resolveArgument()`方法中会创建一个原始对象，然后创建数据绑定器，默认`ExtendedServletRequestDataBinder`，在绑定数据前对参数进行类型转换（默认没有转为`LocalDateTime`类型的，需要自定义配置）。
 
-#### **==2.2.3 自定义Converter==**
+转换参数时查找适合的**Converter**，其会存储在`ConversionService`中。
+
+> **convert是什么时候添加到ConversionService**
+>
+> - SpringBoot 启动的时候运行 run 方法
+> - 调用`SpringApplication.prepareEnvironment()`方法准备环境
+> - 调用`SpringApplication.configureEnvironment()`方法创建一个`ApplicationConversionService`并加载`ConversionService`等
+> - 在`ApplicationConversionService`中依次`new`出来 DefaultConverter、DefaultFormatter、ApplicationFormatters、ApplicationConverters
+
+##### 2.requestBody对象
+
+由`RequestResponseByMethodProcessor`进行解析和绑定。当有`@RequestBody`修饰时返回 true。底层调用的是**Jackon**进行字符串的解析转换。
+
+#### **==2.2.3 自定义POJO Converter==**
 
 实现将字符串解析成 POJO 的转换器：`user?pet=zhangsan,20`
 
@@ -464,6 +448,37 @@ public class StringToPetConverter implements Converter<String, Pet> {
             pet.setAge(Integer.parseInt(split[1]));
             return pet;
         }
+        return null;
+    }
+}
+```
+
+### ==2.3 RequestBodyAdvice==
+
+允许在读取请求体并将其转换为对象之前自定义请求，还允许在将结果对象作为`@RequestBody`或`HttpEntity`方法参数传递给控制器方法之前对其进行处理。
+
+该合约的实现可以直接使用`RequestMappingHandlerAdapter`注册，或者更可能使用`@ControllerAdvice`进行注释，在这种情况下它们会被自动检测到。
+
+```java
+@RestControllerAdvice
+public class MyRequestBodyAdvice implements RequestBodyAdvice {
+    @Override
+    public boolean supports(MethodParameter methodParameter, Type targetType, Class<? extends HttpMessageConverter<?>> converterType) {
+        return false;
+    }
+
+    @Override
+    public HttpInputMessage beforeBodyRead(HttpInputMessage inputMessage, MethodParameter parameter, Type targetType, Class<? extends HttpMessageConverter<?>> converterType) throws IOException {
+        return null;
+    }
+
+    @Override
+    public Object afterBodyRead(Object body, HttpInputMessage inputMessage, MethodParameter parameter, Type targetType, Class<? extends HttpMessageConverter<?>> converterType) {
+        return null;
+    }
+
+    @Override
+    public Object handleEmptyBody(Object body, HttpInputMessage inputMessage, MethodParameter parameter, Type targetType, Class<? extends HttpMessageConverter<?>> converterType) {
         return null;
     }
 }
@@ -1327,7 +1342,6 @@ public class MyServlet extends HttpServlet {
     }
 }
 
-// Spring 中使用 /**
 @WebFilter(urlPatterns={"/css/*", "/images/*"})
 public class MyFilter implements Filter {
     @Override
