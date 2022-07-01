@@ -301,7 +301,29 @@ public class DateTimeFormatterLocalTimeTest {
     }
 }
 ```
+### 7.3 解析模式
+
+|     ResolverStyle     |                             作用                             |
+| :-------------------: | :----------------------------------------------------------: |
+| ResolverStyle.STRICT  |                 严格遵守有效日期，无效则报错                 |
+|  ResolverStyle.SMART  | 智能遵守日期规范，例如日只能从1-31，超过实际的天数不会报错，会被自动替换为当月最后一天 |
+| ResolverStyle.LENIENT |          更宽松的规则，超过的会累计到下个年、月、日          |
+
+```java
+DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withResolverStyle(ResolverStyle.STRICT);
+LocalDateTime parse = LocalDateTime.parse("2012-11-31 12:30:20", dateTimeFormatter); // 报错
+```
+
+```java
+DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withResolverStyle(ResolverStyle.LENIENT);
+LocalDateTime parse = LocalDateTime.parse("2012-12-32 25:61:61", dateTimeFormatter);
+System.out.println(parse); // 2013-01-02T02:02:01
+```
+
+
+
 ## 8.ZonedDateTime的使用
+
 ### 8.1 介绍
 `java.time.ZonedDateTime`表示带时区的日期时间，例如`2007-12-03T10:15:30+01:00[Europe/Paris]`。表示巴黎当前是 10 点，比标准时间早 1 个小时。
 

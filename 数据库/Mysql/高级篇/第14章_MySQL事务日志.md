@@ -479,7 +479,7 @@ mysql> show variables like 'innodb_undo_logs';
 
   update undo log 记录的是对 delete 和 update 操作产生的 undo log。该 undo log 可能需要提供 MVCC 机制，因此不能再事务提交时就进行删除。提交时放入 undo log 链表，等待 purge 线程进行最后的删除。
 
-### 2.5 undo log 的生命周期
+### 2.5 undo log的生命周期
 
 #### 1.简要生成过程
 
@@ -552,7 +552,7 @@ UPDATE user SET name="Sun" WHERE id=1;
 UPDATE user SET id=2 WHERE id=1;
 ```
 
-![image-20220223220624584](img\image-20220223220624584.png)
+<img src="img\image-20220223220624584.png" alt="image-20220223220624584" style="zoom:80%;" />
 
 对于更新主键的操作，会先把原来的数据 deletemark 标识打开，这时并没有真正的删除数据，真正的删除会交给清理线程去判断，然后在后面插入一条新的数据，新的数据也会产生 undo log，并且 undo log 的序号会递增。
 

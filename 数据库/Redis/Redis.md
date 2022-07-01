@@ -3457,21 +3457,21 @@ public class JedisClusterTest {
 
 > ​    key 对应的数据在数据源并不存在，每次针对此 key 的请求从缓存获取不到，请求都会压到数据源，从而可能压垮数据源。比如用一个不存在的用户 id 获取用户信息，不论缓存还是数据库都没有，若黑客利用此漏洞进行攻击可能压垮数据库。
 
-<img src="img\66" alt="img" style="zoom:80%;" />
+<img src="img/Redis/66" alt="img" style="zoom:80%;" />
 
 #### 1.2 解决方案
 
-> ​    一个一定不存在缓存及查询不到的数据，由于缓存是不命中时被动写的，并且出于容错考虑，如果从存储层查不到数据则不写入缓存，这将导致这个不存在的数据每次请求都要到存储层去查询，失去了缓存的意义。
+> 一个一定不存在缓存及查询不到的数据，由于缓存是不命中时被动写的，并且出于容错考虑，如果从存储层查不到数据则不写入缓存，这将导致这个不存在的数据每次请求都要到存储层去查询，失去了缓存的意义。
 
 **解决方案：**
 
-- 对空值缓存：如果一个查询返回的数据为空（不管是不是由于数据不存在），我们仍然把这个空结果（null）进行缓存，设置空结果的过期时间会很短，最长不超过五分钟
+- 对空值缓存：如果一个查询返回的数据为空（不管是不是由于数据不存在），我们仍然把这个空结果（null）进行缓存（比如设置 value 为 -1，代表没有数据），设置空结果的过期时间会很短，最长不超过五分钟。
 
-设置可访问的名单（白名单）：使用 bitmaps 类型定义一个可以访问的名单，名单 id 作为 bitmaps 的偏移量，每次访问和 bitmap 里面的 id 进行比较，如果访问 id 不在 bitmaps 里面，进行拦截，不允许访问。
+- 设置可访问的名单（白名单）：使用 bitmaps 类型定义一个可以访问的名单，名单 id 作为 bitmaps 的偏移量，每次访问和 bitmap 里面的 id 进行比较，如果访问 id 不在 bitmaps 里面，进行拦截，不允许访问。
 
 - 采用布隆过滤器：布隆过滤器（Bloom Filter）是1970年由布隆提出的。它实际上是一个很长的二进制向量（位图）和一系列随机映射函数（哈希函数）。布隆过滤器可以用于检索一个元素是否在一个集合中。它的优点是空间效率和查询时间都远远超过一般的算法，缺点是有一定的误识别率和删除困难。将所有可能存在的数据哈希到一个足够大的 bitmaps 中，一个一定不存在的数据会被 这个 bitmaps 拦截掉，从而避免了对底层存储系统的查询压力。
 
-- 进行实时监控：当发现的命中率开始急速降低，需要排查访问对象和访问的数据，和运维人员配合，可以设置黑名单限制服务
+- 进行实时监控：当发现的命中率开始急速降低，需要排查访问对象和访问的数据，和运维人员配合，可以设置黑名单限制服务。
 
 ### 2.缓存击穿
 
@@ -3479,7 +3479,7 @@ public class JedisClusterTest {
 
 > key 对应的数据存在，但在 redis 中过期，此时若有大量并发请求过来，这些请求发现缓存过期一般都会从后端 DB 加载数据并回设到缓存，这个时候大并发的请求可能会瞬间把后端DB压垮。
 
-<img src="img\77" alt="img" style="zoom:80%;" />
+<img src="img/Redis/77" alt="img" style="zoom:80%;" />
 
 #### 2.2 解决方案
 
@@ -3497,7 +3497,7 @@ public class JedisClusterTest {
   - 当操作返回成功时，再进行 load db 的操作，并回设缓存,最后删除 mutex key
   - 当操作返回失败，证明有线程在 load db，当前线程睡眠一段时间再重试整个 get 缓存的方法
 
-<img src="img\88" alt="img" style="zoom:80%;" />
+<img src="img/Redis/88" alt="img" style="zoom:80%;" />
 
 ### 3.缓存雪崩
 
@@ -3505,7 +3505,7 @@ public class JedisClusterTest {
 
 > ​    key 对应的数据存在，但在 redis 中过期，此时若有大量并发请求过来，这些请求发现缓存过期一般都会从后端 DB 加载数据并回设到缓存，这个时候大并发的请求可能会瞬间把后端 DB 压垮。缓存雪崩与缓存击穿的区别在于这里针对很多 key 缓存，前者则是某一个 key 正常访问
 
-<img src="img\99" alt="img" style="zoom:80%;" />
+<img src="img/Redis/99" alt="img" style="zoom:80%;" />
 
 #### 3.2 解决方案
 
@@ -3544,7 +3544,7 @@ del key   # 删除锁
 expire users 30
 ```
 
-<img src="img\111" alt="img" style="zoom:80%;" />
+<img src="img/Redis/111" alt="img" style="zoom:80%;" />
 
 > 这样设置的问题：如果设置时间和上锁分开进行的话，可能存在上完锁，服务器 down 了，就没有设置过期时间。
 
@@ -3591,11 +3591,11 @@ public void testLock(){
 
 不过代码除了修改的设置过期时间问题，还存在问题，入下图所示：
 
-<img src="img\12332" alt="img" style="zoom:80%;" />
+<img src="img/Redis/12332" alt="img" style="zoom:80%;" />
 
 解决方法：
 
-<img src="img\123456" alt="img" style="zoom:80%;" />
+<img src="img/Redis/123456" alt="img" style="zoom:80%;" />
 
 代码实现：
 
@@ -3625,7 +3625,7 @@ public void testLock(){
 
 原因：
 
-<img src="img\a" alt="img" style="zoom:67%;" />
+<img src="img/Redis/a" alt="img" style="zoom:67%;" />
 
 解决方案：使用lua脚本保证删除的原子性
 
@@ -3709,21 +3709,21 @@ public void testLockLua() {
 
 - 使用 `acl list` 命令展现用户权限列表
 
-  <img src="img\f6ef6cd7875b46fb8419e9ba054d24be.png" alt="img" style="zoom:80%;" />
+  <img src="img/Redis/f6ef6cd7875b46fb8419e9ba054d24be.png" alt="img" style="zoom:80%;" />
 
 - 使用 `acl cat` 命令
 
   - 查看添加权限指令类别
 
-    <img src="img\d90cfb671048494fb06a42deb8f7e6d3.png" alt="img" style="zoom:80%;" />
+    <img src="img/Redis/d90cfb671048494fb06a42deb8f7e6d3.png" alt="img" style="zoom:80%;" />
 
   - 加参数类型名可以查看类型下具体命令
 
-    <img src="img\b8104e4448a74ef5837e6825b33f6902.png" alt="img" style="zoom:80%;" />
+    <img src="img/Redis/b8104e4448a74ef5837e6825b33f6902.png" alt="img" style="zoom:80%;" />
 
 - 使用 `acl whoami` 命令查看当前用户
 
-  <img src="img\db1aba8f89704486bb1e9efd01cf6f31.png" alt="img"  />
+  <img src="img/Redis/db1aba8f89704486bb1e9efd01cf6f31.png" alt="img"  />
 
 - 使用 aclsetuser 命令创建和编辑用户 ACL
 
@@ -3749,7 +3749,7 @@ public void testLockLua() {
     acl setuser user1
     ```
 
-    <img src="img\72dd8294941e452fbc573d3633d82a1c.png" alt="img" style="zoom:80%;" />
+    <img src="img/Redis/72dd8294941e452fbc573d3633d82a1c.png" alt="img" style="zoom:80%;" />
 
     > 在上面的示例中，我根本没有指定任何规则。如果用户不存在，这将使用 just created 的默认属性来创建用户。如果用户已经存在，则上面的命令将不执行任何操作。
 
@@ -3759,11 +3759,11 @@ public void testLockLua() {
     acl setuser user2 on >password ~cached:* +get # 只能 get 以 cached: 开头的 key
     ```
 
-    <img src="img\beaea2f2692447238d58336a0fa01bfe.png" alt="img"  />
+    <img src="img/Redis/beaea2f2692447238d58336a0fa01bfe.png" alt="img"  />
 
   - 切换用户，验证权限
 
-    <img src="img\0d0fd42952cf4553be17a1d6c7a7166f.png" alt="img"  />
+    <img src="img/Redis/0d0fd42952cf4553be17a1d6c7a7166f.png" alt="img"  />
 
 ### 2 IO多线程
 
@@ -3772,7 +3772,7 @@ public void testLockLua() {
 **原理架构**
 
 ​    Redis 6 加入多线程,但跟 Memcached 这种从 IO 处理到数据访问多线程的实现模式有些差异。Redis 的多线程部分只是用来处理网络数据的读写和协议解析，执行命令仍然是单线程。之所以这么设计是不想因为多线程而变得复杂，需要去控制 key、lua、事务，LPUSH/LPOP 等等的并发问题。整体的设计大体如下：
-<img src="img\watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,s_16,color_FFFFFF,t_70" alt="img" style="zoom:150%;" />
+<img src="img/Redis/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,s_16,color_FFFFFF,t_70" alt="img" style="zoom:150%;" />
 
 > 另外，多线程 IO 默认也是不开启的，需要再配置文件中配置
 >
@@ -3784,7 +3784,7 @@ public void testLockLua() {
 
 ​    之前老版 Redis 想要搭集群需要单独安装 ruby 环境，Redis 5 将 redis-trib.rb 的功能集成到 redis-cli 。另外官方 redis-benchmark 工具开始支持 cluster 模式了，通过多线程的方式对多个分片进行压测压。
 
-![img](img\watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,)
+![img](img/Redis/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,)
 
 > Redis6新功能还有：
 >
