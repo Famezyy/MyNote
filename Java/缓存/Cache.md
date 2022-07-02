@@ -576,7 +576,7 @@ public User getUser(User queryPram, int[] arr, String str) {
 
 **API 结构**
 
-<img src="..\img\image-20220113005721925.png" alt="image-20220113005721925" style="zoom: 80%;" />
+<img src="img/Cache/image-20220113005721925.png" alt="image-20220113005721925" style="zoom: 80%;" />
 
 ---
 
@@ -584,7 +584,7 @@ public User getUser(User queryPram, int[] arr, String str) {
 
 **API 结构**
 
-<img src="..\img\image-20220113005837032.png" alt="image-20220113005837032" style="zoom:80%;" />
+<img src="img/Cache/image-20220113005837032.png" alt="image-20220113005837032" style="zoom:80%;" />
 
 ---
 
