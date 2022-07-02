@@ -4,63 +4,63 @@
 
 ### 前后端分离
 
-> Vue + SpringBoot
->
-> - 后端时代：前端只管理静态页面，后端管理模板引擎 JSP
->
-> - **前后端分离时代**：
->
->   - 后端：控制层，服务层，数据访问层
->
->   - 前端：控制层，视图层
->
->   - 前后端交互：API
->
->   - 前后端相对独立，甚至可以部署在不同服务器
->
-> - 问题：前后端协商
-> - 解决方案：
->   - 制定 schema，实时更新最新的 API，降低集成的风险
->   - 前端测试后端接口，后端提供接口
+Vue + SpringBoot
+
+- 后端时代：前端只管理静态页面，后端管理模板引擎 JSP
+
+- **前后端分离时代**：
+
+  - 后端：控制层，服务层，数据访问层
+
+  - 前端：控制层，视图层
+
+  - 前后端交互：API
+
+  - 前后端相对独立，甚至可以部署在不同服务器
+
+- 问题：前后端协商
+- 解决方案：
+  - 制定 schema，实时更新最新的 API，降低集成的风险
+  - 前端测试后端接口，后端提供接口
 
 ### Swagger
 
-> - 世界上最流行的 API 框架
-> - RestFul Api 文档在线自动生成
-> - 直接运行，在线测试 API 接口
+- 世界上最流行的 API 框架
+- RestFul Api 文档在线自动生成
+- 直接运行，在线测试 API 接口
 
 ## 2. SpringBoot 集成 Swagger
 
-> - 在项目中使用 Swagger 需要 SpringBox，**Spring 版本不能高于 2.5.6**
->
->   - Swagger2
->   - ui
->
->   ```xml
->   <!-- https://mvnrepository.com/artifact/io.springfox/springfox-swagger-ui -->
->   <dependency>
->       <groupId>io.springfox</groupId>
->       <artifactId>springfox-swagger-ui</artifactId>
->       <version>2.9.2</version>
->   </dependency>
->   <!-- https://mvnrepository.com/artifact/io.springfox/springfox-swagger2 -->
->   <dependency>
->       <groupId>io.springfox</groupId>
->       <artifactId>springfox-swagger2</artifactId>
->       <version>2.9.2</version>
->   </dependency>
->   ```
->
-> - 编写 swagger 配置类
->
->   ```java
->   @Configuration
->   @EnableSwagger2 // 开启 Swagger
->   public class SwaggerConfig {
->   }
->   ```
->
-> - 访问 http://localhost:8080/swagger-ui.html
+- 在项目中使用 Swagger 需要 SpringBox，**Spring 版本不能高于 2.5.6**
+
+  - Swagger2
+  - ui
+
+  ```xml
+  <!-- https://mvnrepository.com/artifact/io.springfox/springfox-swagger-ui -->
+  <dependency>
+      <groupId>io.springfox</groupId>
+      <artifactId>springfox-swagger-ui</artifactId>
+      <version>2.9.2</version>
+  </dependency>
+  <!-- https://mvnrepository.com/artifact/io.springfox/springfox-swagger2 -->
+  <dependency>
+      <groupId>io.springfox</groupId>
+      <artifactId>springfox-swagger2</artifactId>
+      <version>2.9.2</version>
+  </dependency>
+  ```
+
+- 编写 swagger 配置类
+
+  ```java
+  @Configuration
+  @EnableSwagger2 // 开启 Swagger
+  public class SwaggerConfig {
+  }
+  ```
+
+- 访问 http://localhost:8080/swagger-ui.html
 
 ## 3. 配置 Swagger
 
@@ -105,8 +105,6 @@ public class SwaggerConfig {
 ```
 
 ## 4. 接口注释
-
-
 
 ```java
 // model 注释

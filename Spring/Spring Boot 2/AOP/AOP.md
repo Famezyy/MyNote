@@ -173,7 +173,7 @@ class AspectJAutoProxyRegistrar implements ImportBeanDefinitionRegistrar {
 
 实际的目标方法的代理对象容器中保存了组件的代理对象（CGlib 增强后的对象），还保存了详细信息：增强器，目标对象等。
 
-代理对象封装了一个`CglibAopProxy`的私有静态内部类`DynamicAdvisedInterceptor`对象用于拦截方法的执行。
+代理对象封装了一个`CglibAopProxy`的私有静态内部类`DynamicAdvisedInterceptor`对象用于拦截方法的执行，并将原始对象封装起来。
 
 <img src="img/AOP/image-20220616171358048.png" alt="image-20220616171358048" style="zoom:80%;" />
 
@@ -185,7 +185,7 @@ class AspectJAutoProxyRegistrar implements ImportBeanDefinitionRegistrar {
 
 - `@EnableAspectJAutoProxy`：会给容器注册一个组件`AnnotationAwareAspectJAutoProxyCreator`， 是一个后置处理器，在【`Bean`初始化阶段】的【执行`BeanPostProcessor`的`postProcessAfterInitialization()`】创建 AOP 代理对象。
 
-- 容器创建流程
+- 代理对象创建流程
 
   1. `registerBeanPostProcessors()` 注册后置处理器，创建`AnnotationAwareAspectJAutoProxyCreator`
 
