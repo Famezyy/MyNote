@@ -1405,6 +1405,45 @@ $ tree
 
 还有一点同 git add 一样，就是 reset 命令也可以接受一个 --patch 选项来一块一块地取消暂存的内容。 这样你就可以根据选择来取消暂存或恢复内容了。
 
+### 7.5 压缩
+
+假设你有一个项目，第一次提交中有一个文件，第二次提交增加了一个新的文件并修改了第一个文件，第三次提交再次修改了第一个文件。 由于第二次提交是一个未完成的工作，因此你想要压缩它。
+
+<img src="img/第7章_Git工具/image-20220705233040046.png" alt="image-20220705233040046" style="zoom:33%;" />
+
+那么可以运行`git reset --soft HEAD~2`来将 HEAD 分支移动到一个旧一点的提交上（即你想要保留的最近的提交）：
+
+<img src="img/第7章_Git工具/image-20220705233110909.png" alt="image-20220705233110909" style="zoom:33%;" />
+
+修改后只需再次运行`git commit`：
+
+<img src="img/第7章_Git工具/image-20220705233126763.png" alt="image-20220705233126763" style="zoom:33%;" />
+
+### 7.6 检出
+
+最后，你大概还想知道 checkout 和 reset 之间的区别。和 reset 一样，checkout 也操纵三棵树，不过它有一点不同，这取决于你是否传给该命令一个文件路径。
+
+#### 1.不带路径
+
+运行`git checkout [branch]`与运行`git reset --hard [branch]`非常相似，它会更新所有三棵树，不过有两点重要的区别。
+
+首先不同于`reset --hard`，`checkout`对工作目录是安全的，它会通过检查来确保不会将已更改的文件弄丢。 其实它还更聪明一些。它会在工作目录中先试着简单合并一下，这样所有 还未修改过的 文件都会被更新。而`reset --hard`则会不做检查就全面地替换所有东西。
+
+第二个重要的区别是`reset`会移动 HEAD 分支的指向，而`checkout`会移动 HEAD 自身来指向另一个分支。
+
+例如，假设我们有 master 和 develop 分支，它们分别指向不同的提交；我们现在在 develop 上（所以 HEAD 指向它）。 如果我们运行`git reset master`，那么 develop 自身现在会和 master 指向同一个提交。 而如果我们运行`git checkout master`的话，develop 不会移动，HEAD 自身会移动。 现在 HEAD 将会指向 master。
+
+所以，虽然在这两种情况下我们都移动 HEAD 使其指向了提交 A，但 做法 是非常不同的。`reset`会移动 HEAD分支的指向，而`checkout`则移动 HEAD 自身。
+
+<img src="img/第7章_Git工具/image-20220705233514857.png" alt="image-20220705233514857" style="zoom:33%;" />
+
+#### 2.带路径
+
+运行 checkout 的另一种方式就是指定一个文件路径，这会像 reset 一样不会移动 HEAD。 它就像`git reset [branch] file`那样用该次提交中的那个文件来更新索引，但是它也会覆盖工作目录中对应的文件。它就像是`git reset --hard [branch] file`（但是 reset 不允许这样运行）， 这样对工作目录并不安全，它也不会移动 HEAD。
+
+此外，同`git reset`和`git add`一样，checkout 也接受一个`--patch`选项，允许你根据选择一块一块地恢复文件内容。
+
+
 
 ## 8.高级合并
 
