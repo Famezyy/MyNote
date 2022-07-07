@@ -1,4 +1,4 @@
-# 第7章_Git工具
+# 第7章_Git工具上
 
 ## 1.选择修订版本
 
@@ -202,7 +202,7 @@ Date:   Fri Nov 7 13:47:59 2008 -0500
 
 最常用的指明提交区间语法是双点。这种语法可以让 Git 选出在一个分支中而不在另一个分支中的提交。例如，你有如下的提交历史：
 
-<img src="img/第7章_Git工具/image-20220704205851044.png" alt="image-20220704205851044" style="zoom: 33%;" />
+<img src="img/第7章_Git工具上/image-20220704205851044.png" alt="image-20220704205851044" style="zoom: 33%;" />
 
 你想要查看 experiment 分支中还有哪些提交尚未被合并入 master 分支。你可以使用`master..experiment`来让 Git 显示这些提交。也就是“在 experiment 分支中而不在 master 分支中的提交”。为了使例子简单明了，我使用了示意图中提交对象的字母来代替真实日志的输出，所以会显示：
 
@@ -249,7 +249,7 @@ $ git log refA refB --not refC
 
 这个语法可以选择出**被两个引用之一包含但又不被两者同时包含的提交**。再看看之前双点例子中的提交历史。
 
-<img src="img/第7章_Git工具/image-20220704205851044.png" alt="image-20220704205851044" style="zoom: 33%;" />
+<img src="img/第7章_Git工具上/image-20220704205851044.png" alt="image-20220704205851044" style="zoom: 33%;" />
 
 如果你想看 master 或者 experiment 中包含的但不是两者共有的提交，你可以执行：
 
@@ -1251,11 +1251,11 @@ $ git filter-branch --commit-filter '
 
 Git 作为一个系统，是以它的一般操作来管理并操纵这三棵树的：
 
-|   树   |   用途   |
-| ---- | ---- |
-|   HEAD   |   上一次提交的快照，下一次提交的父结点   |
-|   Index    |   预期的下一次提交的快照   |
-|   Working Directory   |   沙盒   |
+| 树                | 用途                                 |
+| ----------------- | ------------------------------------ |
+| HEAD              | 上一次提交的快照，下一次提交的父结点 |
+| Index             | 预期的下一次提交的快照               |
+| Working Directory | 沙盒                                 |
 
 #### 1.HEAD
 
@@ -1313,35 +1313,35 @@ $ tree
 
 经典的 Git 工作流程是通过操纵这三个区域来以更加连续的状态记录项目快照的。
 
-<img src="img/第7章_Git工具/image-20220705225051510.png" alt="image-20220705225051510" style="zoom:33%;" />
+<img src="img/第7章_Git工具上/image-20220705225051510.png" alt="image-20220705225051510" style="zoom:33%;" />
 
 假设我们进入到一个新目录，其中有一个文件。我们称其为该文件的 v1 版本，将它标记为蓝色。现在运行`git init`，这会创建一个 Git 仓库，其中的 HEAD 引用指向未创建的 master 分支。
 
-<img src="img/第7章_Git工具/image-20220705225125635.png" alt="image-20220705225125635" style="zoom: 33%;" />
+<img src="img/第7章_Git工具上/image-20220705225125635.png" alt="image-20220705225125635" style="zoom: 33%;" />
 
 此时，只有工作目录有内容。
 
 现在我们想要提交这个文件，所以用`git add`来获取工作目录中的内容，并将其复制到索引中。
 
-<img src="img/第7章_Git工具/image-20220705225208382.png" alt="image-20220705225208382" style="zoom:33%;" />
+<img src="img/第7章_Git工具上/image-20220705225208382.png" alt="image-20220705225208382" style="zoom:33%;" />
 
 接着运行`git commit`，它会取得索引中的内容并将它保存为一个永久的快照，然后创建一个指向该快照的提交对象，最后更新 master 来指向本次提交。
 
-<img src="img/第7章_Git工具/image-20220705225315297.png" alt="image-20220705225315297" style="zoom:33%;" />
+<img src="img/第7章_Git工具上/image-20220705225315297.png" alt="image-20220705225315297" style="zoom:33%;" />
 
 此时如果我们运行`git status`，会发现没有任何改动，因为现在三棵树完全相同。
 
 现在我们想要对文件进行修改然后提交它。 我们将会经历同样的过程；首先在工作目录中修改文件。 我们称其为该文件的 v2 版本，并将它标记为红色。
 
-<img src="img/第7章_Git工具/image-20220705225354170.png" alt="image-20220705225354170" style="zoom:33%;" />
+<img src="img/第7章_Git工具上/image-20220705225354170.png" alt="image-20220705225354170" style="zoom:33%;" />
 
 如果现在运行`git status`，我们会看到文件显示在 “Changes not staged for commit” 下面并被标记为红色，因为该条目在索引与工作目录之间存在不同。 接着我们运行`git add`来将它暂存到索引中。
 
-<img src="img/第7章_Git工具/image-20220705225421825.png" alt="image-20220705225421825" style="zoom:33%;" />
+<img src="img/第7章_Git工具上/image-20220705225421825.png" alt="image-20220705225421825" style="zoom:33%;" />
 
 此时，由于索引和 HEAD 不同，若运行`git status`的话就会看到 “Changes to be committed” 下的该文件变为绿色 ——也就是说，现在预期的下一次提交与上一次提交不同。 最后，我们运行`git commit`来完成提交。
 
-<img src="img/第7章_Git工具/image-20220705225458634.png" alt="image-20220705225458634" style="zoom:33%;" />
+<img src="img/第7章_Git工具上/image-20220705225458634.png" alt="image-20220705225458634" style="zoom:33%;" />
 
 现在运行`git status`会没有输出，因为三棵树又变得相同了。
 
@@ -1351,7 +1351,7 @@ $ tree
 
 假设我们再次修改了 file.txt 文件并第三次提交它。 现在的历史看起来是这样的：
 
-<img src="img/第7章_Git工具/image-20220705225710395.png" alt="image-20220705225710395" style="zoom:33%;" />
+<img src="img/第7章_Git工具上/image-20220705225710395.png" alt="image-20220705225710395" style="zoom:33%;" />
 
 `reset`主要做了三个基本操作。
 
@@ -1359,7 +1359,7 @@ $ tree
 
 `reset`做的第一件事是移动 HEAD 的指向。 这与改变 HEAD 自身不同（checkout 所做的）；`reset`移动 HEAD 指向的分支。 这意味着如果 HEAD 设置为 master 分支（例如，你正在 master 分支上）， 运行`git reset 9e5e6a4`将会使 master 指向 9e5e6a4。
 
-<img src="img/第7章_Git工具/image-20220705225910224.png" alt="image-20220705225910224" style="zoom:33%;" />
+<img src="img/第7章_Git工具上/image-20220705225910224.png" alt="image-20220705225910224" style="zoom:33%;" />
 
 无论你调用了带何种参数的`reset`，它首先都会尝试这样做。使用`reset --soft`将会使状态停止在这里。
 
@@ -1371,7 +1371,7 @@ $ tree
 
 接下来，reset 会用 HEAD 指向的当前快照的内容来更新索引。
 
-<img src="img/第7章_Git工具/image-20220705230116081.png" alt="image-20220705230116081" style="zoom:33%;" />
+<img src="img/第7章_Git工具上/image-20220705230116081.png" alt="image-20220705230116081" style="zoom:33%;" />
 
 如果指定`--mixed`选项，reset 将会在这时停止。这也是默认行为，所以如果没有指定任何选项（`git reset HEAD~`）。
 
@@ -1381,7 +1381,7 @@ $ tree
 
 如果使用`--hard`选项，它将会继续这一步。
 
-<img src="img/第7章_Git工具/image-20220705230355110.png" alt="image-20220705230355110" style="zoom:33%;" />
+<img src="img/第7章_Git工具上/image-20220705230355110.png" alt="image-20220705230355110" style="zoom:33%;" />
 
 必须注意，`--hard`标记是`reset`命令唯一的==危险用法==，它也是 Git 会真正地销毁数据的仅有的几个操作之一。其他任何形式的 reset 调用都可以轻松撤消，但是`--hard`选项不能，因为它强制覆盖了工作目录中的文件。在这种特殊情况下，我们的 Git 数据库中的一个提交内还留有该文件的 v3 版本， 我们可以通过`reflog`来找回它。但是若该文件还未提交，Git 仍会覆盖它从而导致无法恢复。
 
@@ -1391,17 +1391,17 @@ $ tree
 
 现在，假如我们运行`git reset file.txt`（这其实是`git reset --mixed HEAD file.txt`的简写形式，因为你既没有指定一个提交的 SHA-1 或分支，也没有指定`--soft`或`--hard`），它会将 file.txt 从 HEAD 复制到索引中。
 
-<img src="img/第7章_Git工具/image-20220705231140334.png" alt="image-20220705231140334" style="zoom:33%;" />
+<img src="img/第7章_Git工具上/image-20220705231140334.png" alt="image-20220705231140334" style="zoom:33%;" />
 
 它还有**取消暂存文件**的实际效果。 如果我们查看该命令的示意图，然后再想想`git add`所做的事，就会发现它们正好相反。
 
-<img src="img/第7章_Git工具/image-20220705231223425.png" alt="image-20220705231223425" style="zoom:33%;" />
+<img src="img/第7章_Git工具上/image-20220705231223425.png" alt="image-20220705231223425" style="zoom:33%;" />
 
 这就是为什么`git status`命令的输出会建议运行此命令来取消暂存一个文件。
 
 我们可以不让 Git 从 HEAD 拉取数据，而是通过具体指定一个提交来拉取该文件的对应版本。 我们只需运行类似于`git reset eb43bf file.txt`的命令即可。
 
-<img src="img/第7章_Git工具/image-20220705231252945.png" alt="image-20220705231252945" style="zoom:33%;" />
+<img src="img/第7章_Git工具上/image-20220705231252945.png" alt="image-20220705231252945" style="zoom:33%;" />
 
 还有一点同 git add 一样，就是 reset 命令也可以接受一个 --patch 选项来一块一块地取消暂存的内容。 这样你就可以根据选择来取消暂存或恢复内容了。
 
@@ -1409,15 +1409,15 @@ $ tree
 
 假设你有一个项目，第一次提交中有一个文件，第二次提交增加了一个新的文件并修改了第一个文件，第三次提交再次修改了第一个文件。 由于第二次提交是一个未完成的工作，因此你想要压缩它。
 
-<img src="img/第7章_Git工具/image-20220705233040046.png" alt="image-20220705233040046" style="zoom:33%;" />
+<img src="img/第7章_Git工具上/image-20220705233040046.png" alt="image-20220705233040046" style="zoom:33%;" />
 
 那么可以运行`git reset --soft HEAD~2`来将 HEAD 分支移动到一个旧一点的提交上（即你想要保留的最近的提交）：
 
-<img src="img/第7章_Git工具/image-20220705233110909.png" alt="image-20220705233110909" style="zoom:33%;" />
+<img src="img/第7章_Git工具上/image-20220705233110909.png" alt="image-20220705233110909" style="zoom:33%;" />
 
 修改后只需再次运行`git commit`：
 
-<img src="img/第7章_Git工具/image-20220705233126763.png" alt="image-20220705233126763" style="zoom:33%;" />
+<img src="img/第7章_Git工具上/image-20220705233126763.png" alt="image-20220705233126763" style="zoom:33%;" />
 
 ### 7.6 检出
 
@@ -1435,37 +1435,10 @@ $ tree
 
 所以，虽然在这两种情况下我们都移动 HEAD 使其指向了提交 A，但 做法 是非常不同的。`reset`会移动 HEAD分支的指向，而`checkout`则移动 HEAD 自身。
 
-<img src="img/第7章_Git工具/image-20220705233514857.png" alt="image-20220705233514857" style="zoom:33%;" />
+<img src="img/第7章_Git工具上/image-20220705233514857.png" alt="image-20220705233514857" style="zoom:33%;" />
 
 #### 2.带路径
 
 运行 checkout 的另一种方式就是指定一个文件路径，这会像 reset 一样不会移动 HEAD。 它就像`git reset [branch] file`那样用该次提交中的那个文件来更新索引，但是它也会覆盖工作目录中对应的文件。它就像是`git reset --hard [branch] file`（但是 reset 不允许这样运行）， 这样对工作目录并不安全，它也不会移动 HEAD。
 
 此外，同`git reset`和`git add`一样，`checkout`也接受一个`--patch`选项，允许你根据选择一块一块地恢复文件内容。
-
-## 8.高级合并
-
-
-
-## 9.Rerere
-
-
-
-## 10.调试
-
-
-
-## 11.子模块
-
-
-
-## 12.打包
-
-
-
-## 13.替换
-
-
-
-## 14.凭证存储
-
