@@ -1807,7 +1807,7 @@ class ClientReader extends Thread {
 
 在讲解利用NIO实现通信架构之前，我们需要先来了解一下NIO的基本特点和使用。
 
-## 4.1 Java NIO 基本介绍
+## 4.1 Java NIO基本介绍
 
 * Java NIO（New IO）也有人称之为 java non-blocking IO 是从 Java 1.4 版本开始引入的一个新的 IO API，可以替代标准的 Java IO API。NIO 与原来的 IO 有同样的作用和目的，但是使用的方式完全不同，NIO 支持面**向缓冲区**的、基于**通道**的 IO 操作。NIO 将以更加高效的方式进行文件的读写操作。NIO 可以理解为非阻塞 IO,传统的 IO 的 read 和 write 只能阻塞执行，线程在读写 IO 期间不能干其他事情，比如调用 socket.read() 时，如果服务器一直没有数据传输过来，线程就一直阻塞，而 NIO 中可以配置 socket 为非阻塞模式
 *  NIO 相关类都被放在 java.nio 包及子包下，并且对原 java.io 包中的很多类进行改写
@@ -1817,7 +1817,7 @@ class ClientReader extends Thread {
 
 <img src="img/BIO、NIO、AIO/image-20220202223908046.png" alt="image-20220202223908046" style="zoom: 80%;" />
 
-## 4.2 NIO 和 BIO 的比较
+## 4.2 NIO和BIO的比较
 
 * BIO 以流的方式处理数据，而 NIO 以块的方式处理数据，块 I/O 的效率比流 I/O 高很多
 * BIO 是阻塞的，NIO 则是非阻塞的
@@ -1830,19 +1830,19 @@ class ClientReader extends Thread {
 | 非阻塞（Non Blocking IO） | 阻塞 IO(Blocking IO) |
 | 选择器（Selectors）       |                      |
 
-## 4.3 NIO 三大核心原理示意图
+## 4.3 NIO三大核心原理示意图
 
 NIO 有三大核心部分：**Channel(通道) ，Buffer(缓冲区)，Selector(选择器)**
 
-### Buffer 缓冲区
+### Buffer缓冲区
 
 ​    缓冲区本质上是一块可以写入数据，然后可以从中读取数据的内存。这块内存被包装成 NIO Buffer 对象，并提供了一组方法，用来方便的访问该块内存。相比较直接对数组的操作，Buffer API 更加容易操作和管理。
 
-### **Channel 通道**
+### **Channel通道**
 
 ​    Java NIO 的通道类似流，但又有些不同：既可以从通道中读取数据，又可以写数据到通道。但流的（input 或 output）读写通常是单向的。 通道可以非阻塞读取和写入通道，通道可以支持读取或写入缓冲区，也支持异步地读写。
 
-### Selector 选择器
+### Selector选择器
 
 ​    Selector 是一个 Java NIO 组件，可以能够检查一个或多个 NIO 通道，并确定哪些通道已经准备好进行读取或写入。这样，一个单独的线程可以管理多个 channel，从而管理多个网络连接，提高效率。
 
@@ -1864,7 +1864,7 @@ NIO 有三大核心部分：**Channel(通道) ，Buffer(缓冲区)，Selector(�
 
 <img src="img/BIO、NIO、AIO/image-20220202224429384.png" alt="image-20220202224429384" style="zoom:67%;" />
 
-### **Buffer 类及其子类**
+### **Buffer类及其子类**
 
 **Buffer** 就像一个数组，可以保存多个相同类型的数据。根据数据类型不同 ，有以下 Buffer 常用子类：
 
