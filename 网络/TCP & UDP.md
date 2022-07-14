@@ -7,15 +7,13 @@
 </style>
 <p style="text-align:right"><a href="https://mp.weixin.qq.com/s/doxVJZ1G6187B4AOXb0JlA">引用</a></p>
 
-<img src="\img\image-20220422203304153.png" alt="image-20220422203304153" style="zoom:80%;" />
+<img src="img/TCP & UDP/image-20220422203304153.png" alt="image-20220422203304153" style="zoom:80%;" />
 
 ## 1.TCP 和 UDP 的特点
 
 **用户数据报协议 UDP（User Datagram Protocol）**
 
 是==无连接==的，尽最大可能交付，没有拥塞控制，面向报文（对于应用程序传下来的报文不合并也不拆分，只是添加 UDP 首部），支持一对一、一对多、多对一和多对多的交互通信。
-
-
 
 **传输控制协议 TCP（Transmission Control Protocol）**
 
@@ -132,17 +130,15 @@
 
   第一种情况，接收端正常收到两个数据包，即没有发生拆包和粘包的现象。
 
-<img src="img\640" alt="图片" style="zoom: 80%;" />
+<img src="img/TCP & UDP/640" alt="图片" style="zoom: 80%;" />
 
 第二种情况，接收端只收到一个数据包，但是这一个数据包中包含了发送端发送的两个数据包的信息，这种现象即为粘包。这种情况由于接收端不知道这两个数据包的界限，所以对于接收端来说很难处理。
 
-<img src="img\6401" alt="图片" style="zoom: 80%;" />
+<img src="img/TCP & UDP/6401" alt="图片" style="zoom: 80%;" />
 
 第三种情况，这种情况有两种表现形式，如下图。接收端收到了两个数据包，但是这两个数据包要么是不完整的，要么就是多出来一块，这种情况即发生了拆包和粘包。这两种情况如果不加特殊处理，对于接收端同样是不好处理的。
 
-
-
-<img src="img\6402" alt="图片" style="zoom: 80%;" />
+<img src="img/TCP & UDP/6402" alt="图片" style="zoom: 80%;" />
 
 <img src="https://mmbiz.qpic.cn/mmbiz_png/j5D4MI5U9vX67Ziaria9ibcMMNVR5Gn2zUFBflo3qeEItFbdu3Lib6wicdICKRRXKV44YQBFWvNNNlTxicFpWuF3CwdA/640?wx_fmt=png&tp=webp&wxfrom=5&wx_lazy=1&wx_co=1" alt="图片" style="zoom: 80%;" />
 
@@ -154,8 +150,6 @@
 - 待发送数据大于 MSS（最大报文长度），TCP 在传输前将进行拆包。
 - 要发送的数据小于 TCP 发送缓冲区的大小，TCP 将多次写入缓冲区的数据一次发送出去，将会发生粘包。
 - 接收数据端的应用层没有及时读取接收缓冲区中的数据，将发生粘包。
-
-
 
 **粘包、拆包解决办法**
 
@@ -188,7 +182,7 @@ $$
 
 接收窗口只会对窗口内最后一个按序到达的字节进行确认，例如接收窗口已经收到的字节为 {31, 34, 35}，其中 {31} 按序到达，而 {34, 35} 就不是，因此只对字节 31 进行确认。发送方得到一个字节的确认之后，就知道这个字节之前的所有字节都已经被接收。
 
-<img src="img\6403" alt="图片" style="zoom: 50%;" />
+<img src="img/TCP & UDP/6403" alt="图片" style="zoom: 50%;" />
 
 ## 7.TCP 流量控制
 
@@ -202,7 +196,7 @@ $$
 
 如果网络出现拥塞，分组将会丢失，此时发送方会继续重传，从而导致网络拥塞程度更高。因此当出现拥塞时，应当控制发送方的速率。这一点和流量控制很像，但是出发点不同。流量控制是为了让接收方能来得及接收，而拥塞控制是为了降低整个网络的拥塞程度。
 
-<img src="img\6404" alt="图片" style="zoom: 50%;" />
+<img src="img/TCP & UDP/6404" alt="图片" style="zoom: 50%;" />
 
 
 
@@ -218,7 +212,7 @@ TCP 主要通过四个算法来进行拥塞控制：
 
 - 虽然 TCP 的窗口基于字节，但是这里设窗口的大小单位为报文段。
 
-<img src="img\6405" alt="图片" style="zoom:50%;" />
+<img src="img/TCP & UDP/6405" alt="图片" style="zoom:50%;" />
 
 
 
@@ -240,7 +234,7 @@ TCP 主要通过四个算法来进行拥塞控制：
 
 慢开始和快恢复的快慢指的是 cwnd 的设定值，而不是 cwnd 的增长速率。慢开始 cwnd 设定为 1，而快恢复 cwnd 设定为 ssthresh。
 
-<img src="img\6406" alt="图片" style="zoom: 33%;" />
+<img src="img/TCP & UDP/6406" alt="图片" style="zoom: 33%;" />
 
 ## 9.提供网络利用率
 

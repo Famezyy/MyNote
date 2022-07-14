@@ -1,94 +1,218 @@
-# 第1章_NIO基础
+# 第2章_NIO基础
 
-NIO：non-blocking io，表示非阻塞 IO。
+Java NIO（New IO）也有人称之为 java non-blocking IO 是从 Java 1.4 版本开始引入的一个新的 IO API，可以替代标准的 Java IO API。NIO 与原来的 IO 有同样的作用和目的，但是使用的方式完全不同，NIO 支持**面向缓冲区**的、基于**通道**的 IO 操作。NIO 将以更加高效的方式进行文件的读写操作。
+
+NIO 可以理解为非阻塞 IO，传统的 IO 的 read 和 write 只能阻塞执行，线程在读写 IO 期间不能干其他事情，比如调用`socket.read()`时，如果服务器一直没有数据传输过来，线程就一直阻塞，而 NIO 中可以配置 socket 为非阻塞模式。NIO 相关类都被放在`java.nio`包及子包下，并且对原`java.io`包中的很多类进行改写。Java NIO 的非阻塞模式，使一个线程从某通道发送请求或者读取数据，但是它仅能得到目前可用的数据，如果目前没有数据可用时，就什么都不会获取，而不是保持线程阻塞，所以直至数据变的可以读取之前，该线程可以继续做其他的事情。 非阻塞写也是如此，一个线程请求写入一些数据到某通道，但不需要等待它完全写入，这个线程同时可以去做别的事情。
+
+**NIO和BIO的比较**
+
+* BIO 以流的方式处理数据，而 NIO 以块的方式处理数据，块 I/O 的效率比流 I/O 高很多
+* BIO 是阻塞的，NIO 则是非阻塞的
+* BIO 基于字节流和字符流进行操作，而 NIO 基于 Channel（通道）和 Buffer（缓冲区）进行操作，数据总是从通道读取到缓冲区中，或者从缓冲区写入到通道中。Selector（选择器）用于监听多个通道的事件（比如：连接请求，数据到达等），因此使用单个线程就可以监听多个客户端通道
+
+| NIO                       | BIO                  |
+| ------------------------- | -------------------- |
+| 面向缓冲区（Buffer）      | 面向流（Stream）     |
+| 非阻塞（Non Blocking IO） | 阻塞 IO(Blocking IO) |
+| 选择器（Selectors）       |                      |
+
+NIO 有三大核心部分：**Channel(通道) 、Buffer(缓冲区)、Selector(选择器)**。
 
 ## 1.三大组件
 
-### 1.1 Channel & Buffer
+### 1.1 缓冲区（Buffer）
 
-`channel`有一点类似于 stream，它就是读写数据的**双向通道**，可以从 channel 将数据读入 buffer，也可以将 buffer 的数据写入 channel，而之前的 stream 要么是输入，要么是输出，channel 比 stream 更为底层。
+一个用于特定基本数据类型的容器。由`java.nio`包定义的，所有缓冲区都是 Buffer 抽象类的子类.。Java NIO 中的 Buffer 主要用于与 NIO 通道进行交互，数据是从通道读入缓冲区，从缓冲区写入通道中的。
 
-```mermaid
-graph LR
-channel --> buffer
-buffer --> channel
+<img src="img/第2章_NIO基础/image-20220202224429384.png" alt="image-20220202224429384" style="zoom:67%;" />
+
+#### 1.Buffer类及其子类
+
+**Buffer**就像一个数组，可以保存多个相同类型的数据。根据数据类型不同 ，有以下 Buffer 常用子类：
+
+* ByteBuffer 
+* CharBuffer 
+* ShortBuffer 
+* IntBuffer 
+* LongBuffer 
+* FloatBuffer 
+* DoubleBuffer 
+
+上述 Buffer 类都采用相似的方法进行管理数据，只是各自管理的数据类型不同而已。都是通过如下方法获取一个 Buffer 对象：
+
+```java
+// 创建一个容量为 capacity 的 XxxBuffer 对象
+static XxxBuffer allocate(int capacity) {}
 ```
 
-常见的 Channel 有：
+#### 2.缓冲区的基本属性
 
-* FileChannel
-* DatagramChannel
-* SocketChannel
-* ServerSocketChannel
+Buffer 中的重要概念：
 
-`buffer`则用来缓冲读写数据，常见的 buffer 有：
+* **容量（capacity）**：作为一个内存块，Buffer 具有一定的固定大小，也称为"容量"，缓冲区容量不能为负，并且创建后不能更改。 
+* **限制（limit）**：表示缓冲区中可以操作数据的大小（limit 后数据不能进行读写）。缓冲区的限制不能为负，并且不能大于其容量。 写入模式，限制等于 buffer 的容量。读取模式下，limit 等于写入的数据量。
+* **位置（position）**：下一个要读取或写入的数据的索引，缓冲区的位置不能为负，并且不能大于其限制。
+* **标记（mark）与重置（reset）**：标记是一个索引，通过 Buffer 中的`mark()`方法 指定 Buffer 中一个特定的 position，之后可以通过调用 reset() 方法恢复到这个 position。
 
-* ByteBuffer
-  * MappedByteBuffer
-  * DirectByteBuffer
-  * HeapByteBuffer
-* ShortBuffer
-* IntBuffer
-* LongBuffer
-* FloatBuffer
-* DoubleBuffer
-* CharBuffer
+标记、位置、限制、容量遵守以下不变式：`0 <= mark <= position <= limit <= capacity`
 
-### 1.2 Selector
+一开始
 
-`selector`单从字面意思不好理解，需要结合服务器的设计演化来理解它的用途。
+![](img/第2章_NIO基础/0021.png)
 
-#### 1.多线程版设计
+写模式下，position 是写入位置，limit 等于容量，下图表示写入了 4 个字节后的状态
 
-```mermaid
-graph TD
-subgraph 多线程版
-t1(thread) --> s1(socket1)
-t2(thread) --> s2(socket2)
-t3(thread) --> s3(socket3)
-end
-```
-**缺点**
+![](img/第2章_NIO基础/0018.png)
 
-* 内存占用高
-* 线程上下文切换成本高
-* 只适合连接数少的场景
+flip 动作发生后，position 切换为读取位置，limit 切换为读取限制（Limit 为 5）
 
-#### 2.线程池版设计
+![](img/第2章_NIO基础/0019.png)
 
-```mermaid
-graph TD
-subgraph 线程池版
-t4(thread) --> s4(socket1)
-t5(thread) --> s5(socket2)
-t4(thread) -.-> s6(socket3)
-t5(thread) -.-> s7(socket4)
-end
-```
-**缺点**
+读取 4 个字节后，状态
 
-* 阻塞模式下，线程仅能处理一个 socket 连接
-* 仅适合短连接场景
+![](img/第2章_NIO基础/0020.png)
 
-#### 3.selector版设计
+clear 动作发生后，状态
 
-selector 的作用就是配合一个线程来管理多个 channel，获取这些 channel 上发生的事件，这些 channel 工作在非阻塞模式下，不会让线程吊死在一个 channel 上。适合连接数特别多，但流量低的场景。
+![](img/第2章_NIO基础/0021-16575171511855.png)
 
-```mermaid
-graph TD
-subgraph selector 版
-thread --> selector
-selector --> c1(channel)
-selector --> c2(channel)
-selector --> c3(channel)
-end
+compact 方法，是把未读完的部分向前压缩，然后切换至写模式
+
+![](img/第2章_NIO基础/0022.png)
+
+#### 3.Buffer常见方法
+
+可以使用`allocate()`或`allocateDirect()`方法为 ByteBuffer 分配空间，其它 buffer 类也有该方法：
+
+```java
+Bytebuffer heapByteBuffer = ByteBuffer.allocate(16);
+Bytebuffer DirectByteBuffer = ByteBuffer.allocateDirect(16);
+System.out.println(heapByteBuffer.getClass()); // java.nio.HeapByteBuffer - 使用 java 堆内存，读写效率低，受 GC 影响
+System.out.println(DirectByteBuffer.getClass()); // java.nio.DirectByteBuffer - 使用直接内存，读写效率高，不受 GC 影响，分配内存效率低下，存在内存泄漏问题
 ```
 
-调用 selector 的`select()`会阻塞直到 channel 发生了读写就绪事件，这些事件发生，select 方法就会返回这些事件交给 thread 来处理。
+> **allocate 和 directAllocate**
+>
+> 根据官方文档的描述：
+>
+> ​    `byte byffer`可以是两种类型，一种是基于直接内存（也就是非堆内存）；另一种是非直接内存（也就是堆内存）。对于直接内存来说，JVM 将会在 IO 操作上具有更高的性能，因为它直接作用于本地系统的 IO 操作。而非直接内存，也就是堆内存中的数据，如果要作 IO 操作，会先从本进程内存复制到直接内存，再利用本地IO处理。
+>
+> 从数据流的角度，非直接内存是下面这样的作用链：
+>
+> ```
+> 本地IO-->直接内存-->非直接内存-->直接内存-->本地IO
+> ```
+>
+> 而直接内存是：
+>
+> ```
+> 本地IO-->直接内存-->本地IO
+> ```
+>
+> ​    很明显，在做IO处理时，比如网络发送大量数据时，直接内存会具有更高的效率。直接内存使用 allocateDirect 创建，但是它比申请普通的堆内存需要耗费更高的性能。不过，这部分的数据是在 JVM 之外的，因此它不会占用应用的内存。所以呢，当你有很大的数据要缓存，并且它的生命周期又很长，那么就比较适合使用直接内存。只是一般来说，如果不是能带来很明显的性能提升，还是推荐直接使用堆内存。字节缓冲区是直接缓冲区还是非直接缓冲区可通过调用其 isDirect()  方法来确定。
+>
+> ​    虽然 directAllocate 分配的内存不由 jvm 管理但他所属的对像还是由 jvm 管理的（比如 ByteBuffer 这类型的对像），所以当对像消亡时就是这段内存释放的时候
+>
+> **使用场景**
+>
+> - 1 有很大的数据需要存储，它的生命周期又很长
+> - 2 适合频繁的 IO 操作，比如网络并发场景
 
-## 2.ByteBuffer
+**其他常用方法**
 
-**入门案例**
+```java
+Buffer clear() 清空缓冲区并返回对缓冲区的引用
+Buffer flip() 将缓冲区的界限设置为当前位置，并将当前位置重置为 0
+int capacity() 返回 Buffer 的 capacity 大小
+boolean hasRemaining() 判断缓冲区中是否还有元素
+int limit() 返回 Buffer 的界限（limit）的位置
+Buffer limit(int n) 将 limit 设置为 n, 并返回一个具有新 limit 的缓冲区对象
+Buffer mark() 对缓冲区设置标记
+int position() 返回缓冲区的当前位置 position
+Buffer position(int n) 将 position 设置为 n, 并返回修改后的 Buffer 对象
+int remaining() 返回 position 和 limit 之间的元素个数
+Buffer reset() 将 position 转到以前设置的 mark 所在的位置
+Buffer rewind() 将 position 设为 0，取消设置的 mark
+```
+
+> **`clear()`、`rewind()`、`flip()`方法的区别**
+>
+> - `clear()`方法用于写模式，其作用为清空 Buffer 中的内容，所谓清空是指将 limit 设置为 capacity 大小，同时将当前写位置置为最前端下标为 0 处
+>
+> - `rewind()`在读写模式下都可用，它单纯的将当前位置置 0，同时取消 mark 标记
+> - `flip()`函数的作用是将写模式转变为读模式，即将写模式下的 Buffer 中内容的最后位置变为读模式下的 limit 位置，作为读越界位置，同时将当前读位置置为 0，表示转换后重头开始读，同时再消除写模式下的 mark 标记
+
+**字符串与ByteBuffer互转**
+
+```java
+/// 字符串转换为 ByteBuffer
+// 1.ByteBuffer.put()
+ByteBuffer buffer1 = ByteBuffer.allocate(16);
+buffer1.put("hello".getBytes());
+// 2.ByteBuffer.wrap()
+ByteBuffer buffer2 = ByteBuffer.wrap("hello".getBytes());
+// 3.使用 StandardCharsets
+ByteBuffer buffer3 = StandardCharsets.UTF_8.encode("你好");
+
+/// ByteBuffer 转换为字符串
+// 使用 StandardCharsets
+CharBuffer buffer5 = StandardCharsets.UTF_8.decode(buffer2);
+String str1 = buffer5.toString();
+// 注意：使用 decode 时必须将 position 重置，对于第一种字符串转换为 ByteBuffer 方法，由于其 position 还没有重置，直接使用 decode 会转换第 5 位到 15 位的字符
+String str2 = StandardCharsets.UTF_8.decode(buffer1).toString();
+System.out.println("str2: " + str2 + "; str2.length: " + str2.length()); // str2:            ; str2.length: 11
+
+// 使用 flip() 重置 position 为 0
+buffer1.flip();
+// 使用 limit() 重置 limit 为 5
+buffer1.limit(5);
+String str3 = StandardCharsets.UTF_8.decode(buffer1).toString();
+System.out.println("str3: " + str3); // str3: hello
+```
+
+#### 4.缓冲区的数据操作
+
+```java
+// Buffer 所有子类提供了两个用于数据操作的方法：get() put() 方法
+// 获取 Buffer 中的数据
+get()：读取单个字节
+get(byte[] dst)：批量读取多个字节到 dst 中
+get(int index)：读取指定索引位置的字节(不会移动 position)
+get(byte[] dst, int offset, int length)：
+    for (int i = offset; i < end; i++)
+            dst[i] = get();
+    
+// 放入数据到 Buffer 中
+put(byte b)：将给定单个字节写入缓冲区的当前位置
+put(byte[] src)：将 src 中的字节写入缓冲区的当前位置
+put(int index, byte b)：将指定字节写入缓冲区的索引位置(不会移动 position)
+```
+
+**使用 Buffer 读写数据一般遵循以下四个步骤：**
+
+* 写入数据到 Buffer
+
+* 调用`flip()`方法，转换为读取模式
+
+* 从 Buffer 中读取数据
+
+* 调用`buffer.clear()`方法或者`buffer.compact()`方法清除缓冲区
+
+  > **`clear`与`compact`**
+  >
+  > - `clear`是把 position=0，limit=capcity 等，也就是说，除了内部数组，其他属性都还原到 buffer 创建时的初始值，而内部数组的数据虽然没赋为 null，但只要不在 clear 之后误用 `buffer.get`就不会有问题，正确用法是使用`buffer.put`从头开始写入数据;
+  >
+  > - `compcat`是把 buffer 中内部数组剩余未读取的数据复制到该数组从索引为 0 开始，然后 position 设置为复制剩余数据后的最后一位元素的索引 +1，limit 设置为 capcity，此时在 0\~position 之间是未读数据，而 position~limit 之间是 buffer 的剩余空间，可以 put 数据。
+  >
+  > 使用场景：
+  >
+  > 当 buffer 未被完全读取完时，可以执行`compact`把剩余未读取数据往缓冲数据前面移动，compact 移动完后，可以再次使用 put 往该 buffer 里 put 数据，此时数据会被写到剩余数据之后
+
+#### 5.Buffer的线程安全
+
+Buffer 是==非线程安全的==。
+
+#### 6.入门案例
 
 有一普通文本文件 data.txt，内容为：
 
@@ -128,67 +252,53 @@ public class ChannelDemo1 {
 }
 ```
 
-输出
+#### 7.练习
 
-```bash
-10:39:03 [DEBUG] [main] c.i.n.ChannelDemo1 - 读到字节数：10
-10:39:03 [DEBUG] [main] c.i.n.ChannelDemo1 - 1
-10:39:03 [DEBUG] [main] c.i.n.ChannelDemo1 - 2
-10:39:03 [DEBUG] [main] c.i.n.ChannelDemo1 - 3
-10:39:03 [DEBUG] [main] c.i.n.ChannelDemo1 - 4
-10:39:03 [DEBUG] [main] c.i.n.ChannelDemo1 - 5
-10:39:03 [DEBUG] [main] c.i.n.ChannelDemo1 - 6
-10:39:03 [DEBUG] [main] c.i.n.ChannelDemo1 - 7
-10:39:03 [DEBUG] [main] c.i.n.ChannelDemo1 - 8
-10:39:03 [DEBUG] [main] c.i.n.ChannelDemo1 - 9
-10:39:03 [DEBUG] [main] c.i.n.ChannelDemo1 - 0
-10:39:03 [DEBUG] [main] c.i.n.ChannelDemo1 - 读到字节数：4
-10:39:03 [DEBUG] [main] c.i.n.ChannelDemo1 - a
-10:39:03 [DEBUG] [main] c.i.n.ChannelDemo1 - b
-10:39:03 [DEBUG] [main] c.i.n.ChannelDemo1 - c
-10:39:03 [DEBUG] [main] c.i.n.ChannelDemo1 - d
-10:39:03 [DEBUG] [main] c.i.n.ChannelDemo1 - 读到字节数：-1
+网络上有多条数据发送给服务端，数据之间使用`\n`进行分隔，但由于某种原因这些数据在接收时，被进行了重新组合，例如原始数据有 3 条为：
+
+* Hello,world\n
+* I'm zhangsan\n
+* How are you?\n
+
+变成了下面的两个 byteBuffer：
+
+* Hello,world\nI'm zhangsan\nHo（黏包）
+* w are you?\n（半包）
+
+现在要求你编写程序，将错乱的数据恢复成原始的按`\n`分隔的数据
+
+```java
+public static void main(String[] args) {
+    ByteBuffer source = ByteBuffer.allocate(32);
+    //                     11            24
+    source.put("Hello,world\nI'm zhangsan\nHo".getBytes());
+    split(source);
+
+    source.put("w are you?\nhaha!\n".getBytes());
+    split(source);
+}
+
+private static void split(ByteBuffer source) {
+    source.flip();
+    int length = source.limit();
+    for (int i = 0; i < length; i++) {
+        if (source.get(i) == StringUtil.LINE_FEED) {
+            // 修改 limit 为当前换行符位置
+            source.limit(i);
+            // 申请 ByteBuffer 空间
+            ByteBuffer out = ByteBuffer.allocate(i - source.position());
+            // 向 out 中写入 source 的 position 到 limit 的内容
+            out.put(source);
+            debugAll(out);
+            // 重置 limit，否则当 position 大于 limit 则会报错
+            source.limit(length);
+            // 修改 position 为换行符下一个字符
+            source.position(i + 1);
+        }
+    }
+    source.compact();
+}
 ```
-
-### 2.1 ByteBuffer使用步骤
-
-1. 向 buffer 写入数据，例如调用`channel.read(buffer)`
-2. 调用 flip() 切换至**读模式**
-3. 从 buffer 读取数据，例如调用`buffer.get()`
-4. 调用`clear()`或`compact()`切换至**写模式**
-5. 重复 1~4 步骤
-
-### 2.2 ByteBuffer结构
-
-ByteBuffer 有以下重要属性
-
-* capacity（容量）：缓冲区容量不能为负，并且创建后不能更改
-* position（写入位置）：下一个要读取或写入的数据的索引，缓冲区的位置不能为负，并且不能大于其限制 
-* limit（读取或写入限制）：写入模式，限制等于buffer的容量。读取模式下，limit 等于写入的数据量
-
-一开始
-
-![](img/第1章_NIO基础/0021.png)
-
-写模式下，position 是写入位置，limit 等于容量，下图表示写入了 4 个字节后的状态
-
-![](img/第1章_NIO基础/0018.png)
-
-flip 动作发生后，position 切换为读取位置，limit 切换为读取限制（Limit 为 5）
-
-![](img/第1章_NIO基础/0019.png)
-
-读取 4 个字节后，状态
-
-![](img/第1章_NIO基础/0020.png)
-
-clear 动作发生后，状态
-
-![](img/第1章_NIO基础/0021-16575171511855.png)
-
-compact 方法，是把未读完的部分向前压缩，然后切换至写模式
-
-![](img/第1章_NIO基础/0022.png)
 
 #### 💡 调试工具类
 
@@ -363,237 +473,56 @@ public class ByteBufferUtil {
 }
 ```
 
-### 2.3 ByteBuffer常见方法
+### 1.2 Channel
 
-#### 1.分配空间
+通道（Channel）由`java.nio.channels`包定义的，Channel 表示 IO 源与目标打开的连接，Channel 类似于传统的“流”，只不过 Channel 本身不能直接访问数据，Channel 只能与 Buffer 进行交互。
 
-可以使用`allocate()`或`allocateDirect()`方法为 ByteBuffer 分配空间，其它 buffer 类也有该方法：
+-  NIO 的通道类似于流，但有些区别如下：
 
-```java
-Bytebuffer heapByteBuffer = ByteBuffer.allocate(16);
-Bytebuffer DirectByteBuffer = ByteBuffer.allocateDirect(16);
-System.out.println(heapByteBuffer.getClass()); // java.nio.HeapByteBuffer - 使用 java 堆内存，读写效率低，受 GC 影响
-System.out.println(DirectByteBuffer.getClass()); // java.nio.DirectByteBuffer - 使用直接内存，读写效率高，不受 GC 影响，分配内存效率低下，存在内存泄漏问题
-```
+   * 通道可以同时进行读写，而流只能读或者只能写
 
-#### 2.向buffer写入数据
 
-有两种办法：
+  *  通道可以实现异步读写数据
 
-* 调用 channel 的`read()`方法
-* 调用 buffer 自己的`put()`方法
 
-```java
-int readBytes = channel.read(buf);
-buf.put((byte)127);
-```
+  *  通道可以从缓冲读数据，也可以写数据到缓冲
 
-#### 3.从buffer读取数据
 
-同样有两种办法：
+- BIO 中的 stream 是单向的，例如 FileInputStream 对象只能进行读取数据的操作，而 NIO 中的通道（Channe）是双向的，可以读操作，也可以写操作
 
-* 调用 channel 的`write()`方法
-* 调用 buffer 自己的`get()`方法
+- Channel 在 NIO 中是一个接口
 
-```java
-int writeBytes = channel.write(buf);
-byte b = buf.get();
-```
+#### 1.常用的Channel实现类
 
-`get()`方法会让 position 读指针向后走，如果想重复读取数据：
+* FileChannel：用于读取、写入、映射和操作文件的通道
 
-* 可以调用`rewind()`方法将 position 重新置为 0
-* 或者调用`get(int i)`方法获取索引 i 的内容，它不会移动读指针
+* DatagramChannel：通过 UDP 读写网络中的数据通道
 
-#### 4.mark和reset
+* SocketChannel：通过 TCP 读写网络中的数据
 
-mark 是在读取时，做一个标记，即使 position 改变，只要调用`reset()`就能回到 mark 的位置
+* ServerSocketChannel：可以监听新进来的 TCP 连接，对每一个新进来的连接都会创建一个 SocketChannel
 
-> **注意**
->
-> `rewind()`和`flip()`都会清除 mark 位置
 
-#### 5.字符串与ByteBuffer互转
+> ServerSocketChanne 类似 ServerSocket , SocketChannel 类似 Socket
 
-```java
-/// 字符串转换为 ByteBuffer
-// 1.ByteBuffer.put()
-ByteBuffer buffer1 = ByteBuffer.allocate(16);
-buffer1.put("hello".getBytes());
-// 2.ByteBuffer.wrap()
-ByteBuffer buffer2 = ByteBuffer.wrap("hello".getBytes());
-// 3.使用 StandardCharsets
-ByteBuffer buffer3 = StandardCharsets.UTF_8.encode("你好");
+#### 2.FileChannel类
 
-/// ByteBuffer 转换为字符串
-// 使用 StandardCharsets
-CharBuffer buffer5 = StandardCharsets.UTF_8.decode(buffer2);
-String str1 = buffer5.toString();
-// 注意：使用 decode 时必须将 position 重置，对于第一种字符串转换为 ByteBuffer 方法，由于其 position 还没有重置，直接使用 decode 会转换第 5 位到 15 位的字符
-String str2 = StandardCharsets.UTF_8.decode(buffer1).toString();
-System.out.println("str2: " + str2 + "; str2.length: " + str2.length()); // str2:            ; str2.length: 11
+FileChannel 只能工作在阻塞模式下。
 
-// 使用 flip() 重置 position 为 0
-buffer1.flip();
-// 使用 limit() 重置 limit 为 5
-buffer1.limit(5);
-String str3 = StandardCharsets.UTF_8.decode(buffer1).toString();
-System.out.println("str3: " + str3); // str3: hello
-```
+获取通道的一种方式是对支持通道的对象调用`getChannel()`方法，支持通道的类如下：
 
-#### ⚠️ Buffer的线程安全
+* FileInputStream
+* FileOutputStream
+* RandomAccessFile
+* DatagramSocket
+* Socket
+* ServerSocket
 
-> Buffer 是==非线程安全的==
+获取通道的其他方式是使用 Files 类的静态方法`newByteChannel()`获取字节通道，或者通过通道的静态方法`open()`打开并返回指定通道
 
-### 2.4 Scattering Reads
+**FileChannel的常用方法**
 
-分散读取，有一个文本文件 3parts.txt
-
-```
-onetwothree
-```
-
-使用如下方式读取，可以将数据填充至多个 buffer
-
-```java
-try (RandomAccessFile file = new RandomAccessFile("helloword/3parts.txt", "rw")) {
-    FileChannel channel = file.getChannel();
-    ByteBuffer a = ByteBuffer.allocate(3);
-    ByteBuffer b = ByteBuffer.allocate(3);
-    ByteBuffer c = ByteBuffer.allocate(5);
-    channel.read(new ByteBuffer[]{a, b, c});
-    a.flip();
-    b.flip();
-    c.flip();
-    debug(a);
-    debug(b);
-    debug(c);
-} catch (IOException e) {
-    e.printStackTrace();
-}
-```
-
-结果
-
-```
-         +-------------------------------------------------+
-         |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
-+--------+-------------------------------------------------+----------------+
-|00000000| 6f 6e 65                                        |one             |
-+--------+-------------------------------------------------+----------------+
-         +-------------------------------------------------+
-         |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
-+--------+-------------------------------------------------+----------------+
-|00000000| 74 77 6f                                        |two             |
-+--------+-------------------------------------------------+----------------+
-         +-------------------------------------------------+
-         |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
-+--------+-------------------------------------------------+----------------+
-|00000000| 74 68 72 65 65                                  |three           |
-+--------+-------------------------------------------------+----------------+
-```
-
-### 2.5 Gathering Writes
-
-使用如下方式写入，可以将多个 buffer 的数据填充至 channel
-
-```java
-try (RandomAccessFile file = new RandomAccessFile("helloword/3parts.txt", "rw")) {
-    FileChannel channel = file.getChannel();
-    ByteBuffer d = ByteBuffer.allocate(4);
-    ByteBuffer e = ByteBuffer.allocate(4);
-    channel.position(11);
-
-    d.put(new byte[]{'f', 'o', 'u', 'r'});
-    e.put(new byte[]{'f', 'i', 'v', 'e'});
-    d.flip();
-    e.flip();
-    debug(d);
-    debug(e);
-    channel.write(new ByteBuffer[]{d, e});
-} catch (IOException e) {
-    e.printStackTrace();
-}
-```
-
-输出
-
-```
-         +-------------------------------------------------+
-         |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
-+--------+-------------------------------------------------+----------------+
-|00000000| 66 6f 75 72                                     |four            |
-+--------+-------------------------------------------------+----------------+
-         +-------------------------------------------------+
-         |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
-+--------+-------------------------------------------------+----------------+
-|00000000| 66 69 76 65                                     |five            |
-+--------+-------------------------------------------------+----------------+
-```
-
-文件内容
-
-```
-onetwothreefourfive
-```
-
-### 2.6 练习
-
-网络上有多条数据发送给服务端，数据之间使用`\n`进行分隔，但由于某种原因这些数据在接收时，被进行了重新组合，例如原始数据有 3 条为：
-
-* Hello,world\n
-* I'm zhangsan\n
-* How are you?\n
-
-变成了下面的两个 byteBuffer：
-
-* Hello,world\nI'm zhangsan\nHo（黏包）
-* w are you?\n（半包）
-
-现在要求你编写程序，将错乱的数据恢复成原始的按`\n`分隔的数据
-
-```java
-public static void main(String[] args) {
-    ByteBuffer source = ByteBuffer.allocate(32);
-    //                     11            24
-    source.put("Hello,world\nI'm zhangsan\nHo".getBytes());
-    split(source);
-
-    source.put("w are you?\nhaha!\n".getBytes());
-    split(source);
-}
-
-private static void split(ByteBuffer source) {
-    source.flip();
-    int length = source.limit();
-    for (int i = 0; i < length; i++) {
-        if (source.get(i) == StringUtil.LINE_FEED) {
-            // 修改 limit 为当前换行符位置
-            source.limit(i);
-            // 申请 ByteBuffer 空间
-            ByteBuffer out = ByteBuffer.allocate(i - source.position());
-            // 向 out 中写入 source 的 position 到 limit 的内容
-            out.put(source);
-            debugAll(out);
-            // 重置 limit，否则当 position 大于 limit 则会报错
-            source.limit(length);
-            // 修改 position 为换行符下一个字符
-            source.position(i + 1);
-        }
-    }
-    source.compact();
-}
-```
-
-## 3. 文件编程
-
-### 3.1 FileChannel
-
-#### ⚠️ FileChannel工作模式
-
-> FileChannel 只能工作在阻塞模式下
-
-#### 获取
+（1）获取
 
 不能直接打开 FileChannel，必须通过`FileInputStream`、`FileOutputStream`或者`RandomAccessFile`来获取 FileChannel，它们都有`getChannel()`方法
 
@@ -601,7 +530,7 @@ private static void split(ByteBuffer source) {
 * 通过`FileOutputStream`获取的 channel 只能写
 * 通过`RandomAccessFile`是否能读写根据构造`RandomAccessFile`时的读写模式决定
 
-#### 读取
+（2）读取
 
 会从 channel 读取数据填充 ByteBuffer，返回值表示读到了多少字节，-1 表示到达了文件的末尾。
 
@@ -609,7 +538,7 @@ private static void split(ByteBuffer source) {
 int readBytes = channel.read(buffer);
 ```
 
-#### 写入
+（3）写入
 
 `SocketChannel`写入的正确姿势如下：
 
@@ -625,11 +554,11 @@ while(buffer.hasRemaining()) {
 
 在 while 中调用`channel.write()`是因为`write()`方法并不能保证一次将 buffer 中的内容全部写入 channel
 
-#### 关闭
+（4）关闭
 
 channel 必须关闭，不过调用了`FileInputStream`、`FileOutputStream`或者`RandomAccessFile`的`close()`方法会间接地调用 channel 的`close()`方法
 
-#### 位置
+（5）位置
 
 获取当前位置：
 
@@ -649,36 +578,194 @@ channel.position(newPos);
 * 这时读取会返回 -1 
 * 这时写入，会追加内容，但要注意如果 position 超过了文件末尾，再写入时在新内容和原末尾之间会有空洞（00）
 
-#### 大小
+（6）大小
 
 使用`size()`方法获取文件的大小
 
-#### 强制写入
+（7）强制写入
 
 操作系统出于性能的考虑，会将数据缓存，不是立刻写入磁盘。可以调用`force(true)`方法将文件内容和元数据（文件的权限等信息）立刻写入磁盘。
 
-### 3.2 两个Channel传输数据
+**案例1-本地文件写数据**
+
+需求：使用前面学习后的 ByteBuffer（缓冲）和 FileChannel（通道）， 将 "hello，黑马Java程序员！" 写入到 data.txt 中
 
 ```java
-String FROM = "helloword/data.txt";
-String TO = "helloword/to.txt";
-long start = System.nanoTime();
-try (FileChannel from = new FileInputStream(FROM).getChannel();
-     FileChannel to = new FileOutputStream(TO).getChannel();
-    ) {
-    // 效率高，底层会利用操作系统的零拷贝进行优化
-    from.transferTo(0, from.size(), to);
-} catch (IOException e) {
-    e.printStackTrace();
+package com.itheima;
+
+
+import org.junit.Test;
+
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+
+public class ChannelTest {
+    @Test
+    public void write(){
+        try {
+            // 1、字节输出流通向目标文件
+            FileOutputStream fos = new FileOutputStream("data01.txt");
+            // 2、得到字节输出流对应的通道Channel
+            FileChannel channel = fos.getChannel();
+            // 3、分配缓冲区
+            ByteBuffer buffer = ByteBuffer.allocate(1024);
+            buffer.put("hello,黑马Java程序员！".getBytes());
+            // 4、切换指针到起始位置
+            buffer.flip();
+            channel.write(buffer);
+            channel.close();
+            System.out.println("写数据到文件中！");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }
-long end = System.nanoTime();
-System.out.println("transferTo 用时：" + (end - start) / 1000_000.0);
 ```
 
-输出
+**案例2-本地文件读数据**
 
+需求：使用前面学习后的 ByteBuffer（缓冲）和 FileChannel（通道），将 data01.txt 中的数据读入到程序，并显示在控制台屏幕
+
+```java
+public class ChannelTest {
+
+    @Test
+    public void read() throws Exception {
+        // 1、定义一个文件字节输入流与源文件接通
+        FileInputStream is = new FileInputStream("data01.txt");
+        // 2、需要得到文件字节输入流的文件通道
+        FileChannel channel = is.getChannel();
+        // 3、定义一个缓冲区
+        ByteBuffer buffer = ByteBuffer.allocate(1024);
+        // 4、读取数据到缓冲区
+        channel.read(buffer);
+        buffer.flip();
+        // 5、读取出缓冲区中的数据并输出即可
+        String rs = new String(buffer.array(),0,buffer.remaining());
+        System.out.println(rs);
+
+    }
 ```
-transferTo 用时：8.2011
+
+**案例3-使用Buffer完成文件复制**
+
+使用 FileChannel(通道) ，完成文件的拷贝。
+
+```java
+@Test
+public void copy() throws Exception {
+    // 源文件
+    File srcFile = new File("C:\\Users\\dlei\\Desktop\\BIO,NIO,AIO\\文件\\壁纸.jpg");
+    File destFile = new File("C:\\Users\\dlei\\Desktop\\BIO,NIO,AIO\\文件\\壁纸new.jpg");
+    // 得到一个字节字节输入流
+    FileInputStream fis = new FileInputStream(srcFile);
+    // 得到一个字节输出流
+    FileOutputStream fos = new FileOutputStream(destFile);
+    // 得到的是文件通道
+    FileChannel isChannel = fis.getChannel();
+    FileChannel osChannel = fos.getChannel();
+    // 分配缓冲区
+    ByteBuffer buffer = ByteBuffer.allocate(1024);
+    while(true){
+        // 必须先清空缓冲然后再写入数据到缓冲区
+        buffer.clear();
+        // 开始读取一次数据
+        int flag = isChannel.read(buffer);
+        if(flag == -1){
+            break;
+        }
+        // 已经读取了数据，移动头指针到初始位置
+        buffer.flip();
+        // 把数据写出到
+        osChannel.write(buffer);
+    }
+    isChannel.close();
+    osChannel.close();
+    System.out.println("复制完成！");
+}
+```
+
+**案例4-分散和聚集**
+
+分散读取（Scatter）是指把 Channel 通道的数据读入到多个缓冲区中去
+
+聚集写入（Gathering）是指将多个 Buffer 中的数据“聚集”到 Channel
+
+```java
+//分散和聚集
+@Test
+public void test() throws IOException {
+    RandomAccessFile raf1 = new RandomAccessFile("1.txt", "rw");
+    //1. 获取通道
+    FileChannel channel1 = raf1.getChannel();
+
+    //2. 分配指定大小的缓冲区
+    ByteBuffer buf1 = ByteBuffer.allocate(10);
+    ByteBuffer buf2 = ByteBuffer.allocate(1024);
+
+    //3. 分散读取 -- 按顺序写入到每个缓冲区中
+    ByteBuffer[] bufs = {buf1, buf2};
+    channel1.read(bufs);
+
+    for (ByteBuffer byteBuffer : bufs) {
+        byteBuffer.flip();
+    }
+
+    System.out.println(new String(bufs[0].array(), 0, bufs[0].limit()));
+    System.out.println("-----------------");
+    System.out.println(new String(bufs[1].array(), 0, bufs[1].limit()));
+
+    //4. 聚集写入
+    RandomAccessFile raf2 = new RandomAccessFile("2.txt", "rw");
+    FileChannel channel2 = raf2.getChannel();
+
+    channel2.write(bufs);
+    raf1.close();
+    raf2.close();
+}
+```
+
+**案例5-transferFrom()**
+
+从目标通道中去复制原通道数据
+
+```java
+@Test
+public void test02() throws Exception {
+    // 1、字节输入管道
+    FileInputStream is = new FileInputStream("data01.txt");
+    FileChannel isChannel = is.getChannel();
+    // 2、字节输出流管道
+    FileOutputStream fos = new FileOutputStream("data03.txt");
+    FileChannel osChannel = fos.getChannel();
+    // 3、复制，底层调用了 mappedByteBuffer
+    osChannel.transferFrom(isChannel, isChannel.position(), isChannel.size());
+    isChannel.close();
+    osChannel.close();
+}
+```
+
+**案例6-transferTo()**
+
+把原通道数据复制到目标通道
+
+```java
+@Test
+public void test02() throws Exception {
+    // 1、字节输入管道
+    FileInputStream is = new FileInputStream("data01.txt");
+    FileChannel isChannel = is.getChannel();
+    // 2、字节输出流管道
+    FileOutputStream fos = new FileOutputStream("data04.txt");
+    FileChannel osChannel = fos.getChannel();
+    // 3、复制
+    isChannel.transferTo(isChannel.position() , isChannel.size() , osChannel);
+    isChannel.close();
+    osChannel.close();
+}
 ```
 
 > **注意**
@@ -716,7 +803,61 @@ position:4294967294 left:3474980866
 position:6442450941 left:1327497219
 ```
 
-### 3.3 Path
+### 1.3 Selector
+
+Selector 是一个 Java NIO 组件，可以能够检查一个或多个 NIO 通道，并确定哪些通道已经准备好进行读取或写入。这样，一个单独的线程可以管理多个 channel，从而管理多个网络连接，提高效率。
+
+#### 1.多线程版设计
+
+```mermaid
+graph TD
+subgraph 多线程版
+t1(thread) --> s1(socket1)
+t2(thread) --> s2(socket2)
+t3(thread) --> s3(socket3)
+end
+```
+**缺点**
+
+* 内存占用高
+* 线程上下文切换成本高
+* 只适合连接数少的场景
+
+#### 2.线程池版设计
+
+```mermaid
+graph TD
+subgraph 线程池版
+t4(thread) --> s4(socket1)
+t5(thread) --> s5(socket2)
+t4(thread) -.-> s6(socket3)
+t5(thread) -.-> s7(socket4)
+end
+```
+**缺点**
+
+* 阻塞模式下，线程仅能处理一个 socket 连接
+* 仅适合短连接场景
+
+#### 3.selector版设计
+
+selector 的作用就是配合一个线程来管理多个 channel，获取这些 channel 上发生的事件，这些 channel 工作在非阻塞模式下，不会让线程吊死在一个 channel 上。适合连接数特别多，但流量低的场景。
+
+```mermaid
+graph TD
+subgraph selector 版
+thread --> selector
+selector --> c1(channel)
+selector --> c2(channel)
+selector --> c3(channel)
+end
+```
+
+调用 selector 的`select()`会阻塞直到 channel 发生了读写就绪事件，这些事件发生，select 方法就会返回这些事件交给 thread 来处理。
+
+## 2.文件编程
+
+### 2.1 Path
 
 jdk7 引入了 Path 和 Paths 类
 
@@ -761,7 +902,7 @@ d:\data\projects\a\..\b
 d:\data\projects\b
 ```
 
-### 3.4 Files
+### 2.2 Files
 
 检查文件或文件夹是否存在
 
@@ -935,9 +1076,9 @@ long end = System.currentTimeMillis();
 System.out.p	rintln(end - start);
 ```
 
-## 4. 网络编程
+## 3.网络编程
 
-### 4.1 非阻塞 vs 阻塞
+### 3.1 非阻塞vs阻塞
 
 #### 1.阻塞
 
@@ -1009,7 +1150,6 @@ ssc.configureBlocking(false); // 非阻塞模式
 ssc.bind(new InetSocketAddress(8080));
 List<SocketChannel> channels = new ArrayList<>();
 while (true) {
-    // accept 建立与客户端连接， SocketChannel 用来与客户端之间通信
     SocketChannel sc = ssc.accept(); // 非阻塞，线程还会继续运行，如果没有连接建立，sc 是 null
     if (sc != null) {
         log.debug("connected... {}", sc);
@@ -1017,7 +1157,6 @@ while (true) {
         channels.add(sc);
     }
     for (SocketChannel channel : channels) {
-        // 接收客户端发送的数据
         int read = channel.read(buffer);// 非阻塞，线程仍然会继续运行，如果没有读到数据，read 返回 0
         if (read > 0) {
             buffer.flip();
@@ -1040,7 +1179,7 @@ while (true) {
   * 有可写事件才去写入
     * 限于网络传输能力，Channel 未必时时可写，一旦 Channel 可写，会触发 Selector 的可写事件
 
-### 4.2 Selector
+### 3.2 Selector
 
 ```mermaid
 graph TD
@@ -1052,104 +1191,99 @@ selector --> c3(channel)
 end
 ```
 
-
-
-好处
+**好处**
 
 * 一个线程配合 selector 就可以监控多个 channel 的事件，事件发生线程才去处理。避免非阻塞模式下所做无用功
 * 让这个线程能够被充分利用
 * 节约了线程的数量
 * 减少了线程上下文切换
 
-
-
-#### 创建
+#### 1.创建
 
 ```java
 Selector selector = Selector.open();
 ```
 
-
-
-#### 绑定 Channel 事件
+#### 2.绑定Channel事件
 
 也称之为注册事件，绑定的事件 selector 才会关心 
 
 ```java
 channel.configureBlocking(false);
-SelectionKey key = channel.register(selector, 绑定事件);
+/// SelectionKey：封装了事件的信息
+// 1.一个参数：可进而通过 interestOps() 方法绑定事件
+key2.interestOps(SelectionKey.OP_ACCEPT);
+// 2.两个参数：直接指定绑定事件
+SelectionKey key1 = channel.register(selector, SelectionKey.OP_ACCEPT);
+// 3.三个参数：0 表示不绑定任何事件，第三个参数为附件
+SelectionKey key2 = channel.register(selector, 0, null);
 ```
 
 * channel 必须工作在非阻塞模式
+
 * FileChannel 没有非阻塞模式，因此不能配合 selector 一起使用
-* 绑定的事件类型可以有
-  * connect - 客户端连接成功时触发
-  * accept - 服务器端成功接受连接时触发
-  * read - 数据可读入时触发，有因为接收能力弱，数据暂不能读入的情况
-  * write - 数据可写出时触发，有因为发送能力弱，数据暂不能写出的情况
 
+* 绑定的事件类型可以有：
+  * connect - 客户端连接成功时触发：`SelectionKey.OP_CONNECT （8）`
+  * accept - 服务器端成功接受连接时触发：`SelectionKey.OP_ACCEPT （16）`
+  * read - 数据可读入时触发，有因为接收能力弱，数据暂不能读入的情况：`SelectionKey.OP_READ （1）`
+  * write - 数据可写出时触发，有因为发送能力弱，数据暂不能写出的情况：`SelectionKey.OP_WRITE （4）`
+  
+  > 若注册时不止监听一个事件，则可以使用“位或”操作符连接
+  >
+  > ```java
+  > int interestSet = SelectionKey.OP_READ|SelectionKey.OP_WRITE
+  > ```
 
-
-#### 监听 Channel 事件
+#### 3.监听Channel事件
 
 可以通过下面三种方法来监听是否有事件发生，方法的返回值代表有多少 channel 发生了事件
 
-方法1，阻塞直到绑定事件发生
+方法1：阻塞直到绑定事件发生
 
 ```java
 int count = selector.select();
 ```
 
-
-
-方法2，阻塞直到绑定事件发生，或是超时（时间单位为 ms）
+方法2：阻塞直到绑定事件发生，或是超时（时间单位为 ms）
 
 ```java
 int count = selector.select(long timeout);
 ```
 
-
-
-方法3，不会阻塞，也就是不管有没有事件，立刻返回，自己根据返回值检查是否有事件
+方法3：不会阻塞，也就是不管有没有事件，立刻返回，自己根据返回值检查是否有事件
 
 ```java
 int count = selector.selectNow();
 ```
 
+#### 4.select何时不阻塞
 
+* 事件发生时
+  * 客户端发起连接请求，会触发 accept 事件
+  * 客户端发送数据过来，客户端正常、异常关闭时，都会触发 read 事件，另外如果发送的数据大于 buffer 缓冲区，会触发多次读取事件
+  * channel 可写，会触发 write 事件
+  * 在 linux 下 nio bug 发生时
+* 调用 selector.wakeup()
+* 调用 selector.close()
+* selector 所在线程 interrupt
 
-#### 💡 select 何时不阻塞
-
-> * 事件发生时
->   * 客户端发起连接请求，会触发 accept 事件
->   * 客户端发送数据过来，客户端正常、异常关闭时，都会触发 read 事件，另外如果发送的数据大于 buffer 缓冲区，会触发多次读取事件
->   * channel 可写，会触发 write 事件
->   * 在 linux 下 nio bug 发生时
-> * 调用 selector.wakeup()
-> * 调用 selector.close()
-> * selector 所在线程 interrupt
-
-
-
-### 4.3 处理 accept 事件
+### 3.3 处理accept事件
 
 客户端代码为
 
 ```java
 public class Client {
     public static void main(String[] args) {
-        try (Socket socket = new Socket("localhost", 8080)) {
-            System.out.println(socket);
-            socket.getOutputStream().write("world".getBytes());
-            System.in.read();
+        try (SocketChannel sc = SocketChannel.open()) {
+            sc.connect(new InetSocketAddress(8080));
+            System.out.println(1);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 }
 ```
-
-
 
 服务器端代码为
 
@@ -1162,20 +1296,22 @@ public class ChannelDemo6 {
             System.out.println(channel);
             Selector selector = Selector.open();
             channel.configureBlocking(false);
-            channel.register(selector, SelectionKey.OP_ACCEPT);
+            // 注册
+            SelectionKey originalKey = channel.register(selector, SelectionKey.OP_ACCEPT);
 
             while (true) {
                 int count = selector.select();
-//                int count = selector.selectNow();
+                // int count = selector.selectNow();
                 log.debug("select count: {}", count);
-//                if(count <= 0) {
-//                    continue;
-//                }
+                // if(count <= 0) {
+                //    continue;
+                // }
 
                 // 获取所有事件
                 Set<SelectionKey> keys = selector.selectedKeys();
 
-                // 遍历所有事件，逐一处理
+                // 遍历所有事件，逐一处理，注意使用迭代器，因为要删除
+                // 此处获得的 SelectionKey 是之前注册的 originalKey
                 Iterator<SelectionKey> iter = keys.iterator();
                 while (iter.hasNext()) {
                     SelectionKey key = iter.next();
@@ -1197,15 +1333,11 @@ public class ChannelDemo6 {
 }
 ```
 
-
-
 #### 💡 事件发生后能否不处理
 
-> 事件发生后，要么处理，要么取消（cancel），不能什么都不做，否则下次该事件仍会触发，这是因为 nio 底层使用的是水平触发
+> 事件发生后，要么处理，要么取消（`selectionKey.cancel()`），不能什么都不做，否则下次该事件仍会触发，这是因为 nio 底层使用的是水平触发
 
-
-
-### 4.4 处理 read 事件
+### 3.4 处理read事件
 
 ```java
 @Slf4j
@@ -1220,11 +1352,11 @@ public class ChannelDemo6 {
 
             while (true) {
                 int count = selector.select();
-//                int count = selector.selectNow();
+                // int count = selector.selectNow();
                 log.debug("select count: {}", count);
-//                if(count <= 0) {
-//                    continue;
-//                }
+                // if(count <= 0) {
+                //     continue;
+                // }
 
                 // 获取所有事件
                 Set<SelectionKey> keys = selector.selectedKeys();
@@ -1240,11 +1372,11 @@ public class ChannelDemo6 {
                         SocketChannel sc = c.accept();
                         sc.configureBlocking(false);
                         sc.register(selector, SelectionKey.OP_READ);
-                        log.debug("连接已建立: {}", sc);
                     } else if (key.isReadable()) {
                         SocketChannel sc = (SocketChannel) key.channel();
                         ByteBuffer buffer = ByteBuffer.allocate(128);
                         int read = sc.read(buffer);
+                        // 断开连接返回值为 -1
                         if(read == -1) {
                             key.cancel();
                             sc.close();
@@ -1264,46 +1396,18 @@ public class ChannelDemo6 {
 }
 ```
 
-开启两个客户端，修改一下发送文字，输出
+#### 1.为何要iter.remove()
 
-```
-sun.nio.ch.ServerSocketChannelImpl[/0:0:0:0:0:0:0:0:8080]
-21:16:39 [DEBUG] [main] c.i.n.ChannelDemo6 - select count: 1
-21:16:39 [DEBUG] [main] c.i.n.ChannelDemo6 - 连接已建立: java.nio.channels.SocketChannel[connected local=/127.0.0.1:8080 remote=/127.0.0.1:60367]
-21:16:39 [DEBUG] [main] c.i.n.ChannelDemo6 - select count: 1
-         +-------------------------------------------------+
-         |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
-+--------+-------------------------------------------------+----------------+
-|00000000| 68 65 6c 6c 6f                                  |hello           |
-+--------+-------------------------------------------------+----------------+
-21:16:59 [DEBUG] [main] c.i.n.ChannelDemo6 - select count: 1
-21:16:59 [DEBUG] [main] c.i.n.ChannelDemo6 - 连接已建立: java.nio.channels.SocketChannel[connected local=/127.0.0.1:8080 remote=/127.0.0.1:60378]
-21:16:59 [DEBUG] [main] c.i.n.ChannelDemo6 - select count: 1
-         +-------------------------------------------------+
-         |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
-+--------+-------------------------------------------------+----------------+
-|00000000| 77 6f 72 6c 64                                  |world           |
-+--------+-------------------------------------------------+----------------+
-```
-
-
-
-#### 💡 为何要 iter.remove()
-
-> 因为 select 在事件发生后，就会将相关的 key 放入 selectedKeys 集合，但不会在处理完后从 selectedKeys 集合中移除，需要我们自己编码删除。例如
+> 因为 select 在事件发生后，就会将相关的 key 放入`selectedKeys`集合（不同于注册时的 selectionKey 集合），但不会在处理完后从`selectedKeys`集合中移除，需要我们自己编码删除。例如：
 >
-> * 第一次触发了 ssckey 上的 accept 事件，没有移除 ssckey 
-> * 第二次触发了 sckey 上的 read 事件，但这时 selectedKeys 中还有上次的 ssckey ，在处理时因为没有真正的 serverSocket 连上了，就会导致空指针异常
+> * 第一次触发了 ssckey 上的 accept 事件，没有移除 ssckey
+> * 第二次触发了 sckey 上的 read 事件，但这时 selectedKeys 中还有上次的 ssckey，在处理`SocketChannel sc = c.accept()`时因为没有真正的 serverSocket 连上了所以返回 null（非阻塞模式下没有连接建立时，`accept()`会返回 null），就会导致空指针异常
 
+#### 2.cancel的作用
 
+> cancel 会取消注册在 selector 上的 channel，并从注册的 keys 集合中删除 key 后续不会再监听事件
 
-#### 💡 cancel 的作用
-
-> cancel 会取消注册在 selector 上的 channel，并从 keys 集合中删除 key 后续不会再监听事件
-
-
-
-#### ⚠️  不处理边界的问题
+#### 3.不处理边界的问题
 
 以前有同学写过这样的代码，思考注释中两个问题，以 bio 为例，其实 nio 道理是一样的
 
@@ -1319,6 +1423,7 @@ public class Server {
             while(true) {
                 int read = in.read(arr);
                 // 这里这么写，有没有问题
+                // 没有判断还有没有未读的信息
                 if(read == -1) {
                     break;
                 }
@@ -1351,24 +1456,19 @@ hell
 owor
 ld�
 �好
-
 ```
 
 为什么？
 
+#### 4.处理消息的边界
 
-
-#### 处理消息的边界
-
-![](img/第1章_NIO基础/0023.png)
+![](img/第2章_NIO基础/0023.png)
 
 * 一种思路是固定消息长度，数据包大小一样，服务器按预定长度读取，缺点是浪费带宽
 * 另一种思路是按分隔符拆分，缺点是效率低
 * TLV 格式，即 Type 类型、Length 长度、Value 数据，类型和长度已知的情况下，就可以方便获取消息大小，分配合适的 buffer，缺点是 buffer 需要提前分配，如果内容过大，则影响 server 吞吐量
   * Http 1.1 是 TLV 格式
   * Http 2.0 是 LTV 格式
-
-
 
 ```mermaid
 sequenceDiagram 
@@ -1441,7 +1541,7 @@ public static void main(String[] args) throws IOException {
                 log.debug("scKey:{}", scKey);
             } else if (key.isReadable()) { // 如果是 read
                 try {
-                    SocketChannel channel = (SocketChannel) key.channel(); // 拿到触发事件的channel
+                    SocketChannel channel = (SocketChannel) key.channel(); // 拿到触发事件的 channel
                     // 获取 selectionKey 上关联的附件
                     ByteBuffer buffer = (ByteBuffer) key.attachment();
                     int read = channel.read(buffer); // 如果是正常断开，read 的方法的返回值是 -1
@@ -1453,7 +1553,7 @@ public static void main(String[] args) throws IOException {
                         if (buffer.position() == buffer.limit()) {
                             ByteBuffer newBuffer = ByteBuffer.allocate(buffer.capacity() * 2);
                             buffer.flip();
-                            newBuffer.put(buffer); // 0123456789abcdef3333\n
+                            newBuffer.put(buffer);
                             key.attach(newBuffer);
                         }
                     }
@@ -1480,34 +1580,22 @@ sc.write(Charset.defaultCharset().encode("0123456789abcdef3333\n"));
 System.in.read();
 ```
 
-
-
-
-
-#### ByteBuffer 大小分配
+#### 5.ByteBuffer大小分配
 
 * 每个 channel 都需要记录可能被切分的消息，因为 ByteBuffer 不能被多个 channel 共同使用，因此需要为每个 channel 维护一个独立的 ByteBuffer
 * ByteBuffer 不能太大，比如一个 ByteBuffer 1Mb 的话，要支持百万连接就要 1Tb 内存，因此需要设计大小可变的 ByteBuffer
   * 一种思路是首先分配一个较小的 buffer，例如 4k，如果发现数据不够，再分配 8k 的 buffer，将 4k buffer 内容拷贝至 8k buffer，优点是消息连续容易处理，缺点是数据拷贝耗费性能，参考实现 [http://tutorials.jenkov.com/java-performance/resizable-array.html](http://tutorials.jenkov.com/java-performance/resizable-array.html)
   * 另一种思路是用多个数组组成 buffer，一个数组不够，把多出来的内容写入新的数组，与前面的区别是消息存储不连续解析复杂，优点是避免了拷贝引起的性能损耗
 
+### 3.5 处理write事件
 
-
-
-
-### 4.5 处理 write 事件
-
-
-
-#### 一次无法写完例子
+#### 1.一次无法写完例子
 
 * 非阻塞模式下，无法保证把 buffer 中所有数据都写入 channel，因此需要追踪 write 方法的返回值（代表实际写入字节数）
 * 用 selector 监听所有 channel 的可写事件，每个 channel 都需要一个 key 来跟踪 buffer，但这样又会导致占用内存过多，就有两阶段策略
   * 当消息处理器第一次写入消息时，才将 channel 注册到 selector 上
   * selector 检查 channel 上的可写事件，如果所有的数据写完了，就取消 channel 的注册
   * 如果不取消，会每次可写均会触发 write 事件
-
-
 
 ```java
 public class WriteServer {
@@ -1543,9 +1631,10 @@ public class WriteServer {
                     // 4. 如果有剩余未读字节，才需要关注写事件
                     if (buffer.hasRemaining()) {
                         // read 1  write 4
-                        // 在原有关注事件的基础上，多关注 写事件
+                        // 在原有关注事件的基础上，再关注一个写事件
                         sckey.interestOps(sckey.interestOps() + SelectionKey.OP_WRITE);
-                        // 把 buffer 作为附件加入 sckey
+                        // sckey.interestOps(sckey.interestOps() | SelectionKey.OP_WRITE);
+                        // 把未写完的 buffer 作为附件加入 sckey
                         sckey.attach(buffer);
                     }
                 } else if (key.isWritable()) {
@@ -1582,7 +1671,8 @@ public class WriteClient {
                 SelectionKey key = iter.next();
                 iter.remove();
                 if (key.isConnectable()) {
-                    System.out.println(sc.finishConnect());
+                    // 一定要完成连接，否则会一直轮询该事件
+                    sc.finishConnect();
                 } else if (key.isReadable()) {
                     ByteBuffer buffer = ByteBuffer.allocate(1024 * 1024);
                     count += sc.read(buffer);
@@ -1595,47 +1685,26 @@ public class WriteClient {
 }
 ```
 
+#### 2.write为何要取消
 
+只要向 channel 发送数据时，socket 缓冲可写，这个事件会频繁触发，因此应当只在 socket 缓冲区写不下时再关注可写事件，数据写完之后再取消关注。
 
-#### 💡 write 为何要取消
+### 3.6 多线程优化
 
-只要向 channel 发送数据时，socket 缓冲可写，这个事件会频繁触发，因此应当只在 socket 缓冲区写不下时再关注可写事件，数据写完之后再取消关注
-
-
-
-
-
-
-
-
-
-
-
-### 4.6 更进一步
-
-
-
-#### 💡 利用多线程优化
-
-> 现在都是多核 cpu，设计时要充分考虑别让 cpu 的力量被白白浪费
-
-
+#### 1.利用多线程优化
 
 前面的代码只有一个选择器，没有充分利用多核 cpu，如何改进呢？
 
-分两组选择器
+**分两组选择器**
 
 * 单线程配一个选择器，专门处理 accept 事件
 * 创建 cpu 核心数的线程，每个线程配一个选择器，轮流处理 read 事件
-
-
 
 ```java
 public class ChannelDemo7 {
     public static void main(String[] args) throws IOException {
         new BossEventLoop().register();
     }
-
 
     @Slf4j
     static class BossEventLoop implements Runnable {
@@ -1660,7 +1729,7 @@ public class ChannelDemo7 {
         }
 
         public WorkerEventLoop[] initEventLoops() {
-//        EventLoop[] eventLoops = new EventLoop[Runtime.getRuntime().availableProcessors()];
+            // EventLoop[] eventLoops = new EventLoop[Runtime.getRuntime().availableProcessors()];
             WorkerEventLoop[] workerEventLoops = new WorkerEventLoop[2];
             for (int i = 0; i < workerEventLoops.length; i++) {
                 workerEventLoops[i] = new WorkerEventLoop(i);
@@ -1719,7 +1788,7 @@ public class ChannelDemo7 {
                     e.printStackTrace();
                 }
             });
-            worker.wakeup();
+            worker.wakeup(); // 唤醒 worker：Selector
         }
 
         @Override
@@ -1765,16 +1834,250 @@ public class ChannelDemo7 {
 }
 ```
 
-
-
-#### 💡 如何拿到 cpu 个数
+#### 2.如何拿到cpu个数
 
 > * Runtime.getRuntime().availableProcessors() 如果工作在 docker 容器下，因为容器不是物理隔离的，会拿到物理 cpu 个数，而不是容器申请时的个数
 > * 这个问题直到 jdk 10 才修复，使用 jvm 参数 UseContainerSupport 配置， 默认开启
+>
+> 阿姆达尔定律
+
+### 3.7 应用实例-群聊系统
+
+* 编写一个 NIO 群聊系统，实现客户端与客户端的通信需求（非阻塞）
+* 服务器端：可以监测用户上线，离线，并实现消息转发功能
+* 客户端：通过 channel 可以无阻塞发送消息给其它所有客户端用户，同时可以接受其它客户端用户通过服务端转发来的消息
+
+#### 1.服务端代码实现
+
+```java
+public class Server {
+    //定义属性
+    private Selector selector;
+    private ServerSocketChannel ssChannel;
+    private static final int PORT = 9999;
+    //构造器
+    //初始化工作
+    public Server() {
+        try {
+            // 1、获取通道
+            ssChannel = ServerSocketChannel.open();
+            // 2、切换为非阻塞模式
+            ssChannel.configureBlocking(false);
+            // 3、绑定连接的端口
+            ssChannel.bind(new InetSocketAddress(PORT));
+            // 4、获取选择器Selector
+            selector = Selector.open();
+            // 5、将通道都注册到选择器上去，并且开始指定监听接收事件
+            ssChannel.register(selector , SelectionKey.OP_ACCEPT);
+        }catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    //监听
+    public void listen() {
+        System.out.println("监听线程: " + Thread.currentThread().getName());
+        try {
+            while (selector.select() > 0){
+                System.out.println("开始一轮事件处理~~~");
+                // 7、获取选择器中的所有注册的通道中已经就绪好的事件
+                Iterator<SelectionKey> it = selector.selectedKeys().iterator();
+                // 8、开始遍历这些准备好的事件
+                while (it.hasNext()){
+                    // 提取当前这个事件
+                    SelectionKey sk = it.next();
+                    // 9、判断这个事件具体是什么
+                    if(sk.isAcceptable()){
+                        // 10、直接获取当前接入的客户端通道
+                        SocketChannel schannel = ssChannel.accept();
+                        // 11 、切换成非阻塞模式
+                        schannel.configureBlocking(false);
+                        // 12、将本客户端通道注册到选择器
+                        System.out.println(schannel.getRemoteAddress() + " 上线 ");
+                        schannel.register(selector, SelectionKey.OP_READ);
+                        //提示
+                    }else if(sk.isReadable()){
+                        //处理读 (专门写方法..)
+                        readData(sk);
+                    }
+                    it.remove(); // 处理完毕之后需要移除当前事件
+                }
+            }
+        }catch (Exception e) {
+            e.printStackTrace();
+        }finally {
+            //发生异常处理....
+        }
+    }
+
+    //读取客户端消息
+    private void readData(SelectionKey key) {
+        //取到关联的channle
+        SocketChannel channel = null;
+        try {
+           //得到channel
+            channel = (SocketChannel) key.channel();
+            //创建buffer
+            ByteBuffer buffer = ByteBuffer.allocate(1024);
+            int count = channel.read(buffer);
+            //根据count的值做处理
+            if(count > 0) {
+                //把缓存区的数据转成字符串
+                String msg = new String(buffer.array(), 0, buffer.remaining());
+                //输出该消息
+                System.out.println("form 客户端: " + msg);
+                //向其它的客户端转发消息(去掉自己), 专门写一个方法来处理
+                sendInfoToOtherClients(msg, channel);
+            }
+        }catch (IOException e) {
+            try {
+                System.out.println(channel.getRemoteAddress() + " 离线了..");
+                e.printStackTrace();
+                //取消注册
+                key.cancel();
+                //关闭通道
+                channel.close();
+            }catch (IOException e2) {
+                e2.printStackTrace();;
+            }
+        }
+    }
+
+    //转发消息给其它客户(通道)
+    private void sendInfoToOtherClients(String msg, SocketChannel self) throws  IOException{
+        System.out.println("服务器转发消息中...");
+        System.out.println("服务器转发数据给客户端线程: " + Thread.currentThread().getName());
+        //遍历所有注册到 selector 上的 SocketChannel，并排除 self
+        for(SelectionKey key: selector.keys()) {
+            //通过 key 取出对应的 SocketChannel
+            Channel targetChannel = key.channel();
+            //排除自己以及 ServerSocketChannel
+            if(targetChannel instanceof  SocketChannel && targetChannel != self) {
+                //转型
+                SocketChannel dest = (SocketChannel)targetChannel;
+                //将 msg 存储到 buffer
+                ByteBuffer buffer = ByteBuffer.wrap(msg.getBytes());
+                //将 buffer 的数据写入 通道
+                dest.write(buffer);
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        //创建服务器对象
+        Server groupChatServer = new Server();
+        groupChatServer.listen();
+    }
+}
+```
+
+> - selector.keys 返回当前所有注册在 selector 中 channel 的 selectionKey
+>
+> - selector.selectedKeys() 返回注册在 selector 中等待 IO 操作（及有事件发生）channel 的 selectionKey
+
+#### 2.客户端代码实现
+
+```java
+package com.itheima.chat;
+
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.SocketChannel;
+import java.util.Iterator;
+import java.util.Scanner;
+
+public class Client {
+    //定义相关的属性
+    private final String HOST = "127.0.0.1"; // 服务器的ip
+    private final int PORT = 9999; //服务器端口
+    private Selector selector;
+    private SocketChannel socketChannel;
+    private String username;
+
+    //构造器, 完成初始化工作
+    public Client() throws IOException {
+
+        selector = Selector.open();
+        //连接服务器
+        socketChannel = socketChannel.open(new InetSocketAddress("127.0.0.1", PORT));
+        //设置非阻塞
+        socketChannel.configureBlocking(false);
+        //将channel 注册到selector
+        socketChannel.register(selector, SelectionKey.OP_READ);
+        //得到username
+        username = socketChannel.getLocalAddress().toString().substring(1);
+        System.out.println(username + " is ok...");
+
+    }
+
+    //向服务器发送消息
+    public void sendInfo(String info) {
+        info = username + " 说：" + info;
+        try {
+            socketChannel.write(ByteBuffer.wrap(info.getBytes()));
+        }catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    //读取从服务器端回复的消息
+    public void readInfo() {
+        try {
+            int readChannels = selector.select();
+            while (readChannels > 0) {//有可以用的通道
+                Iterator<SelectionKey> iterator = selector.selectedKeys().iterator();
+                while (iterator.hasNext()) {
+                    SelectionKey key = iterator.next();
+                    if(key.isReadable()) {
+                        //得到相关的通道
+                       SocketChannel sc = (SocketChannel) key.channel();
+                       //得到一个Buffer
+                        ByteBuffer buffer = ByteBuffer.allocate(1024);
+                        //读取
+                        sc.read(buffer);
+                        //把读到的缓冲区的数据转成字符串
+                        String msg = new String(buffer.array());
+                        System.out.println(msg.trim());
+                    }
+                }
+                iterator.remove(); //删除当前的selectionKey, 防止重复操作
+            }
+        }catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void main(String[] args) throws Exception {
+        //启动我们客户端
+        Client chatClient = new Client();
+        //启动一个线程, 每个3秒，读取从服务器发送数据
+        new Thread() {
+            public void run() {
+                chatClient.readInfo();
+                try {
+                    Thread.currentThread().sleep(3000);
+                }catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }.start();
+
+        //发送数据给服务器端
+        Scanner scanner = new Scanner(System.in);
+
+        while (scanner.hasNextLine()) {
+            String s = scanner.nextLine();
+            chatClient.sendInfo(s);
+        }
+    }
+}
+```
 
 
 
-### 4.7 UDP
+### 3.8 UDP
 
 * UDP 是无连接的，client 发送数据不会管 server 是否开启
 * server 这边的 receive 方法会将接收到的数据存入 byte buffer，但如果数据报文超过 buffer 大小，多出来的数据会被默默抛弃
@@ -1804,8 +2107,6 @@ public class UdpServer {
 waiting...
 ```
 
-
-
 运行客户端
 
 ```java
@@ -1832,11 +2133,10 @@ public class UdpClient {
 +--------+-------------------------------------------------+----------------+
 ```
 
+## 5. NIO、BIO、AIO
 
-
-
-
-## 5. NIO vs BIO
+- Java BIO：同步并阻塞，服务器实现模式为一个连接一个线程，即客户端有连接请求时服务器端就需要启动一个线程进行处理，如果这个连接不做任何事情会造成不必要的线程开销，当然可以通过线程池机制改善
+- Java NIO：同步非阻塞，服务器实现模式为一个请求一个线程，即客户端发送的连接请求都会注册到多路复用器上，多路复用器轮询到连接有 I/O 请求时才启动一个线程进行处理
 
 ### 5.1 stream vs channel
 
@@ -1844,57 +2144,57 @@ public class UdpClient {
 * stream 仅支持阻塞 API，channel 同时支持阻塞、非阻塞 API，网络 channel 可配合 selector 实现多路复用
 * 二者均为全双工，即读写可以同时进行
 
-
-
-### 5.2 IO 模型
+### 5.2 IO模型
 
 同步阻塞、同步非阻塞、同步多路复用、异步阻塞（没有此情况）、异步非阻塞
 
 * 同步：线程自己去获取结果（一个线程）
 * 异步：线程自己不去获取结果，而是由其它线程送结果（至少两个线程）
 
-
-
-当调用一次 channel.read 或 stream.read 后，会切换至操作系统内核态来完成真正数据读取，而读取又分为两个阶段，分别为：
+当调用一次`channel.read`或`stream.read`后，会切换至操作系统内核态来完成真正数据读取，而读取又分为两个阶段，分别为：
 
 * 等待数据阶段
 * 复制数据阶段
 
-![](img/第1章_NIO基础/0033.png)
+<img src="img/第2章_NIO基础/0033.png" style="zoom:80%;" />
 
 * 阻塞 IO
 
-  ![](img/第1章_NIO基础/0039.png)
+  切换到内核空间后，在等待数据时发生阻塞，在复制数据时也会阻塞。
+
+  <img src="img/第2章_NIO基础/0039.png" style="zoom:80%;" />
 
 * 非阻塞  IO
 
-  ![](img/第1章_NIO基础/0035.png)
+  切换到内核空间后，读取数据不发生阻塞，通过轮询判断是否收到数据（多次用户态到内核态的切换）。在复制数据时会阻塞。
+
+  <img src="img/第2章_NIO基础/0035.png" style="zoom:80%;" />
 
 * 多路复用
 
-  ![](img/第1章_NIO基础/0038.png)
+  `select`阻塞监控数据，收到数据时生产`read`事件进行数据的复制。在等待数据时发生阻塞，在复制数据时也会阻塞。与阻塞 IO 不同的是，虽然内核态的切换成本增加，但是可以单线程处理多个 channel 的操作。
+
+  <img src="img/第2章_NIO基础/0038.png" style="zoom:80%;" />
+
+- 阻塞 IO vs 多路复用
+
+  <img src="img/第2章_NIO基础/0034.png" style="zoom:80%;" />
+
+  <img src="img/第2章_NIO基础/0036.png" style="zoom:80%;" />
 
 * 信号驱动
 
 * 异步 IO
 
-  ![](img/第1章_NIO基础/0037.png)
-
-* 阻塞 IO vs 多路复用
-
-  ![](img/第1章_NIO基础/0034.png)
-
-  ![](img/第1章_NIO基础/0036.png)
+  <img src="img/第2章_NIO基础/0037.png" style="zoom:80%;" />
 
 #### 🔖 参考
 
-UNIX 网络编程 - 卷 I
-
-
+`UNIX 网络编程 - 卷 I`
 
 ### 5.3 零拷贝
 
-#### 传统 IO 问题
+#### 1.传统IO问题
 
 传统的 IO 将一个文件通过 socket 写出
 
@@ -1911,7 +2211,7 @@ socket.getOutputStream().write(buf);
 
 内部工作流程是这样的：
 
-![](img/第1章_NIO基础/0024.png)
+<img src="img/第2章_NIO基础/image-20220714195505564.png" alt="image-20220714195505564" style="zoom:80%;" />
 
 1. java 本身并不具备 IO 读写能力，因此 read 方法调用后，要从 java 程序的**用户态**切换至**内核态**，去调用操作系统（Kernel）的读能力，将数据读入**内核缓冲区**。这期间用户线程阻塞，操作系统使用 DMA（Direct Memory Access）来实现文件读，其间也不会使用 cpu
 
@@ -1923,68 +2223,60 @@ socket.getOutputStream().write(buf);
 
 4. 接下来要向网卡写数据，这项能力 java 又不具备，因此又得从**用户态**切换至**内核态**，调用操作系统的写能力，使用 DMA 将 **socket 缓冲区**的数据写入网卡，不会使用 cpu
 
-
-
 可以看到中间环节较多，java 的 IO 实际不是物理设备级别的读写，而是缓存的复制，底层的真正读写是操作系统来完成的
 
 * 用户态与内核态的切换发生了 3 次，这个操作比较重量级
 * 数据拷贝了共 4 次
 
+#### 2，NIO优化
 
+通过`DirectByteBuf`：
 
-#### NIO 优化
+* `ByteBuffer.allocate(10)` ：HeapByteBuffer，使用的还是 java 内存
+* `ByteBuffer.allocateDirect(10)` ：DirectByteBuffer，使用的是操作系统内存
 
-通过 DirectByteBuf 
+<img src="img/第2章_NIO基础/image-20220714195628221.png" alt="image-20220714195628221" style="zoom:80%;" />
 
-* ByteBuffer.allocate(10)  HeapByteBuffer 使用的还是 java 内存
-* ByteBuffer.allocateDirect(10)  DirectByteBuffer 使用的是操作系统内存
-
-![](img/第1章_NIO基础/0025.png)
-
-大部分步骤与优化前相同，不再赘述。唯有一点：java 可以使用 DirectByteBuf 将堆外内存映射到 jvm 内存中来直接访问使用
+大部分步骤与优化前相同，不再赘述。唯有一点：java 可以使用`DirectByteBuf`将堆外内存映射到 jvm 内存中来直接访问使用
 
 * 这块内存不受 jvm 垃圾回收的影响，因此内存地址固定，有助于 IO 读写
-* java 中的 DirectByteBuf 对象仅维护了此内存的虚引用，内存回收分成两步
-  * DirectByteBuf 对象被垃圾回收，将虚引用加入引用队列
+* java 中的`DirectByteBuf`对象仅维护了此内存的虚引用，内存回收分成两步
+  * `DirectByteBuf`对象被垃圾回收，将虚引用加入引用队列
   * 通过专门线程访问引用队列，根据虚引用释放堆外内存
 * 减少了一次数据拷贝，用户态与内核态的切换次数没有减少
 
+进一步优化（底层采用了 linux 2.1 后提供的`sendFile`方法），java 中对应着两个 channel 调用`transferTo/transferFrom`方法拷贝数据
 
-
-进一步优化（底层采用了 linux 2.1 后提供的 sendFile 方法），java 中对应着两个 channel 调用 transferTo/transferFrom 方法拷贝数据
-
-![](img/第1章_NIO基础/0026.png)
+<img src="img/第2章_NIO基础/image-20220714195925864.png" alt="image-20220714195925864" style="zoom:80%;" />
 
 1. java 调用 transferTo 方法后，要从 java 程序的**用户态**切换至**内核态**，使用 DMA将数据读入**内核缓冲区**，不会使用 cpu
 2. 数据从**内核缓冲区**传输到 **socket 缓冲区**，cpu 会参与拷贝
 3. 最后使用 DMA 将 **socket 缓冲区**的数据写入网卡，不会使用 cpu
 
-可以看到
+可以看到：
 
 * 只发生了一次用户态与内核态的切换
 * 数据拷贝了 3 次
 
-
-
 进一步优化（linux 2.4）
 
-![](img/第1章_NIO基础/0027.png)
+<img src="img/第2章_NIO基础/image-20220714200204283.png" alt="image-20220714200204283" style="zoom:80%;" />
 
 1. java 调用 transferTo 方法后，要从 java 程序的**用户态**切换至**内核态**，使用 DMA将数据读入**内核缓冲区**，不会使用 cpu
 2. 只会将一些 offset 和 length 信息拷入 **socket 缓冲区**，几乎无消耗
 3. 使用 DMA 将 **内核缓冲区**的数据写入网卡，不会使用 cpu
 
-整个过程仅只发生了一次用户态与内核态的切换，数据拷贝了 2 次。所谓的【零拷贝】，并不是真正无拷贝，而是在不会拷贝重复数据到 jvm 内存中，零拷贝的优点有
+整个过程仅只发生了一次用户态与内核态的切换，数据拷贝了 2 次。所谓的【零拷贝】，并不是真正无拷贝，而是在**不会拷贝重复数据到 jvm 内存中**。
+
+零拷贝的优点有：
 
 * 更少的用户态与内核态的切换
 * 不利用 cpu 计算，减少 cpu 缓存伪共享
 * 零拷贝适合小文件传输
 
-
-
 ### 5.3 AIO
 
-AIO 用来解决数据复制阶段的阻塞问题
+异步非阻塞，服务器实现模式为一个有效请求一个线程，客户端的 I/O 请求都是由 OS 先完成了再通知服务器应用去启动线程进行处理。AIO 用来解决数据复制阶段的阻塞问题：
 
 * 同步意味着，在进行读写操作时，线程需要等待结果，还是相当于闲置
 * 异步意味着，在进行读写操作时，线程不必等待结果，而是将来由操作系统来通过回调方式由另外的线程来获得结果
@@ -1994,22 +2286,24 @@ AIO 用来解决数据复制阶段的阻塞问题
 > * Windows 系统通过 IOCP 实现了真正的异步 IO
 > * Linux 系统异步 IO 在 2.6 版本引入，但其底层实现还是用多路复用模拟了异步 IO，性能没有优势
 
+#### 1.文件AIO
 
-
-#### 文件 AIO
-
-先来看看 AsynchronousFileChannel
+先来看看`AsynchronousFileChannel`
 
 ```java
 @Slf4j
 public class AioDemo1 {
     public static void main(String[] args) throws IOException {
         try{
-            AsynchronousFileChannel s = 
-                AsynchronousFileChannel.open(
-                	Paths.get("1.txt"), StandardOpenOption.READ);
+            // 参数1：文件路径
+            // 参数2：读取模式
+            AsynchronousFileChannel s = AsynchronousFileChannel.open(Paths.get("1.txt"), StandardOpenOption.READ);
             ByteBuffer buffer = ByteBuffer.allocate(2);
             log.debug("begin...");
+            // 参数1：ByteBuffer
+            // 参数2：读取的起始位置
+            // 参数3：附件
+            // 参数4：回调方法
             s.read(buffer, 0, null, new CompletionHandler<Integer, ByteBuffer>() {
                 @Override
                 public void completed(Integer result, ByteBuffer attachment) {
@@ -2051,15 +2345,11 @@ public class AioDemo1 {
 * 响应文件读取成功的是另一个线程 Thread-5
 * 主线程并没有 IO 操作阻塞
 
+#### 2.守护线程
 
+默认文件 AIO 使用的线程都是守护线程，主线程结束时守护线程也会结束，所以最后要执行 `System.in.read()` 以避免守护线程意外结束。
 
-#### 💡 守护线程
-
-默认文件 AIO 使用的线程都是守护线程，所以最后要执行 `System.in.read()` 以避免守护线程意外结束
-
-
-
-#### 网络 AIO
+#### 3.网络AIO
 
 ```java
 public class AioServer {
@@ -2079,7 +2369,37 @@ public class AioServer {
         }
     }
 
-    private static class ReadHandler implements CompletionHandler<Integer, ByteBuffer> {
+    private static class AcceptHandler implements CompletionHandler<AsynchronousSocketChannel, Object> {
+        private final AsynchronousServerSocketChannel ssc;
+
+        public AcceptHandler(AsynchronousServerSocketChannel ssc) {
+            this.ssc = ssc;
+        }
+
+        @Override
+        public void completed(AsynchronousSocketChannel sc, Object attachment) {
+            try {
+                System.out.printf("[%s] %s connected\n", Thread.currentThread().getName(), sc.getRemoteAddress());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            ByteBuffer buffer = ByteBuffer.allocate(16);
+            // 读事件由 ReadHandler 处理
+            sc.read(buffer, buffer, new ReadHandler(sc));
+            // 写事件由 WriteHandler 处理
+            sc.write(Charset.defaultCharset().encode("server hello!"), ByteBuffer.allocate(16), new WriteHandler(sc));
+            // 处理完第一个 accpet 时，需要再次调用 accept 方法来处理下一个 accept 事件
+            ssc.accept(null, this);
+        }
+
+        @Override
+        public void failed(Throwable exc, Object attachment) {
+            closeChannel(sc);
+            exc.printStackTrace();
+        }
+    }
+    
+        private static class ReadHandler implements CompletionHandler<Integer, ByteBuffer> {
         private final AsynchronousSocketChannel sc;
 
         public ReadHandler(AsynchronousSocketChannel sc) {
@@ -2132,39 +2452,11 @@ public class AioServer {
             closeChannel(sc);
         }
     }
-
-    private static class AcceptHandler implements CompletionHandler<AsynchronousSocketChannel, Object> {
-        private final AsynchronousServerSocketChannel ssc;
-
-        public AcceptHandler(AsynchronousServerSocketChannel ssc) {
-            this.ssc = ssc;
-        }
-
-        @Override
-        public void completed(AsynchronousSocketChannel sc, Object attachment) {
-            try {
-                System.out.printf("[%s] %s connected\n", Thread.currentThread().getName(), sc.getRemoteAddress());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            ByteBuffer buffer = ByteBuffer.allocate(16);
-            // 读事件由 ReadHandler 处理
-            sc.read(buffer, buffer, new ReadHandler(sc));
-            // 写事件由 WriteHandler 处理
-            sc.write(Charset.defaultCharset().encode("server hello!"), ByteBuffer.allocate(16), new WriteHandler(sc));
-            // 处理完第一个 accpet 时，需要再次调用 accept 方法来处理下一个 accept 事件
-            ssc.accept(null, this);
-        }
-
-        @Override
-        public void failed(Throwable exc, Object attachment) {
-            exc.printStackTrace();
-        }
-    }
 }
 ```
 
+### 5.4 适用场景
 
-
-
-
+- BIO 方式适用于连接数目比较小且固定的架构，这种方式对服务器资源要求比较高，并发局限于应用中，JDK1.4 以前的唯一选择，但程序直观简单易理解
+- NIO 方式适用于连接数目多且连接比较短（轻操作）的架构，比如聊天服务器，并发局限于应用中，编程比较复杂，JDK1.4 开始支持
+- AIO 方式使用于连接数目多且连接比较长（重操作）的架构，比如相册服务器，充分调用 OS 参与并发操作，编程比较复杂，JDK7 开始支持
