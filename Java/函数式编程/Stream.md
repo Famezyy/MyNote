@@ -236,7 +236,7 @@ Stream<String> stream = Stream.of("1", "2", "3", "4", "5");
 long count = stream.count();
 ```
 
-### 3.9 Max & Min
+### 3.9 Max & Min & average & sum
 
 `Optional<T> max(Comparator<? super T> comparator)`：根据提供的 Comparator 返回此流的最大元素。
 
@@ -250,6 +250,18 @@ list.stream().max(Comparator.comparing(String::length));
 ```java
 list.stream().min(Integer::compareTo).get();
 list.stream().min(Comparator.comparingInt(Person::getSalary));
+```
+
+`average`
+
+```java
+double average = list.stream().mapToInt(value -> value.getAge()).average().getAsDouble();
+```
+
+`sum`
+
+```java
+int sum = list.stream().sum();
 ```
 
 ### 3.10 limit
