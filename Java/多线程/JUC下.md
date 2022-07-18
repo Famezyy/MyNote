@@ -4,17 +4,17 @@ Fork Join 在 JDK 1.7，并行执行任务！提高效率
 
 适用于处理大数据：Map Reduce （把大任务拆分为小任务）
 
-<img src="img/JUC下/image-20220222125415196.png" alt="image-20220222125415196" style="zoom:67%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220222125415196-4c6d5401aa6b556d74dbb55582286e7f-a6c5cf.png" alt="image-20220222125415196" style="zoom:67%;" />
 
 > Fork Join 特点：工作窃取
 
 这个里面维护的都是双端队列，B 执行完后会执行 A 的任务
 
-<img src="img/JUC下/image-20220222125427720.png" alt="image-20220222125427720" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220222125427720-02e5bc989b8a0879a9b5ceb3e1e276c0-4fd673.png" alt="image-20220222125427720" style="zoom:80%;" />
 
 
 
-<img src="img/JUC下/image-20220222125459873.png" alt="image-20220222125459873" style="zoom: 67%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220222125459873-78d6a09e76fc3bc5d217d88f095ddae8-b5dc5f.png" alt="image-20220222125459873" style="zoom: 67%;" />
 
 ```java
 /** 
@@ -182,7 +182,7 @@ JMM ： Java内存模型，不存在的东西，概念！约定！
 
 **8 种操作：**
 
-<img src="img/JUC下/image-20220126190739728.png" alt="image-20220126190739728" style="zoom: 67%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220126190739728-9496284eb2158619e174236e3e03cd59-a0565e.png" alt="image-20220126190739728" style="zoom: 67%;" />
 
 **内存交互操作有8种，虚拟机实现必须保证每一个操作都是原子的，不可在分的（对于double和long类型的变量来说，load、store、read和 write 操作在某些平台上允许例外）**
 
@@ -277,7 +277,7 @@ public class VDemo02 {
 
 **如果不加** **lock** **和** **synchronized，怎么样保证原子性**
 
-<img src="img/JUC下/image-20220222125521757.png" alt="image-20220222125521757" style="zoom: 67%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220222125521757-a1b7fab39ecbe53e2fc94aa9b3fd54e9-4ad4bb.png" alt="image-20220222125521757" style="zoom: 67%;" />
 
 **使用原子类，解决原子性问题**
 
@@ -333,7 +333,7 @@ y = x * x; // 4
 1. 保证特定操作的执行顺序！
 2. 可以保证某些变量的内存可见性（利用这些特性 **volatile** 实现了可见性）
 
-<img src="img/JUC下/image-20220222125535460.png" alt="image-20220222125535460" style="zoom: 67%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220222125535460-bff1f166d52c45f0bbbe96f0f3215ee0-57dcb6.png" alt="image-20220222125535460" style="zoom: 67%;" />
 
 ### 总结
 
@@ -513,15 +513,15 @@ public class CASDemo {
 
 执行结果如图：
 
-<img src="img/JUC下/image-20220222125547397.png" alt="在这里插入图片描述" style="zoom:67%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220222125547397-00f148ced6b1325260da67de56cdf2f8-c635ec.png" alt="在这里插入图片描述" style="zoom:67%;" />
 
 **Unsafe 类**
 
-<img src="img/JUC下/image-20220222125603889.png" alt="image-20220222125603889" style="zoom: 67%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220222125603889-04d9931c587f33c3d11e703e6c2ad010-f2ebb4.png" alt="image-20220222125603889" style="zoom: 67%;" />
 
-<img src="img/JUC下/image-20220222125613828.png" alt="image-20220222125613828" style="zoom: 67%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220222125613828-2efdc1ed4fba148f348f7a8013b8cab8-919485.png" alt="image-20220222125613828" style="zoom: 67%;" />
 
-<img src="img/JUC下/image-20220222125623438.png" alt="image-20220222125623438" style="zoom: 67%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220222125623438-721117481b4828a1c734f85e5796a685-81e3df.png" alt="image-20220222125623438" style="zoom: 67%;" />
 
 > CAS ：比较当前工作内存中的值和主内存中的值，如果这个值是期望的，那么则执行操作！如果不是就一直循环！
 
@@ -533,7 +533,7 @@ public class CASDemo {
 
 **CAS ： ABA 问题（狸猫换太子）**
 
-<img src="img/JUC下/image-20220222125641262.png" alt="image-20220222125641262" style="zoom: 67%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220222125641262-290b8e8c544d28bebe3abbe8afe6aa8f-10a1cf.png" alt="image-20220222125641262" style="zoom: 67%;" />
 
 ```java
 public class CASDemo {    
@@ -560,7 +560,7 @@ public class CASDemo {
 
 输出结果如图：
 
-<img src="img/JUC下/image-20220222125651928.png" alt="image-20220222125651928" style="zoom: 80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220222125651928-d957cee282ed68bb8bf74ddcf8bf04ad-4e9107.png" alt="image-20220222125651928" style="zoom: 80%;" />
 
 ---
 
@@ -616,7 +616,7 @@ public class CASDemo {
 
 结果如图：
 
-<img src="img/JUC下/image-20220222125701172.png" alt="image-20220222125701172" style="zoom: 67%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220222125701172-8bd6349bf497ce1626ad1a93cba16690-913f1c.png" alt="image-20220222125701172" style="zoom: 67%;" />
 
 **注意：**
 
@@ -624,7 +624,7 @@ public class CASDemo {
 
 下面是阿里巴巴开发手册的规范点：
 
-<img src="img/JUC下/image-20220222125709204.png" alt="image-20220222125709204" style="zoom: 67%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220222125709204-d61c8fd2a5068bbb6a8973e1f7808912-a6c200.png" alt="image-20220222125709204" style="zoom: 67%;" />
 
 ---
 
@@ -760,7 +760,7 @@ class Phone2{
 
 > spinlock
 
-<img src="img/JUC下/image-20220222125721765.png" alt="image-20220222125721765" style="zoom: 67%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220222125721765-d7df5f55fa5a4fe672251e4500b7f07b-ab1cae.png" alt="image-20220222125721765" style="zoom: 67%;" />
 
 我们来自定义一个锁测试：
 
@@ -831,7 +831,7 @@ public class TestSpinLock {
 
 ### 4 死锁
 
-<img src="img/JUC下/image-20220222125833199.png" alt="image-20220222125833199" style="zoom: 67%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220222125833199-2a36b1e90a0c174cba566ff805b101a1-c338a2.png" alt="image-20220222125833199" style="zoom: 67%;" />
 
 ```java
 public class TestLock {

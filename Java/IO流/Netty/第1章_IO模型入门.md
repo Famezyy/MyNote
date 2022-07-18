@@ -11,13 +11,13 @@ I/O 模型：就是用什么样的通道或者说是通信模式和架构进行�
 
 同步并阻塞（传统阻塞型），服务器实现模式为一个连接一个线程，即客户端有连接请求时服务器端就需要启动一个线程进行处理，如果这个连接不做任何事情会造成不必要的线程开销
 
-<img src="img/第1章_IO模型入门/image-20220201003935222.png" alt="image-20220201003935222" style="zoom:67%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/20220718-39a05ec6c97b52ef863f892cf5f36a51-image-20220201003935222-99f8c5-39a05ec6c97b52ef863f892cf5f36a51-6d0a71.png" alt="image-20220201003935222" style="zoom:67%;" />
 
 #### 2.NIO
 
 同步非阻塞，服务器实现模式为一个线程处理多个请求（连接），即客户端发送的连接请求都会注册到多路复用器（选择器）上，多路复用器轮询到连接有 I/O 请求就进行处理
 
-<img src="img/第1章_IO模型入门/image-20220201004033258.png" alt="image-20220201004033258" style="zoom: 67%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/20220718-0d4b6a381e05a90f8efb255b58980862-image-20220201004033258-1b2bd4-0d4b6a381e05a90f8efb255b58980862-c43cc1.png" alt="image-20220201004033258" style="zoom: 67%;" />
 
 ####  3.AIO
 
@@ -37,7 +37,7 @@ Java AIO(NIO.2)：异步异步非阻塞，服务器实现模式为一个有效�
 
 ### 2.1 工作机制
 
-<img src="img/第1章_IO模型入门/image-20220202223935304.png" alt="image-20220202223935304" style="zoom: 80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/20220718-699be31b4afd9e1e3c0e2ab4a3f7b08e-image-20220202223935304-7ef7b5-699be31b4afd9e1e3c0e2ab4a3f7b08e-7c5b56.png" alt="image-20220202223935304" style="zoom: 80%;" />
 
 **对 BIO  编程流程的梳理**
 
@@ -313,7 +313,7 @@ class ServerReadThread extends Thread{
 
 图示如下：
 
-<img src="img/第1章_IO模型入门/image-20220201230956992.png" alt="image-20220201230956992" style="zoom:67%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/20220718-dc03c5a35338bc411a255316881f41d2-image-20220201230956992-cf785d-dc03c5a35338bc411a255316881f41d2-bc128d.png" alt="image-20220201230956992" style="zoom:67%;" />
 
 **客户端源码分析**
 
@@ -548,7 +548,7 @@ public class ServerReaderThread extends Thread {
 
 需求：需要实现一个客户端的消息可以发送给所有的客户端去接收。（群聊实现）
 
-<img src="img/第1章_IO模型入门/image-20220202000029876.png" alt="image-20220202000029876" style="zoom:67%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/20220718-08f8bfca6dfd454f52921c23402bcc90-image-20220202000029876-d95112-08f8bfca6dfd454f52921c23402bcc90-6c7aa2.png" alt="image-20220202000029876" style="zoom:67%;" />
 
 **客户端开发**
 

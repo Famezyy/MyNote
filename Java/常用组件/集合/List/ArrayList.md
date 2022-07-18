@@ -18,7 +18,7 @@ public static void main(String[] args) {
 
 在`remove()`方法中调用了`fastRemove()`方法，在后者中当找到目标元素后，会将该元素后面的所有元素都向前移动一格，然后最后一个设置元素为 null：
 
-<img src="img/ArrayList/image-20220527135655279.png" alt="image-20220527135655279" style="zoom:50%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220527135655279-82293c10ed8a6b69d46320003a1921e8-565459.png" alt="image-20220527135655279" style="zoom:50%;" />
 
 解决办法：
 

@@ -3494,7 +3494,7 @@ public class JedisClusterTest {
 - 使用锁：
   - 就是在缓存失效的时候（判断拿出来的值为空），不是立即去 load db
   - 先使用缓存工具的某些带成功操作返回值的操作（比如 Redis 的 SETNX）去 set 一个 mutex key
-  - 当操作返回成功时，再进行 load db 的操作，并回设缓存,最后删除 mutex key
+  - 当操作返回成功时，再进行 load db 的操作，并回设缓存，最后删除 mutex key
   - 当操作返回失败，证明有线程在 load db，当前线程睡眠一段时间再重试整个 get 缓存的方法
 
 <img src="img/Redis/88" alt="img" style="zoom:80%;" />

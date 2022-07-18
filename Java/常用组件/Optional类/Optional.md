@@ -1,6 +1,6 @@
 在文章的开头，先说下 NPE 问题，NPE 问题就是，我们在开发中经常碰到的 NullPointerException。假设我们有两个类，他们的 UML 类图如下图所示
 
-<img src="img/Optional/640" alt="图片" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/640-89da17600161ac7521e70b7b79e8d837-165a29" alt="图片" style="zoom:80%;" />
 
 在这种情况下，有如下代码
 
@@ -27,7 +27,7 @@ if(user!=null){
 
 先说明一下，`Optional(T value)`，即构造函数，它是private权限的，不能由外部调用的。其余三个函数是public权限，供我们所调用。那么，Optional 的本质，就是内部储存了一个真实的值，在构造的时候，就直接判断其值是否为空。好吧，这么说还是比较抽象。直接上`Optional(T value)`构造函数的源码，如下图所示
 
-![图片](img/Optional/641)
+![图片](https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/641-eadfa4dcd6e0ded80175b8111f9c1946-9e1fa1)
 
 那么，of(T value) 的源码如下
 

@@ -19,7 +19,7 @@
 
 - 下图描述了 hashmap 的存储结构图
 
-<img src="img/HashMap/SouthEast" alt="img" style="zoom: 67%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/SouthEast-b6fad6d78315224694a5ce7a20e6b148-d03332" alt="img" style="zoom: 67%;" />
 
 ## 2.和HashTable的不同
 

@@ -13,7 +13,7 @@ Netty 是一个异步的、基于事件驱动的网络应用框架，用于快�
 
 ### 1.2 Netty的作者
 
-<img src="img/第3章_Netty入门/0005.png" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/0005-64fc67105d460cb23e0bcc014ba4c21f-b52781.png" style="zoom:80%;" />
 
 他还是另一个著名网络应用框架 Mina 的重要贡献者
 
@@ -123,7 +123,7 @@ new Bootstrap()
 
 ### 2.4 流程梳理
 
-<img src="img/第3章_Netty入门/0040.png" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/0040-adea72dac7ceb3d0f0158cd3d7acdd57-231ffe.png" style="zoom:80%;" />
 
 > #### 💡 提示
 >
@@ -268,7 +268,7 @@ public static void main(String[] args) throws InterruptedException {
 
 可以看到两个工人轮流处理 channel，但工人与 channel 之间进行了绑定：
 
-<img src="img/第3章_Netty入门/0042.png" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/0042-5481d330648f7aac4452dbfb01920fd3-49aec9.png" style="zoom:80%;" />
 
 
 
@@ -316,9 +316,7 @@ new ServerBootstrap()
 
 可以看到，nio 工人和 非 nio 工人也分别绑定了 channel，handler1 由 NioEventLoop 执行，handler2 由 DefaultEventLoop 执行。
 
-
-
-<img src="img/0041.png" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/0041-7de561abc15cda8879ac2cf85700066b-a1ee91.png" style="zoom:80%;" />
 
 
 
@@ -565,17 +563,17 @@ public class CloseFutureClient {
 >
 > 思考下面的场景，4 个医生给人看病，每个病人花费 20 分钟，而且医生看病的过程中是以病人为单位的，一个病人看完了，才能看下一个病人。每 20 分钟进来 4 个病人出去 4 个病人。
 >
-> <img src="img/第3章_Netty入门/0044.png" style="zoom:80%;" />
+> <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/0044-6a10c9dad3ac38a87f514c18b0324711-df56d8.png" style="zoom:80%;" />
 >
 > 经研究发现，看病可以细分为四个步骤，经拆分后每个步骤需要 5 分钟，如下
 >
-> <img src="img/第3章_Netty入门/0048.png" style="zoom:80%;" />
+> <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/0048-0f99455333121fbdbcd1d639a74177d4-e5ce58.png" style="zoom:80%;" />
 >
 > 
 >
 > 因此可以做如下优化，只有一开始，医生 2、3、4 分别要等待 5、10、15 分钟才能执行工作，但只要后续病人源源不断地来，他们就能够满负荷工作，虽然 20 分钟还是处理 4 个病人，但是每 5 分钟就会有一个病人进来和一个病人出去
 >
-> <img src="img/第3章_Netty入门/0047.png" style="zoom:80%;" />
+> <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/0047-a694740c598213c9bdeba1a223382696-5f52b7.png" style="zoom:80%;" />
 >
 > **要点**
 >
@@ -859,10 +857,6 @@ io.netty.util.concurrent.BlockingOperationException: DefaultPromise@47499c2a(inc
 
 ```
 
-
-
-
-
 ### 3.4 Handler & Pipeline
 
 ChannelHandler 用来处理 Channel 上的各种事件，分为入站、出站两种。所有 ChannelHandler 被连成一串，就是 Pipeline
@@ -963,7 +957,7 @@ new Bootstrap()
 
 可以看到，ChannelInboundHandlerAdapter 是按照 addLast 的顺序执行的，而 ChannelOutboundHandlerAdapter 是按照 addLast 的逆序执行的。ChannelPipeline 的实现是一个 ChannelHandlerContext（包装了 ChannelHandler） 组成的双向链表
 
-![](img/0008.png)
+![](https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/0008-9f1815805bdefed71b1f6f5e5c0627ee-d511fe.png)
 
 * 入站处理器中，ctx.fireChannelRead(msg) 是 **调用下一个入站处理器**
   * 如果注释掉 1 处代码，则仅会打印 1
@@ -983,7 +977,7 @@ new Bootstrap()
 
 图1 - 服务端 pipeline 触发的原始流程，图中数字代表了处理步骤的先后次序
 
-![](img/0009.png)
+![](https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/0009-56d3381368d498b7fbe7e6b775fcbdd1-241e2d.png)
 
 
 
@@ -1060,13 +1054,11 @@ ByteBuf buffer = ByteBufAllocator.DEFAULT.directBuffer(10);
 * 4.1 以后，非 Android 平台默认启用池化实现，Android 平台启用非池化实现
 * 4.1 之前，池化功能还不成熟，默认是非池化实现
 
-
-
 #### 4）组成
 
 ByteBuf 由四部分组成
 
-![](img/0010.png)
+![](https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/0010-cba17278034a053c70930947343310aa-77d98b.png)
 
 最开始读写指针都在 0 位置
 
@@ -1329,7 +1321,7 @@ public static boolean release(Object msg) {
 
 【零拷贝】的体现之一，对原始 ByteBuf 进行切片成多个 ByteBuf，切片后的 ByteBuf 并没有发生内存复制，还是使用原始 ByteBuf 的内存，切片后的 ByteBuf 维护独立的 read，write 指针
 
-![](img/0011.png)
+![](https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/0011-ae0b62ba4b5935c66674cb603da6bbc4-17fc5b.png)
 
 例，原始 ByteBuf 进行一些初始操作
 
@@ -1440,7 +1432,7 @@ System.out.println(ByteBufUtil.prettyHexDump(origin));
 
 【零拷贝】的体现之一，就好比截取了原始 ByteBuf 所有内容，并且没有 max capacity 的限制，也是与原始 ByteBuf 使用同一块底层内存，只是读写指针是独立的
 
-![](img/0012.png)
+![](https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/0012-dc2294119a7fdc68f77855060844c978-fa1516.png)
 
 
 

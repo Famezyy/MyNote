@@ -29,7 +29,7 @@ public class NormalReferenceTest {
 ### 1.2 软引用
 当内存足够的时候，GC 不会回收软引用，当内存不够的时候，软引用会被回收。因此软引用非常适合做**缓存**。
 
-<img src="img/ThreadLocal/image-20220525223956948.png" alt="image-20220525223956948" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220525223956948-9cf5e1de05b1b7dcc5402245dcee698c-45dee1.png" alt="image-20220525223956948" style="zoom:80%;" />
 
 ```java
 public class SoftReferenceTest {
@@ -247,7 +247,7 @@ static class ThreadLocalMap {
 ```
 ### 2.2 为什么要用弱引用？
 如果使用了强引用作为 key 去创建一个线程私有的变量，那么这个私有变量的生命周期就与`ThreadLocals`这个 map 绑定了，也就是与该线程绑定了，直到线程结束前都不会被回收。如果是个弱引用，一旦`tl`与`new`出来的`ThreadLocal`切断了联系，当下次 GC 时该`ThreadLocal`对象就会被回收。
-<img src="img/ThreadLocal/image-20220525224019756.png" alt="image-20220525224019756" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220525224019756-394004747a056767951740f09d9845a7-aa6090.png" alt="image-20220525224019756" style="zoom:80%;" />
 
 ### 2.3 内存泄漏
 但是此时只有`key`被回收了，`Entry`对象中的`value`却永远被保存下来了，这就是内存泄漏的问题。设想如果这发生在**线程池**中：一个线程被使用并创建了`ThreadLocal`变量，但是发生了内存泄露并返回给了线程池。甚者`key`也没有被回收并回到了线程池中。

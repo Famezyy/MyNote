@@ -91,7 +91,7 @@ private List<WriteModel> createModelList() {
 
 看下实际效果：
 
-<img src="img/image-20220430173940062.png" alt="image-20220430173940062" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220430173940062-e90dbf7870a1e68f5151e50f1d6a17ff-a8d631.png" alt="image-20220430173940062" style="zoom:80%;" />
 
 ## 3.特殊场景支持
 
@@ -198,7 +198,7 @@ private List<List<Object>> createDynamicModelList() {
 
 看下效果：
 
-<img src="img/image-20220430182441022.png" alt="image-20220430182441022" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220430182441022-34983aecf64e9d529f35114a87823941-43f31b.png" alt="image-20220430182441022" style="zoom:80%;" />
 
 ### 3.2 自定义表头以及内容样式
 
@@ -253,7 +253,7 @@ TableStyle createTableStyle() {
 
 我们可以通过 `TableStyle` 这个类来设置表头、表格主题的样式，效果见下图：
 
-<img src="img/image-20220430180427300.png" alt="image-20220430180427300" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220430180427300-3e338d5e2f722af1e3da8a928ebbb9ae-a2637a.png" alt="image-20220430180427300" style="zoom:80%;" />
 
 ### 3.3 合并单元格
 
@@ -271,7 +271,7 @@ writer.finish();
 
 注意下标是从 0 开始的，也就是说合并了第六行到第七行，其中的第一列到第五列，跑下代码，看下效果：
 
-<img src="img/image-20220430182927792.png" alt="image-20220430182927792" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220430182927792-453aa03ebc276ed1071b99d47cc5271d-f46bd9.png" alt="image-20220430182927792" style="zoom:80%;" />
 
 ### 3.4 自定义处理
 

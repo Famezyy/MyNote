@@ -2,7 +2,7 @@
 
 在 Java 5.0 提供了 java.util.concurrent （简称JUC ）包，在此包中增加了在并发编程中很常用的实用工具类，用于定义类似于线程的自定义子系统，包括线程池、异步 IO 和轻量级任务框架。提供可调的、灵活的线程池。还提供了设计用于多线程上下文中的 Collection 实现等。
 
-<img src="img/JUC上/image-20220222125045713.png" alt="image-20220222125045713" style="zoom:50%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220222125045713-d3d0745818a42ef8f8d18b3c0d49f8fa-98a951.png" alt="image-20220222125045713" style="zoom:50%;" />
 
 ---
 
@@ -157,11 +157,11 @@ class Ticket {
 
 **Lock 接口**
 
-<img src="img/JUC上/image-20220124235715303.png" alt="image-20220124235715303" style="zoom: 80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220124235715303-7ea0da31fec1fcc128ee373a0de451fc-a90dd5.png" alt="image-20220124235715303" style="zoom: 80%;" />
 
-<img src="img/JUC上/image-20220222125107097.png" alt="image-20220222125107097" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220222125107097-d561d16e8d9a15b6663b632c3cf39831-0ac078.png" alt="image-20220222125107097" style="zoom:80%;" />
 
-<img src="img/JUC上/image-20220222125116202.png" alt="image-20220222125116202" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220222125116202-4bbcdcb669c26e224a4370e12e114a23-4226b2.png" alt="image-20220222125116202" style="zoom:80%;" />
 
 - 公平锁：十分公平，线程执行顺序按照先来后到顺序
 - 非公平锁：十分不公平：可以插队 （默认锁）
@@ -328,13 +328,13 @@ class Data {
 
 > 问题存在，A B C D 4 个线程时会出现虚假唤醒
 
-<img src="img/JUC上/image-20220222125131919.png" alt="image-20220222125131919" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220222125131919-ba2212abcb7efe4d1cea431774940e82-b83275.png" alt="image-20220222125131919" style="zoom:80%;" />
 
 因此上述代码中必须使用 **while** 判断，而不能使用 **if**
 
 ### 2.JUC
 
-<img src="img/JUC上/image-20220222125140474.png" alt="image-20220222125140474" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220222125140474-879847332f047b775ef2c8649b6d3b22-d9dfda.png" alt="image-20220222125140474" style="zoom:80%;" />
 
 代码实现：
 
@@ -524,7 +524,7 @@ class Data3 {
 
 测试结果：
 
-<img src="img/JUC上/image-20220222125151093.png" alt="image-20220222125151093" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220222125151093-0debcde515cff64e88eb4779f416d773-918f63.png" alt="image-20220222125151093" style="zoom:80%;" />
 
 ---
 
@@ -1109,6 +1109,6 @@ class MyCache{
 
 执行效果如图：
 
-<img src="img/JUC上/image-20220222125240193.png" alt="image-20220222125240193" style="zoom: 50%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220222125240193-4df5463a2e4b9ef030fad440d6807711-04f76a.png" alt="image-20220222125240193" style="zoom: 50%;" />
 
-<img src="img/JUC上/image-20220222125228234.png" alt="image-20220222125228234" style="zoom: 67%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220222125228234-de29166ff51fd792413e47f4b9196893-05c754.png" alt="image-20220222125228234" style="zoom: 67%;" />

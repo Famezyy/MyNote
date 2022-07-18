@@ -70,7 +70,7 @@ list.stream()
 
 `stream`是顺序流，由主线程按顺序对流执行操作，而`parallelStream`是并行流，内部以多线程并行执行的方式对流进行操作，但前提是流中的数据处理没有顺序要求。例如筛选集合中的奇数，两者的处理不同之处：
 
-<img src="img/Stream/640.png" alt="图片" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/640-ece19ebc6d8e6cec578f96607f85db08-f9057f.png" alt="图片" style="zoom:80%;" />
 
 如果流中的数据量足够大，并行流可以加快处速度。除了直接创建并行流，还可以通过`parallel()`把顺序流转换成并行流：
 
@@ -146,13 +146,13 @@ stream2.forEach(System.out::println);
 
 把`数组流`中的每一个值，使用所提供的函数执行一遍，一一对应。得到元素个数相同的`数组流`。
 
-<img src="img/stream/image-20220619163541677.png" alt="image-20220619163541677" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220619163541677-6f1973d15ba3013b93eaed7ae495eb18-62965b.png" alt="image-20220619163541677" style="zoom:80%;" />
 
 **flatMap**
 
 flat 是扁平的意思。它把`数组流`中的每一个值，使用所提供的函数执行一遍，一一对应。得到元素相同的`数组流`。只不过，里面的元素也是一个子`数组流`。把这些子数组合并成一个数组以后，元素个数大概率会和原`数组流`的个数不同。
 
-<img src="img/stream/image-20220619163550966.png" alt="image-20220619163550966" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220619163550966-5edccaf75c3ef010b7a173a8cc684f36-906d3d.png" alt="image-20220619163550966" style="zoom:80%;" />
 
 **举例**
 
@@ -160,7 +160,7 @@ flat 是扁平的意思。它把`数组流`中的每一个值，使用所提供�
 
 数据结构：
 
-<img src="img/stream/image-20220619163702922.png" alt="image-20220619163702922" style="zoom:67%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220619163702922-051438bcd520e5a40a3a5a88d80bc5ea-debd02.png" alt="image-20220619163702922" style="zoom:67%;" />
 
 ```java
 public static void main(String[] args) {
@@ -320,7 +320,7 @@ Optional<Integer> sum = Arrays.stream(new Integer[] {1, 2, 3, 4})
     .reduce(Integer::sum);
 ```
 
-<img src="img/Stream/image-20220625215156376.png" alt="image-20220625215156376" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220625215156376-86f1e9c96247f15de2ba277e60bdc5c7-50257d.png" alt="image-20220625215156376" style="zoom:80%;" />
 
 ### 3.15 reduce
 

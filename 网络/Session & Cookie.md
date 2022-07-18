@@ -8,7 +8,7 @@
 - 浏览器看到有`Set-Cookie`字段以后就知道这是服务器给的身份标识，于是就保存起来，下次请求时会自动将此`key=value`值放入到`Cookie`字段中发给服务端
 - 服务端收到请求报文后，发现`Cookie`字段中有值，就能根据此值识别用户的身份然后提供个性化的服务
 
-<img src="img/image-20220515171754148.png" alt="image-20220515171754148" style="zoom: 50%;" />
+<img src="img/Session & Cookie/image-20220515171754148.png" alt="image-20220515171754148" style="zoom: 50%;" />
 
 接下来我们用代码演示一下服务器是如何生成，我们自己搭建一个后台服务器，这里我用的是 SpringBoot 搭建的，并且写入SpringMVC 的代码如下。
 
@@ -22,11 +22,11 @@ public String cookies(HttpServletResponse response){
 
 项目启动以后我们输入路径`http://localhost:8005/testCookies`，然后查看发的请求。可以看到下面那张图使我们首次访问服务器时发送的请求，可以看到服务器返回的响应中有`Set-Cookie`字段。而里面的`key=value`值正是我们服务器中设置的值。
 
-<img src="img/image-20220515171906231.png" alt="image-20220515171906231" style="zoom:80%;" />
+<img src="img/Session & Cookie/image-20220515171906231.png" alt="image-20220515171906231" style="zoom: 80%;" />
 
 接下来我们再次刷新这个页面可以看到在请求体中已经设置了`Cookie`字段，并且将我们的值也带过去了。这样服务器就能够根据`Cookie`中的值记住我们的信息了。
 
-<img src="img/image-20220515171928069.png" alt="image-20220515171928069" style="zoom:80%;" />
+<img src="img/Session & Cookie/image-20220515171928069.png" alt="image-20220515171928069" style="zoom: 80%;" />
 
 接下来我们换一个请求呢？是不是`Cookie`也会带过去呢？接下来我们输入路径`http://localhost:8005`请求。我们可以看到`Cookie`字段还是被带过去了。
 

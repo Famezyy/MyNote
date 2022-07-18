@@ -24,7 +24,7 @@ NIO 有三大核心部分：**Channel(通道) 、Buffer(缓冲区)、Selector(�
 
 一个用于特定基本数据类型的容器。由`java.nio`包定义的，所有缓冲区都是 Buffer 抽象类的子类.。Java NIO 中的 Buffer 主要用于与 NIO 通道进行交互，数据是从通道读入缓冲区，从缓冲区写入通道中的。
 
-<img src="img/第2章_NIO基础/image-20220202224429384.png" alt="image-20220202224429384" style="zoom:67%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220202224429384-748f5ef4a2a7454ffdc61f22580161b7-d2443d.png" alt="image-20220202224429384" style="zoom:67%;" />
 
 #### 1.Buffer类及其子类
 
@@ -58,27 +58,27 @@ Buffer 中的重要概念：
 
 一开始
 
-![](img/第2章_NIO基础/0021.png)
+![](https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/0021-c8a78053293105a1ce22334ebe26853f-55e46e.png)
 
 写模式下，position 是写入位置，limit 等于容量，下图表示写入了 4 个字节后的状态
 
-![](img/第2章_NIO基础/0018.png)
+![](https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/0018-86a06b91acb74a9c2ff00a10004bdc3d-d3eb28.png)
 
 flip 动作发生后，position 切换为读取位置，limit 切换为读取限制（Limit 为 5）
 
-![](img/第2章_NIO基础/0019.png)
+![](https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/0019-c3197ff6217affbbcc20ab865ae58ee1-a195a6.png)
 
 读取 4 个字节后，状态
 
-![](img/第2章_NIO基础/0020.png)
+![](https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/0020-8202e9da57d2a913d86d057dc5140226-3bd91b.png)
 
 clear 动作发生后，状态
 
-![](img/第2章_NIO基础/0021-16575171511855.png)
+![](https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/0021-16575171511855-c8a78053293105a1ce22334ebe26853f-7081ea.png)
 
 compact 方法，是把未读完的部分向前压缩，然后切换至写模式
 
-![](img/第2章_NIO基础/0022.png)
+![](https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/0022-a46df9c4e66a8e545792dbedfc4650fd-b94f43.png)
 
 #### 3.Buffer常见方法
 
@@ -1462,7 +1462,7 @@ ld�
 
 #### 4.处理消息的边界
 
-![](img/第2章_NIO基础/0023.png)
+![](https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/0023-3b9638a1e23e235165906d2db3fdc238-9c3121.png)
 
 * 一种思路是固定消息长度，数据包大小一样，服务器按预定长度读取，缺点是浪费带宽
 * 另一种思路是按分隔符拆分，缺点是效率低
@@ -2156,123 +2156,41 @@ public class UdpClient {
 * 等待数据阶段
 * 复制数据阶段
 
-<img src="img/第2章_NIO基础/0033.png" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/0033-9beda40e996875e42ae18f1a4010cb0e-ddb582.png" style="zoom:80%;" />
 
 * 阻塞 IO
 
   切换到内核空间后，在等待数据时发生阻塞，在复制数据时也会阻塞。
 
-  <img src="img/第2章_NIO基础/0039.png" style="zoom:80%;" />
+  <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/0039-d6140fbe21ad3029c901c39fc656c80f-70eb5a.png" style="zoom:80%;" />
 
 * 非阻塞  IO
 
   切换到内核空间后，读取数据不发生阻塞，通过轮询判断是否收到数据（多次用户态到内核态的切换）。在复制数据时会阻塞。
 
-  <img src="img/第2章_NIO基础/0035.png" style="zoom:80%;" />
+  <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/0035-bee47ff0353597736841cb77f39de290-387629.png" style="zoom:80%;" />
 
 * 多路复用
 
   `select`阻塞监控数据，收到数据时生产`read`事件进行数据的复制。在等待数据时发生阻塞，在复制数据时也会阻塞。与阻塞 IO 不同的是，虽然内核态的切换成本增加，但是可以单线程处理多个 channel 的操作。
 
-  <img src="img/第2章_NIO基础/0038.png" style="zoom:80%;" />
+  <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/0038-92295a6cadbef7f318b447c195cfdaaf-788d47.png" style="zoom:80%;" />
 
 - 阻塞 IO vs 多路复用
 
-  <img src="img/第2章_NIO基础/0034.png" style="zoom:80%;" />
+  <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/0034-b14515879b743602954685e6403970ad-845b64.png" style="zoom:80%;" />
 
-  <img src="img/第2章_NIO基础/0036.png" style="zoom:80%;" />
+  <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/0036-fe68785fc885d9bbfa4e9fa6a973dbe3-6e9c0f.png" style="zoom:80%;" />
 
 * 信号驱动
 
 * 异步 IO
 
-  <img src="img/第2章_NIO基础/0037.png" style="zoom:80%;" />
+  <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/0037-d24fd0f79f08ba57c427e8105d1b723b-88d2e9.png" style="zoom:80%;" />
 
 #### 🔖 参考
 
 `UNIX 网络编程 - 卷 I`
-
-### 5.3 零拷贝
-
-#### 1.传统IO问题
-
-传统的 IO 将一个文件通过 socket 写出
-
-```java
-File f = new File("helloword/data.txt");
-RandomAccessFile file = new RandomAccessFile(file, "r");
-
-byte[] buf = new byte[(int)f.length()];
-file.read(buf);
-
-Socket socket = ...;
-socket.getOutputStream().write(buf);
-```
-
-内部工作流程是这样的：
-
-<img src="img/第2章_NIO基础/image-20220714195505564.png" alt="image-20220714195505564" style="zoom:80%;" />
-
-1. java 本身并不具备 IO 读写能力，因此 read 方法调用后，要从 java 程序的**用户态**切换至**内核态**，去调用操作系统（Kernel）的读能力，将数据读入**内核缓冲区**。这期间用户线程阻塞，操作系统使用 DMA（Direct Memory Access）来实现文件读，其间也不会使用 cpu
-
-   > DMA 也可以理解为硬件单元，用来解放 cpu 完成文件 IO
-
-2. 从**内核态**切换回**用户态**，将数据从**内核缓冲区**读入**用户缓冲区**（即 byte[] buf），这期间 cpu 会参与拷贝，无法利用 DMA
-
-3. 调用 write 方法，这时将数据从**用户缓冲区**（byte[] buf）写入 **socket 缓冲区**，cpu 会参与拷贝
-
-4. 接下来要向网卡写数据，这项能力 java 又不具备，因此又得从**用户态**切换至**内核态**，调用操作系统的写能力，使用 DMA 将 **socket 缓冲区**的数据写入网卡，不会使用 cpu
-
-可以看到中间环节较多，java 的 IO 实际不是物理设备级别的读写，而是缓存的复制，底层的真正读写是操作系统来完成的
-
-* 用户态与内核态的切换发生了 3 次，这个操作比较重量级
-* 数据拷贝了共 4 次
-
-#### 2，NIO优化
-
-通过`DirectByteBuf`：
-
-* `ByteBuffer.allocate(10)` ：HeapByteBuffer，使用的还是 java 内存
-* `ByteBuffer.allocateDirect(10)` ：DirectByteBuffer，使用的是操作系统内存
-
-<img src="img/第2章_NIO基础/image-20220714195628221.png" alt="image-20220714195628221" style="zoom:80%;" />
-
-大部分步骤与优化前相同，不再赘述。唯有一点：java 可以使用`DirectByteBuf`将堆外内存映射到 jvm 内存中来直接访问使用
-
-* 这块内存不受 jvm 垃圾回收的影响，因此内存地址固定，有助于 IO 读写
-* java 中的`DirectByteBuf`对象仅维护了此内存的虚引用，内存回收分成两步
-  * `DirectByteBuf`对象被垃圾回收，将虚引用加入引用队列
-  * 通过专门线程访问引用队列，根据虚引用释放堆外内存
-* 减少了一次数据拷贝，用户态与内核态的切换次数没有减少
-
-进一步优化（底层采用了 linux 2.1 后提供的`sendFile`方法），java 中对应着两个 channel 调用`transferTo/transferFrom`方法拷贝数据
-
-<img src="img/第2章_NIO基础/image-20220714195925864.png" alt="image-20220714195925864" style="zoom:80%;" />
-
-1. java 调用 transferTo 方法后，要从 java 程序的**用户态**切换至**内核态**，使用 DMA将数据读入**内核缓冲区**，不会使用 cpu
-2. 数据从**内核缓冲区**传输到 **socket 缓冲区**，cpu 会参与拷贝
-3. 最后使用 DMA 将 **socket 缓冲区**的数据写入网卡，不会使用 cpu
-
-可以看到：
-
-* 只发生了一次用户态与内核态的切换
-* 数据拷贝了 3 次
-
-进一步优化（linux 2.4）
-
-<img src="img/第2章_NIO基础/image-20220714200204283.png" alt="image-20220714200204283" style="zoom:80%;" />
-
-1. java 调用 transferTo 方法后，要从 java 程序的**用户态**切换至**内核态**，使用 DMA将数据读入**内核缓冲区**，不会使用 cpu
-2. 只会将一些 offset 和 length 信息拷入 **socket 缓冲区**，几乎无消耗
-3. 使用 DMA 将 **内核缓冲区**的数据写入网卡，不会使用 cpu
-
-整个过程仅只发生了一次用户态与内核态的切换，数据拷贝了 2 次。所谓的【零拷贝】，并不是真正无拷贝，而是在**不会拷贝重复数据到 jvm 内存中**。
-
-零拷贝的优点有：
-
-* 更少的用户态与内核态的切换
-* 不利用 cpu 计算，减少 cpu 缓存伪共享
-* 零拷贝适合小文件传输
 
 ### 5.3 AIO
 

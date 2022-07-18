@@ -79,7 +79,7 @@
 
   代码运行结果如下：
 
-  <img src="img/image-20200429165544151.png" style="zoom:60%;" />
+  <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20200429165544151-b9d9c2f9b4c0186bdefd16450f16dc45-b05f14.png" style="zoom:60%;" />
 
 通过上面代码及结果可以看出：
 
@@ -95,7 +95,7 @@ Spring 大约有 20 个模块，由 1300 多个不同的文件构成。这些模
 
 核心容器、AOP 和设备支持、数据访问与集成、Web 组件、通信报文和集成测试等，下面是 Spring 框架的总体架构图：
 
-<img src="img/image-20200429111324770.png" style="zoom: 67%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20200429111324770-2689d1f8699a85d9d338b0d8816e6634-de9acb.png" style="zoom: 67%;" />
 
 
 
@@ -131,7 +131,7 @@ spring 中 Bean 用于对一个类进行封装，如下面的配置：
 
 Spring中Bean 的创建是典型的工厂模式，这一系列的 Bean 工厂，即 IOC 容器，为开发者管理对象之间的依赖关系提供了很多便利和基础服务，在 Spring 中有许多 IOC 容器的实现供用户选择，其相互关系如下图所示。
 
-<img src="img/image-20200429185050396.png" style="zoom:60%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20200429185050396-a24effda856f43acbe34d518b18a81fb-b26539.png" style="zoom:60%;" />
 
 其中，`BeanFactory`作为最顶层的一个接口，**定义了 IOC 容器的基本功能规范**，BeanFactory 有三个重要的子接口：`ListableBeanFactory`、`HierarchicalBeanFactory`和`AutowireCapableBeanFactory`。但是从类图中我们可以发现最终的默认实现类是`DefaultListableBeanFactory`，它实现了所有的接口。
 
@@ -178,7 +178,7 @@ public interface BeanFactory {
 
 BeanFactory 有一个很重要的子接口，就是 ApplicationContext 接口，该接口主要来规范容器中的 Bean 对象是非延时加载，即在创建容器对象的时候就对象 Bean 进行初始化，并存储到一个容器中。
 
-<img src="img/image-20200430220155371.png" style="zoom:60%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20200430220155371-24b67b94d377da25555f71798d2afcbb-7a780d.png" style="zoom:60%;" />
 
 要知道工厂是如何产生对象的，我们需要看具体的IOC容器实现，Spring提供了许多IOC容器实现，比如：
 
@@ -201,13 +201,13 @@ bean标签还有很多属性：
 
 其继承体系如下图所示。
 
-<img src="img/image-20200429204239868.png" style="zoom:60%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20200429204239868-3dc6c6ede1194f4d5ba141dea9d981e9-503021.png" style="zoom:60%;" />
 
 ### 3.3 BeanDefinitionReader解析
 
 Bean 的解析过程非常复杂，功能被分得很细，因为这里需要被扩展的地方很多，必须保证足够的灵活性，以应对可能的变化。**Bean的解析**主要就是对 Spring 配置文件的解析。这个解析过程主要通过`BeanDefinitionReader`来完成，看看 Spring 中`BeanDefinitionReader`的类结构图，如下图所示。
 
-<img src="img/image-20200429204700956.png" style="zoom:60%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20200429204700956-abc263795e405f0627ebf6fdd9a743d6-480e01.png" style="zoom:60%;" />
 
 看看`BeanDefinitionReader`接口定义的功能来理解它具体的作用：
 
@@ -265,7 +265,7 @@ public interface BeanDefinitionRegistry extends AliasRegistry {
 
 继承结构图如下：
 
-<img src="img/image-20200429211132185.png" style="zoom:60%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20200429211132185-38f3364b456bbd073dfba9c6191f8100-c234f3.png" style="zoom:60%;" />
 
 从上面类图可以看到 BeanDefinitionRegistry 接口的子实现类主要有以下几个：
 
@@ -793,7 +793,7 @@ public class Test {
 
 ### 4.6 自定义SpringIOC总结
 
-<img src="img/IOC容器UML.png" alt="IOC容器UML"  />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/IOC%E5%AE%B9%E5%99%A8UML-5e7edce8571adb8e138cc7a513e9054e-d07d1a.png" alt="IOC容器UML"  />
 
 #### 1.使用到的设计模式
 
