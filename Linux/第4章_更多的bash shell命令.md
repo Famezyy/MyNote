@@ -259,7 +259,7 @@ Linux 系统中使用的 GNU `ps`命令支持以下 3 种类型的命令行选�
 
 **图4-1　`top`命令运行时的输出**
 
-<img src="img/image-20220528203232560.png" alt="image-20220528203232560"  />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220528203232560-b4206483a9a003c23781d40e1c291c9d-da490f.png" alt="image-20220528203232560"  />
 
 输出的第一部分显示的是系统概况：第一行显示了当前时间、系统的运行时长、登录的用户数以及系统的平均负载。
 

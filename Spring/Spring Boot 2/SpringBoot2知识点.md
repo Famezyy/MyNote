@@ -342,7 +342,7 @@ autoconfigure 包中配置使用`META-INF/spring.factories`中`EnableAutoConfigu
 
    构成如下：
 
-   <img src="img/SpringBoot2知识点/image-20220626204240534.png" alt="image-20220626204240534" style="zoom:80%;" />
+   <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220626204240534-8753ddc31363e4d3dde82a575d868621-c58c99.png" alt="image-20220626204240534" style="zoom:80%;" />
 
 2. `youyi-zhao-spring-boot-starter`：启动器
 
@@ -391,11 +391,11 @@ autoconfigure 包中配置使用`META-INF/spring.factories`中`EnableAutoConfigu
 
 在使用Spring Boot开发应用的时候，你是否有发现这样的情况：自定义属性是有高量背景的，鼠标放上去，有一个`Cannot resolve configuration property`的配置警告。
 
-<img src="img/SpringBoot2知识点/pasted-416.png" alt="img" style="zoom: 33%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/pasted-416-371e44563206b051351c6ac70fda9396-799edc.png" alt="img" style="zoom: 33%;" />
 
 如果不对于这个警告觉得烦，想要去掉，那么可以通过设置来去除：
 
-<img src="img/SpringBoot2知识点/pasted-417.png" alt="img" style="zoom: 33%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/pasted-417-490d99a60c44d9b9190b3815c8c70ea8-c7fe3c.png" alt="img" style="zoom: 33%;" />
 
 但是，我的建议是不要去掉，因为这个警告正好可以通过高亮来区分你的自定义配置以及框架配置，可以让你快速的分辨哪些是自定义的。
 
@@ -405,7 +405,7 @@ autoconfigure 包中配置使用`META-INF/spring.factories`中`EnableAutoConfigu
 
 我们不妨打开一个已经创建好的 Spring Boot 项目，查看一下它的 Spring Boot 依赖包，可以找到如下图的一个 json 文件：
 
-<img src="img/SpringBoot2知识点/pasted-418.png" alt="img" style="zoom: 33%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/pasted-418-576a784db9b54e15ba83f01bf55ac6fd-e8112d.png" alt="img" style="zoom: 33%;" />
 
 这里报错的就是配置的元数据信息。有没有发现这些`name`的值都很熟悉？其中`description`是不是也很熟悉？对，这些就是我们常用的 Spring Boot 原生配置的元数据信息。
 
@@ -446,11 +446,11 @@ public class DidiProperties {
 
 此时我们可以在工程target目录下找到元数据文件：
 
-<img src="img/SpringBoot2知识点/pasted-419.png" alt="img" style="zoom: 33%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/pasted-419-0bac7d2b4294ac0ad586cf0e71c65ab2-bbe30c.png" alt="img" style="zoom: 33%;" />
 
 同时，我们在配置文件中尝试编写这个自定义的配置项时，可以看到编译器给出了联想和提示：
 
-<img src="img/SpringBoot2知识点/pasted-420.png" alt="img" style="zoom: 33%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/pasted-420-c244f2fe484077daedd274207c09b51b-76694f.png" alt="img" style="zoom: 33%;" />
 
 并且，编写完配置之后，也没有高亮警告了！
 

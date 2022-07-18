@@ -318,7 +318,7 @@ public class AsyncController {
 
 ##### 2.3 DeferredResult
 
-<img src="img/第4章_Servlet 3.0/image-20211226010650337.png" alt="image-20211226010650337" style="zoom: 50%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20211226010650337-d1b93ba5a8783b866cf2eacc9a6566a2-e58b0a.png" alt="image-20211226010650337" style="zoom: 50%;" />
 
 ```java
 // 先返回一个 DeferredResult<T> 对象，当调用该对象的 setResult() 方法时，才会返回给前端

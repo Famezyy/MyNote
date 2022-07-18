@@ -45,7 +45,7 @@ public GenericApplicationContext() {
 
 继承关系
 
-<img src="img/Spring 容器重要组件/image-20220605014138550.png" alt="image-20220605014138550" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220605014138550-a8f15186b1d58559db3046f1fa3d2524-dd0609.png" alt="image-20220605014138550" style="zoom:80%;" />
 
 通过`SpringApplication.run()`方法启动时，流程稍有不同：
 
@@ -87,7 +87,7 @@ public ClassPathXmlApplicationContext(
 
 继承关系
 
-<img src="img/Spring 容器重要组件/image-20220605013914031.png" alt="image-20220605013914031" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220605013914031-2cb8f6c95473819a71d71c99768ef527-a384d3.png" alt="image-20220605013914031" style="zoom:80%;" />
 
 ```java
 class ConfigurationClassBeanDefinitionReader {
@@ -295,19 +295,19 @@ public class MyBeanDefinitionRegistryPostProcessor implements BeanDefinitionRegi
 
    1. 请求 http://localhost:8888/api/test 并在 header 中设置 Accept-Languate=zh，结果如下：
 
-      <img src="img/Spring 容器重要组件/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2hhaWh1aV95YW5n,size_16,color_FFFFFF,t_70" alt="img" style="zoom: 33%;" />
+      <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2hhaWh1aV95YW5n,size_16,color_FFFFFF,t_70-d93b4a0cf44ae98b7af96e9bdbc9e249-8607c9" alt="img" style="zoom: 33%;" />
 
    2. 请求 http://localhost:8888/api/test 并在 header 中设置 Accept-Language=en，结果如下：
 
-      <img src="img/Spring 容器重要组件/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2hhaWh1aV95YW5n,size_16,color_FFFFFF,t_701" alt="img" style="zoom:33%;" />
+      <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2hhaWh1aV95YW5n,size_16,color_FFFFFF,t_701-46c65ce69f4c10babdb13c457f6d00cd-dcf1da" alt="img" style="zoom:33%;" />
 
    3. 请求 http://localhost:8888/hello-coder 并在 header 中设置 Accept-Language=zh，结果如下：
 
-      <img src="img/Spring 容器重要组件/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2hhaWh1aV95YW5n,size_16,color_FFFFFF,t_702" alt="img" style="zoom:33%;" />
+      <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2hhaWh1aV95YW5n,size_16,color_FFFFFF,t_702-a7a8df55433872b6e7951bb5de46a007-353c91" alt="img" style="zoom:33%;" />
 
    4. 请求 http://localhost:8888/hello-coder 并在 header 中设置 Accept-Languate=en，结果如下：
 
-      <img src="img/Spring 容器重要组件/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2hhaWh1aV95YW5n,size_16,color_FFFFFF,t_703" alt="img" style="zoom:33%;" />
+      <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2hhaWh1aV95YW5n,size_16,color_FFFFFF,t_703-83916d5e4945286e1cdf98e88e6ef315-3af9c6" alt="img" style="zoom:33%;" />
 
 ## 5.ApplicationListener
 

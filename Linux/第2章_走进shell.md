@@ -28,7 +28,7 @@ Linux 系统启动时，会自动创建多个**虚拟控制台**。虚拟控制�
 
 虚拟控制台终端的另一种替代方案是使用 Linux 图形化桌面环境中的**终端仿真软件包**。终端仿真软件包会在桌面图形化窗口中模拟控制台终端。下图显示了一个运行在 Linux 图形化桌面环境中的终端仿真器。
 
-<img src="img/008.jpg" alt="{%}" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/008-341239707e7630c822d488db02f9128f-8a6096.jpg" alt="{%}" style="zoom:80%;" />
 
 图形化终端仿真只负责 Linux 图形化体验的一部分。完整的体验需要借助包括图形化终端仿真软件（称为**客户端**）在内的多个组件来实现。下表显示了 Linux 图形化桌面环境中不同的组件。
 
@@ -55,7 +55,7 @@ Linux 系统启动时，会自动创建多个**虚拟控制台**。虚拟控制�
 
 文本模式的虚拟控制台采用全屏的方式显示文本登录界面。下图展示了一个虚拟控制台的文本登录界面。
 
-<img src="img/009.jpg" alt="{%}" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/009-acea1c2b36b25de722b09f34b4afb665-1a115e.jpg" alt="{%}" style="zoom:80%;" />
 
 注意第一行文本的最后一个单词`tty2`，其中的`2`表明这是虚拟控制台 2，可以通过按下 Ctrl+Alt+F2 组合键进入。`tty`代表**电传打字机**（teletypewriter）。这个词有些年代了，是一种用于发送消息的机器。
 
@@ -75,7 +75,7 @@ Linux 系统启动时，会自动创建多个**虚拟控制台**。虚拟控制�
 
 例如，可以将终端的背景色设置成白色，将文本设置成黑色，这样可以让你的眼睛轻松些。登录之后，有好几种方法可以实现这种改动。一种方法是输入命令`setterm --inversescreen on`，然后按 Enter 键，如下图所示。注意，下图中使用`on`启用了`--inversescreen`特性。也可以使用`off`关闭该特性。
 
-<img src="img/010.jpg" alt="{%}" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/010-131836040a8d212ee9d0667809b755f6-4d6f91.jpg" alt="{%}" style="zoom:80%;" />
 
 另一种方法是先后输入两个命令。首先输入`setterm --background white`，然后按 Enter 键，接着输入`setterm -foreground black`，再按 Enter 键。要注意，因为先修改的是终端的背景色，所以可能不容易看清楚接下来输入的命令。
 
@@ -124,17 +124,17 @@ GNOME Terminal 是 GNOME Shell 桌面环境的默认终端仿真器。包括 Red
 
 在 GNOME Shell 桌面环境中，访问 GNOME Terminal 很简单。点击桌面左上角的 Activities 图标。出现搜索栏时，在其中输入 terminal。如下图所示。
 
-<img src="img/011.jpg" alt="{%}" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/011-1024a265f9ea988cf290086310944ede-29c280.jpg" alt="{%}" style="zoom:80%;" />
 
 注意，GNOME Terminal 应用程序图标的名字是 Terminal。点击图标就可以打开终端仿真器。在 CentOS 发行版中打开的 GNOME Terminal 如下图所示。
 
-<img src="img/012.jpg" alt="{%}" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/012-0a0d898d9cdc44f6b8b7c19c81853d23-6c6229.jpg" alt="{%}" style="zoom:80%;" />
 
 使用完终端仿真器后，和其他桌面窗口一样，点击窗口右上角的 x 就可以将其关闭。
 
 GNOME Terminal 的外观可能会随 Linux 发行版而有所不同。例如，下图展示了 Ubuntu GNOME Shell 桌面环境中的 GNOME Terminal。
 
-<img src="img/013.jpg" alt="{%}" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/013-890fb7cb0ee1fb69a9b43e72f0f346cc-5449d4.jpg" alt="{%}" style="zoom:80%;" />
 
 注意，以上两个 GNOME Terminal 的外观不一样。这通常是由于应用程序的默认配置（本章随后会介绍）以及 Linux 发行版的 GUI 窗口的不同特性造成的。
 
@@ -144,7 +144,7 @@ GNOME Terminal 的外观可能会随 Linux 发行版而有所不同。例如，�
 
 在很多发行版中，当你第一次运行 GNOME Terminal 时，终端仿真器图标会出现在 GNOME Shell Favorites 工具栏内。将鼠标悬停在该图标之上就会显示出终端仿真器的名称，如下图所示。
 
-<img src="img/014.jpg" alt="{%}" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/014-53f516f8091423c7184bf2baa4140ba3-0165a7.jpg" alt="{%}" style="zoom:80%;" />
 
 如果图标没有出现在 Favorites 工具栏内，则可以设置快捷键来运行 GNOME Terminal。这种方法对于那些不喜欢使用鼠标的用户来说很方便，可以更快地访问 CLI。
 
@@ -154,11 +154,11 @@ GNOME Terminal 的外观可能会随 Linux 发行版而有所不同。例如，�
 
 要想创建快捷键，需要访问 Keyboard Settings 中的 Keyboard Shortcuts 窗口。为了快速完成设置，点击 GNOME Shell 桌面左上角的 Activities 图标。当出现搜索栏时，点击搜索栏，在其中输入 Keyboard Shortcuts。之后的结果如下图所示。
 
-<img src="img/015.jpg" alt="{%}" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/015-d0b4d8a9394015fdc5a8954258afeb71-91a23b.jpg" alt="{%}" style="zoom:80%;" />
 
 打开 Keyboard Shortcuts 窗口之后，使用鼠标向下滚动到窗口底部的 + 按钮。点击该按钮，打开对话框，可以在其中命名新的快捷方式，提供用于打开应用程序的命令，并设置该快捷方式的组合键，如下图所示。
 
-<img src="img/016.jpg" alt="{%}" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/016-38904c81e05e7006541e0e120f5fbf9e-3438c2.jpg" alt="{%}" style="zoom:80%;" />
 
 要想顺利运行 GNOME Terminal，重要的是要使用正确的命令名，所以要在 Command 字段中输入`gnome-terminal`，如上图所示。一切设置妥当之后，点击 Add 按钮。现在就可以使用指定的快捷键快速启动 GNOME Terminal 了。
 
@@ -293,7 +293,7 @@ Konsole 是 KDE 桌面环境 Plasma 默认的终端仿真器，可以轻松地�
 
 点击 Konsole 图标，打开终端仿真器。在 Ubuntu 发行版中打开的 Konsole 如下图所示。
 
-<img src="img/017.jpg" alt="{%}" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/017-78b318c83eb03555987df42c472e788f-489866.jpg" alt="{%}" style="zoom:80%;" />
 
 别忘了在大多数桌面环境中可以创建快捷键来访问 Konsole 等应用程序。启动 Konsole 终端仿真器要用到的命令是`konsole`。如果已经安装过 Konsole，则可以在其他的终端仿真器中输入 konsole，然后按 Enter 键来启动它。
 
@@ -442,7 +442,7 @@ xterm 是一个功能完善的仿真软件包，并不需要太多的资源（�
 
 下图展示了运行在 CentOS 发行版的 GNOME Shell 环境中的 xterm（必须手动安装）。可以看出它非常“朴素”。
 
-<img src="img/018.jpg" alt="{%}" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/018-21ebbd957c806df5099163a8c871747b-18aebd.jpg" alt="{%}" style="zoom:80%;" />
 
 如今想要把 xterm 终端仿真器找出来可得花点儿心思。它通常并没有被包含在桌面环境的图形菜单中。
 

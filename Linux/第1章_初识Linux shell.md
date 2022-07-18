@@ -9,7 +9,7 @@ Linux 系统可划分为以下 4 部分，每一部分在 Linux 系统中各司�
 - 图形化桌面环境
 - 应用软件
 
-<img src="img/image-20220510155821783.png" alt="image-20220510155821783" style="zoom: 67%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220510155821783-76bc05e0ec990f3c1522ddaae943140b-33ef27.png" alt="image-20220510155821783" style="zoom: 67%;" />
 
 ### 1.1 Linux内核
 
@@ -28,7 +28,7 @@ Linux系统的核心是**内核**。内核控制着计算机系统的所有硬�
 
 内核通过硬盘上称为**交换空间**（swap space）的存储区域来实现虚拟内存。内核在交换空间和实际的物理内存之间反复交换虚拟内存中的内容。这使得系统以为自己拥有比物理内存更多的可用内存，如下图所示。
 
-<img src="img/image-20220510160041963.png" alt="image-20220510160041963" style="zoom:67%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220510160041963-af33b82f9766cbe13bc59caf1a19b22e-b6a3f1.png" alt="image-20220510160041963" style="zoom:67%;" />
 
 内存被划分为若干块，这些块称作**页面**（page）。内核会将每个内存页面置于物理内存或交换空间中。然后，内核会维护一张`内存页面表`，指明哪些页面位于物理内存，哪些页面被交换到了磁盘。
 
@@ -215,7 +215,7 @@ X.org 基于最初的 Unix X Window System 版本 11（常称作 X11），属于
 
 KDE（K desktop environment，K 桌面环境）最初于 1996 年作为开源项目发布，能够生成类似于 Microsoft Windows 的图形化桌面环境。如果你是 Windows 用户，那么 KDE 集成了所有你熟悉的特性。下图展示了运行在 openSUSE Linux 发行版中的 KDE 桌面当前版本 KDE Plasma。
 
-<img src="img/004.jpg" alt="{%}"  />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/004-d273ee5924b210cb06a7e9b2636b5470-26379b.jpg" alt="{%}"  />
 
 KDE Plasma 桌面允许你在桌面的特定区域放置应用程序图标和文件图标。点击应用程序图标，Linux 系统就会启动该应用程序。点击文件图标，KDE 桌面会尝试确定使用哪种应用程序来处理该文件。
 
@@ -236,7 +236,7 @@ GNOME（ GNU network object model environment，GNU 网络对象模型环境）�
 
 下图展示了 Ubuntu Linux 发行版中使用的标准 GNOME 桌面。
 
-<img src="img/005.jpg" alt="{%}"  />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/005-7c18dbc6b7db796e6978d1ac156fa050-08b51d.jpg" alt="{%}"  />
 
 GNOME 3 桌面通过将可用菜单数减少至 3 个来清理桌面界面。
 
@@ -259,7 +259,7 @@ Linux 的主要特色之一就是可选择性，这一点在图形化桌面世�
 
 下图展示了 Linux Mint 发行版中的 Cinnamon 桌面。
 
-<img src="img/006.jpg" alt="{%}" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/006-934ac963de59f425df8bbe1560602222-1b2584.jpg" alt="{%}" style="zoom:80%;" />
 
 这些炫目的图形化桌面环境的缺点在于`需要可观的系统资源才能正常运作`。在 Linux 早期，其标志和卖点就是能够运行在那些无力应付 Microsoft 桌面产品的老旧 PC 上。但随着 KDE Plasma 和 GNOME 3 桌面的流行，情况发生了变化，如今运行 KDE Plasma 或 GNOME 3 桌面所需的内存已经和运行最新的 Microsoft 桌面环境旗鼓相当。
 
@@ -279,7 +279,7 @@ Linux 的主要特色之一就是可选择性，这一点在图形化桌面世�
 
 虽然这些图形化桌面环境没有 KDE Plasma 和 GNOME 3 桌面那样漂亮，但它们提供了恰到好处的基本图形化功能。下图展示了 MX Linux 发行版所采用的 Xfce 桌面的外观。
 
-<img src="img/007.jpg" alt="{%}"  />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/007-fd60b56f6376841af20a0e8662c52d5c-b3753b.jpg" alt="{%}"  />
 
 如果你用的是老旧 PC，那么不妨试试上述桌面环境的 Linux 发行版，看看怎么样。指不定会有惊喜。
 

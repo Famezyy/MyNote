@@ -159,7 +159,7 @@ class AspectJAutoProxyRegistrar implements ImportBeanDefinitionRegistrar {
 
 由于`AnnotationAwareAspectJAutoProxyCreator`是一个`BeanPostProcessor`并实现了`Ordered`接口，在【注册`BeanPostProcessor`】时，创建了`AnnotationAwareAspectJAutoProxyCreator`，并加入了容器中。
 
-<img src="img/AOP/image-20220614175802573.png" alt="image-20220614175802573" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220614175802573-09483db5cde8b3cf6102a301fa5631d5-b2437a.png" alt="image-20220614175802573" style="zoom:80%;" />
 
 ## 3.创建代理对象过程
 
@@ -175,7 +175,7 @@ class AspectJAutoProxyRegistrar implements ImportBeanDefinitionRegistrar {
 
 代理对象封装了一个`CglibAopProxy`的私有静态内部类`DynamicAdvisedInterceptor`对象用于拦截方法的执行，并将原始对象封装起来。
 
-<img src="img/AOP/image-20220616171358048.png" alt="image-20220616171358048" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220616171358048-20dee0fee3a227fdc9fb56ef3408d2b1-4d342c.png" alt="image-20220616171358048" style="zoom:80%;" />
 
 具体执行过程参考流程图。
 

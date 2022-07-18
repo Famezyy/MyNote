@@ -596,7 +596,7 @@ public class MyMapperConfiguration implements WebMvcConfigurer {
 
 ### 5.2 拦截器执行流程
 
-<img src="img/第5章_Web开发/image-20220621183514475.png" alt="image-20220621183514475" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220621183514475-fd7e9ce762be13ab6a1c113b5d526fe3-47a1ee.png" alt="image-20220621183514475" style="zoom:80%;" />
 
 ## 6.文件上传
 

@@ -93,7 +93,7 @@ Spring版本：5.3.1
 
 注：由于 Maven 的传递性，我们不必将所有需要的包全部配置依赖，而是配置最顶端的依赖，其他靠传递性导入。
 
-![images](img\img001.png)
+![images](https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/img001-83957db90208d34bad7e8fae44edbb24-5c91d1.png)
 
 ### 3、配置web.xml
 
@@ -684,7 +684,7 @@ public String testHello(){
 }
 ```
 
-![](img/img002.png)
+![](https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/img002-10658cae24bbce345745e00e5cc9ff4b-9fb648.png)
 
 ### 2、转发视图
 
@@ -703,7 +703,7 @@ public String testForward(){
 }
 ```
 
-![image-20210706201316593](img/img003.png)
+![image-20210706201316593](https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/img003-1300f1f9645a01004f6f9d94a982bac7-c11352.png)
 
 ### 3、重定向视图
 
@@ -720,7 +720,7 @@ public String testRedirect(){
 }
 ```
 
-![image-20210706201602267](img/img004.png)
+![image-20210706201602267](https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/img004-8b3d4f84d03b170f8043123ce7b3af14-c3ef20.png)
 
 > 注：
 >
@@ -1709,7 +1709,7 @@ public String index(){
 
 DispatcherServlet 本质上是一个 Servlet，所以天然的遵循 Servlet 的生命周期。所以宏观上是 Servlet 生命周期来进行调度。
 
-![images](img/img005.png)
+![images](https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/img005-87bd72f62bee871afa425ce6bf648831-ef8a78.png)
 
 ##### a>初始化WebApplicationContext
 
@@ -2093,15 +2093,15 @@ private void processDispatchResult(HttpServletRequest request, HttpServletRespon
 
       - 如果没配置，则控制台报映射查找不到，客户端展示 404 错误
 
-        <img src="img/img006.png" alt="image-20210709214911404" style="zoom:80%;" />
+        <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/img006-a80836038780be82e2ff74ab91ace29e-833264.png" alt="image-20210709214911404" style="zoom:80%;" />
 
-        <img src="img/img007.png" alt="image-20210709214947432" style="zoom:80%;" />
+        <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/img007-4f28d7554d6544323654fbb6b07e293c-b7dc3d.png" alt="image-20210709214947432" style="zoom:80%;" />
 
       - 如果有配置，则访问目标资源（一般为静态资源，如：JS,CSS,HTML），找不到客户端也会展示404错误
 
-        <img src="img/img008.png" alt="image-20210709215255693" style="zoom:80%;" />
+        <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/img008-764ebd6c103113885edac9d94a252013-2c72f4.png" alt="image-20210709215255693" style="zoom:80%;" />
 
-        <img src="img/img009.png" alt="image-20210709215336097" style="zoom:80%;" />
+        <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/img009-6d90bb3597db358f8bc17a42cbe9fea0-5bfb18.png" alt="image-20210709215336097" style="zoom:80%;" />
 
   - 存在则执行下面的流程
 

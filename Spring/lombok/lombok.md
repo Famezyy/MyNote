@@ -210,7 +210,7 @@ javac -processor aboutjava.annotion.MyGetterProcessor aboutjava/annotion/TestAno
 
 这三个阶段的交互过程如下图所示。
 
-<img src="img/image-20220515182242645.png" alt="image-20220515182242645" style="zoom: 67%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220515182242645-777ec3bfc5745d22f58993a528af6eba-b05d2b.png" alt="image-20220515182242645" style="zoom: 67%;" />
 
 ### 解析与填充符号表
 
@@ -224,7 +224,7 @@ javac -processor aboutjava.annotion.MyGetterProcessor aboutjava/annotion/TestAno
 
 语法分析分析出来的树结构是由`JCTree`来表示的，我们可以看一下它的子类有哪些。
 
-<img src="img/image-20220515182405857.png" alt="image-20220515182405857" style="zoom:50%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220515182405857-5b9e4f99134270bd753c6ef0276c830a-509118.png" alt="image-20220515182405857" style="zoom:50%;" />
 
 我们自己建一个类，可以观察它在编译过程中用树结构表示是一种怎样的结构。
 
@@ -248,7 +248,7 @@ public class HelloJvm {
 
 大家注意我划红线的地方，可以看到这些都是 JCTree 的子类。我们可以知道编译期的树是以`JCCompilationUnit`为根节点，然后作为类的构成元素例如方法、私有变量、class 类，这些都是作为树的构成一种。
 
-![image-20220515182513057](img/image-20220515182513057.png)
+![image-20220515182513057](https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220515182513057-7ce3633582d3babbd1ebf832a050ed93-587b18.png)
 
 #### 填充符号表
 
@@ -376,11 +376,11 @@ public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment 
 
 用图表示的话，我们建了一个测试类`TestMySetter`，我们知道其语法树的大致结构如下图所示。
 
-<img src="img/image-20220515183445784.png" alt="image-20220515183445784" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220515183445784-5c1314c61ce4acbe23c1a3b8d907374f-ac359d.png" alt="image-20220515183445784" style="zoom:80%;" />
 
 那么我们的目标就是将其语法树变成下图所示，因为最终生成字节码是根据语法树来生成的，所以我们在语法树中添加了方法的节点，那么在生成字节码的时候就会生成对应方法的字节码。
 
-<img src="img/image-20220515183500785.png" alt="image-20220515183500785" style="zoom: 50%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220515183500785-8ff8591b3abbf04fabeffb6a8986655b-dd5eb6.png" alt="image-20220515183500785" style="zoom: 50%;" />
 
 其中生成方法节点的代码如下
 

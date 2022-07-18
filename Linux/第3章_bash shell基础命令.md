@@ -56,7 +56,7 @@ shell 提示符并非一成不变。你可以根据需要修改提示符，第 6
 
 **图3-1　`hostname`命令的手册页**
 
-<img src="img/019.jpg" alt="{%}" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/019-b2c16ee925e5e7bb97b3a8f0a93fe7f3-823d5c.jpg" alt="{%}" style="zoom:80%;" />
 
 注意图 3-1 中`hostname`命令的`DESCRIPTION`一节。这部分内容松散，字里行间充满了技术术语。bash 手册并不是按部就班的学习指南，而是作为快速参考来使用的。
 
@@ -198,7 +198,7 @@ Linux 虚拟目录中比较复杂的部分是它如何来协调管理各个存�
 
 **图3-2 Linux虚拟目录文件路径**
 
-<img src="img/020.jpg" alt="img" style="zoom: 25%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/020-92906af724b0293f55deb116c009f65b-bc308a.jpg" alt="img" style="zoom: 25%;" />
 
 Linux 会使用根驱动器上一些特别的目录作为**挂载点**（mount point）。挂载点是虚拟目录中分配给额外存储设备的目录。Linux 会让文件和目录出现在这些挂载点目录中，即便它们位于其他物理驱动器中。
 
@@ -206,7 +206,7 @@ Linux 会使用根驱动器上一些特别的目录作为**挂载点**（mount p
 
 **图3-3　Linux文件结构**
 
-<img src="img/021.jpg" alt="img" style="zoom: 25%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/021-48c912ba119bd5215f434284310d18fb-8e7709.jpg" alt="img" style="zoom: 25%;" />
 
 图 3-3 展示了计算机中的两块硬盘。一块硬盘（Disk 1）与虚拟目录的根目录关联。其他硬盘可以挂载到虚拟目录结构中的任何地方。在这个例子中，另一块硬盘（Disk 2）被挂载到了 /home，这是用户主目录所在的位置。
 
@@ -1158,7 +1158,7 @@ $
 
    **图3-4　使用`more`命令显示文本文件**
 
-   ![{%}](img/022.jpg)
+   ![{%}](https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/022-5ee75ab4789d056e3ea3ceb522c28e53-b8c618.jpg)
 
    注意，在图 3-4 的屏幕底部，`more`命令显示了一个标签，说明你仍然处于`more`应用程序中，以及当前在文本文件中所处的位置。这是`more`命令的提示符。
 
