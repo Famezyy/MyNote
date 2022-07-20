@@ -220,6 +220,7 @@
 >     - groupId 中 "." 前后都是独立的文件夹：com.youyi
 >     - artifactId：独立的文件夹
 >     - version：独立的文件夹
+> - `mvn javadoc:javadoc`：检查 javadoc
 
 #### 2.5.2 自定义配置插件
 
