@@ -587,8 +587,45 @@ public class CloseFutureClient {
 
 首先要说明 netty 中的`Future`与 jdk 中的`Future`同名，但是是两个接口，netty 的`Future`继承自 jdk 的`Future`，而`Promise`又继承了 netty 的`Future`。
 
-* jdk Future 只能同步等待任务结束（或成功、或失败）才能得到结果
-* netty Future 可以同步等待任务结束得到结果，也可以异步方式得到结果，但都是要等任务结束
+* jdk Future 只能**同步等待**任务结束（或成功、或失败）才能得到结果
+
+  ```java
+  ExecutorService service = Executors.newFixedThreadPool(2);
+  // 异步执行任务（调用 submit 方法传递一个 Callable 实现）
+  Future<Integer> future = service.submit(new Callable<Integer> {
+      @Override
+  	public Integer call() throws Exception {
+          Thread.sleep(1000);
+          return 50;
+      }
+  });
+  future.get(); // 同步阻塞等待异步执行的结果，由主线程执行
+  ```
+
+* netty Future 可以同步等待任务结束得到结果，也可以**异步方式**得到结果，但都是要等任务结束
+
+  ```java
+  NioEventLoopGroup group = new NioEventLoopGroup();
+  EventLoop eventLoop = group.next();
+  // 注意 Future 对象的包不同
+  Future<Integer> future = eventLoop.submit(new Callable<Integer> {
+      @Override
+  	public Integer call() throws Exception {
+          Thread.sleep(1000);
+          return 50;
+      }
+  });
+  // 1.同步阻塞等待异步执行的结果
+  // future.get();
+  // 2.异步获取结果
+  future.addListener(new GenericFutureListener<Future<? super Integer>>() {
+      @Override
+      public void operationComplete(Future<? suepr Integer> future) throws Exception {
+          future.getNow(); // 同步非阻塞，调用此回调方法时，结果肯定已经得到，所以调用非阻塞方法即可，由 Nio 线程执行
+      }
+  });
+  ```
+
 * netty Promise 不仅有 netty Future 的功能，而且脱离了任务独立存在，只作为两个线程间传递结果的容器
 
 | 功能/名称      | jdk Future                     | netty Future                                                 | Promise      |
