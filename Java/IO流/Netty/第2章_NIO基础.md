@@ -302,6 +302,8 @@ private static void split(ByteBuffer source) {
 
 #### 💡 调试工具类
 
+扩展 Netty 自带的`ByteBufUtil`工具类。
+
 ```java
 public class ByteBufferUtil {
     private static final char[] BYTE2CHAR = new char[256];
@@ -690,9 +692,9 @@ public void copy() throws Exception {
 
 **案例4-分散和聚集**
 
-分散读取（Scatter）是指把 Channel 通道的数据读入到多个缓冲区中去
+**分散读取**（Scatter）是指把 Channel 通道的数据读入到多个缓冲区中去。
 
-聚集写入（Gathering）是指将多个 Buffer 中的数据“聚集”到 Channel
+**聚集写入**（Gathering）是指将多个 Buffer 中的数据“聚集”到 Channel。
 
 ```java
 //分散和聚集
