@@ -720,8 +720,7 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
 EmbeddedChannel channel = new EmbeddedChannel(
     new LoggingHandler(),
     // 解决半包问题
-    new LengthFieldBasedFrameDecoder(
-        1024, 12, 4, 0, 0),
+    new LengthFieldBasedFrameDecoder(1024, 12, 4, 0, 0),
     new MessageCodec()
 );
 // encode
@@ -809,122 +808,80 @@ public class MessageCodecSharable extends MessageToMessageCodec<ByteBuf, Message
 ### 3.1 聊天室业务介绍
 
 ```java
-/**
- * 用户管理接口
- */
-public interface UserService {
+public class UserService implements Service{
 
-    /**
-     * 登录
-     * @param username 用户名
-     * @param password 密码
-     * @return 登录成功返回 true, 否则返回 false
-     */
-    boolean login(String username, String password);
+    private static Map<String, String> USER_CACHE = new ConcurrentHashMap<>();
+
+    static {
+        USER_CACHE.put("zhaoyouyi", "123");
+        USER_CACHE.put("lisi", "123");
+    }
+
+    @Override
+    public boolean login(String username, String password) {
+        return USER_CACHE.getOrDefault(username, "failure").equals(password);
+    }
 }
 ```
 
 ```java
-/**
- * 会话管理接口
- */
-public interface Session {
+public class ChatSession {
+    Map<String, Channel> userChannelMapping = new HashMap<>(64);
+    Map<Channel, String> channelUserMapping = new HashMap<>(64);
+    public void bind(String username, Channel channel) {
+        userChannelMapping.put(username, channel);
+        channelUserMapping.putIfAbsent(channel, username);
+    }
 
-    /**
-     * 绑定会话
-     * @param channel 哪个 channel 要绑定会话
-     * @param username 会话绑定用户
-     */
-    void bind(Channel channel, String username);
+    public Channel getChannel(String username) {
+        return userChannelMapping.get(username);
+    }
 
-    /**
-     * 解绑会话
-     * @param channel 哪个 channel 要解绑会话
-     */
-    void unbind(Channel channel);
 
-    /**
-     * 获取属性
-     * @param channel 哪个 channel
-     * @param name 属性名
-     * @return 属性值
-     */
-    Object getAttribute(Channel channel, String name);
+    public String getUsername(Channel channel) {
+        return channelUserMapping.get(channel);
+    }
 
-    /**
-     * 设置属性
-     * @param channel 哪个 channel
-     * @param name 属性名
-     * @param value 属性值
-     */
-    void setAttribute(Channel channel, String name, Object value);
-
-    /**
-     * 根据用户名获取 channel
-     * @param username 用户名
-     * @return channel
-     */
-    Channel getChannel(String username);
+    public void unBind(Channel channel) {
+        String remove = channelUserMapping.remove(channel);
+        userChannelMapping.remove(remove);
+    }
 }
 ```
 
 ```java
-/**
- * 聊天组会话管理接口
- */
-public interface GroupSession {
-
-    /**
-     * 创建一个聊天组, 如果不存在才能创建成功, 否则返回 null
-     * @param name 组名
-     * @param members 成员
-     * @return 成功时返回组对象, 失败返回 null
-     */
-    Group createGroup(String name, Set<String> members);
-
-    /**
-     * 加入聊天组
-     * @param name 组名
-     * @param member 成员名
-     * @return 如果组不存在返回 null, 否则返回组对象
-     */
-    Group joinMember(String name, String member);
-
-    /**
-     * 移除组成员
-     * @param name 组名
-     * @param member 成员名
-     * @return 如果组不存在返回 null, 否则返回组对象
-     */
-    Group removeMember(String name, String member);
-
-    /**
-     * 移除聊天组
-     * @param name 组名
-     * @return 如果组不存在返回 null, 否则返回组对象
-     */
-    Group removeGroup(String name);
-
-    /**
-     * 获取组成员
-     * @param name 组名
-     * @return 成员集合, 没有成员会返回 empty set
-     */
-    Set<String> getMembers(String name);
-
-    /**
-     * 获取组成员的 channel 集合, 只有在线的 channel 才会返回
-     * @param name 组名
-     * @return 成员 channel 集合
-     */
-    List<Channel> getMembersChannel(String name);
+public class GroupSession {
+    Map<String, List<String>> groupUsernameMappings = new HashMap<>(64);
+    public boolean createGroup(String groupName, List<String> usernames) {
+        if (groupUsernameMappings.containsKey(groupName)) return false;
+        groupUsernameMappings.put(groupName, usernames);
+        return true;
+    }
 }
 ```
 
-### 3.2 聊天室业务-登录
+```java
+public class SessionFactory {
+    private static class InnerClass {
+        private static final ChatSession CHAT_SESSION = new ChatSession();
+        private static final GroupSession GROUP_SESSION = new GroupSession();
+    }
+    private SessionFactory(){}
+
+    public static ChatSession getChatSession() {
+        return InnerClass.CHAT_SESSION;
+    }
+
+    public static GroupSession getGroupSession() {
+        return InnerClass.GROUP_SESSION;
+    }
+
+}
+```
+
+### 3.2 聊天室业务-客户端和服务端
 
 ```java
-@Slf4j
 public class ChatServer {
     public static void main(String[] args) {
         NioEventLoopGroup boss = new NioEventLoopGroup();
@@ -932,6 +889,9 @@ public class ChatServer {
         LoggingHandler LOGGING_HANDLER = new LoggingHandler(LogLevel.DEBUG);
         MessageCodec MESSAGE_CODEC = new MessageCodec();
         LoginRequestMessageHandler LOGIN_REQUEST_MESSAGE_HANDLER = new LoginRequestMessageHandler();
+        ChatRequestMessageHandler CHAT_REQUEST_MESSAGE_HANDLER = new ChatRequestMessageHandler();
+        GroupCreationMessageHandler GROUP_CREATION_MESSAGE_HANDLER = new GroupCreationMessageHandler();
+        QuitHandler QUIT_HANDLER = new QuitHandler();
         try {
             ServerBootstrap serverBootstrap = new ServerBootstrap();
             serverBootstrap.channel(NioServerSocketChannel.class);
@@ -943,10 +903,14 @@ public class ChatServer {
                     ch.pipeline().addLast(LOGGING_HANDLER);
                     ch.pipeline().addLast(MESSAGE_CODEC);
                     ch.pipeline().addLast(LOGIN_REQUEST_MESSAGE_HANDLER);
+                    ch.pipeline().addLast(CHAT_REQUEST_MESSAGE_HANDLER);
+                    ch.pipeline().addLast(GROUP_CREATION_MESSAGE_HANDLER);
+                    ch.pipeline().addLast(QUIT_HANDLER);
                 }
             });
             Channel channel = serverBootstrap.bind(8080).sync().channel();
             channel.closeFuture().sync();
+
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -1010,6 +974,19 @@ public class CharClient {
                                     System.out.println("==================================");
                                     String command = scanner.nextLine();
                                     String[] s = command.split(" ");
+                                    switch (s[0]) {
+                                        case "send":
+                                            ctx.writeAndFlush(new ChatRequestMessage(username, s[1], s[2]));
+                                            break;
+                                        case "gcreate":
+                                            List<String> userNames = Arrays.asList(s[2].split(","));
+                                            userNames.add(username);
+                                            ctx.writeAndFlush(new GroupCreationMessage(s[1], userNames));
+                                            break;
+                                        case "quit":
+                                            ctx.channel().close();
+                                            break;
+                                    }
                                 }
                             });
                         }
@@ -1017,13 +994,15 @@ public class CharClient {
                         @Override
                         public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
                             log.info("msg: {}", msg);
-                            LoginResponseMessage loginMessage = (LoginResponseMessage) msg;
-                            if (loginMessage.isSuccess()) {
-                                // 如果登陆成功设置 LOGIN 为 true
-                                LOGIN.set(true);
+                            if (msg instanceof LoginResponseMessage) {
+                                LoginResponseMessage loginMessage = (LoginResponseMessage) msg;
+                                if (loginMessage.isSuccess()) {
+                                    // 如果登陆成功设置 LOGIN 为 true
+                                    LOGIN.set(true);
+                                }
+                                // 唤醒
+                                WAIT_FOR_LOGIN.countDown();
                             }
-                            // 唤醒
-                            WAIT_FOR_LOGIN.countDown();
                         }
                     });
                 }
@@ -1037,6 +1016,21 @@ public class CharClient {
             group.shutdownGracefully();
             defaultGroup.shutdownGracefully();
         }
+    }
+}
+```
+
+协议格式解码器
+
+```java
+public class ProtocolFrameDecoder extends LengthFieldBasedFrameDecoder {
+
+    public ProtocolFrameDecoder() {
+        this(1024, 12, 4, 0, 0);
+    }
+
+    public ProtocolFrameDecoder(int maxFrameLength, int lengthFieldOffset, int lengthFieldLength, int lengthAdjustment, int initialBytesToStrip) {
+        super(maxFrameLength, lengthFieldOffset, lengthFieldLength, lengthAdjustment, initialBytesToStrip);
     }
 }
 ```
@@ -1057,6 +1051,7 @@ public class LoginRequestMessageHandler extends SimpleChannelInboundHandler<Logi
         boolean login = new UserService().login(username, password);
         LoginResponseMessage message;
         if (login) {
+            SessionFactory.getChatSession().bind(username, ctx.channel());
             message = new LoginResponseMessage(1, "登录成功");
         } else {
             message = new LoginResponseMessage(0, "用户名或密码不正确");
@@ -1073,16 +1068,15 @@ public class LoginRequestMessageHandler extends SimpleChannelInboundHandler<Logi
 public class ChatRequestMessageHandler extends SimpleChannelInboundHandler<ChatRequestMessage> {
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, ChatRequestMessage msg) throws Exception {
-        String to = msg.getTo();
-        Channel channel = SessionFactory.getSession().getChannel(to);
-        // 在线
-        if(channel != null) {
-            channel.writeAndFlush(new ChatResponseMessage(msg.getFrom(), msg.getContent()));
+        String from = msg.getUsername();
+        String to = msg.getToUsername();
+        String message = msg.getMessage();
+        Channel channel = SessionFactory.getChatSession().getChannel(to);
+        if (channel != null) {
+            channel.writeAndFlush(new ChatRequestMessage(from, to, message));
+            return;
         }
-        // 不在线
-        else {
-            ctx.writeAndFlush(new ChatResponseMessage(false, "对方用户不存在或者不在线"));
-        }
+        ctx.writeAndFlush(new CommonMessage("对方不在线"));
     }
 }
 ```
@@ -1093,90 +1087,22 @@ public class ChatRequestMessageHandler extends SimpleChannelInboundHandler<ChatR
 
 ```java
 @ChannelHandler.Sharable
-public class GroupCreateRequestMessageHandler extends SimpleChannelInboundHandler<GroupCreateRequestMessage> {
+public class GroupCreationMessageHandler extends SimpleChannelInboundHandler<GroupCreationMessage> {
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, GroupCreateRequestMessage msg) throws Exception {
+    protected void channelRead0(ChannelHandlerContext ctx, GroupCreationMessage msg) throws Exception {
         String groupName = msg.getGroupName();
-        Set<String> members = msg.getMembers();
-        // 群管理器
-        GroupSession groupSession = GroupSessionFactory.getGroupSession();
-        Group group = groupSession.createGroup(groupName, members);
-        if (group == null) {
-            // 发生成功消息
-            ctx.writeAndFlush(new GroupCreateResponseMessage(true, groupName + "创建成功"));
-            // 发送拉群消息
-            List<Channel> channels = groupSession.getMembersChannel(groupName);
-            for (Channel channel : channels) {
-                channel.writeAndFlush(new GroupCreateResponseMessage(true, "您已被拉入" + groupName));
-            }
-        } else {
-            ctx.writeAndFlush(new GroupCreateResponseMessage(false, groupName + "已经存在"));
+        List<String> usernames = msg.getUsernames();
+        GroupSession groupSession = SessionFactory.getGroupSession();
+        if (!groupSession.createGroup(groupName, usernames)) {
+            ctx.writeAndFlush(new CommonMessage("群已存在"));
+            return;
         }
-    }
-}
-```
-
-群聊
-
-```java
-@ChannelHandler.Sharable
-public class GroupChatRequestMessageHandler extends SimpleChannelInboundHandler<GroupChatRequestMessage> {
-    @Override
-    protected void channelRead0(ChannelHandlerContext ctx, GroupChatRequestMessage msg) throws Exception {
-        List<Channel> channels = GroupSessionFactory.getGroupSession()
-                .getMembersChannel(msg.getGroupName());
-
-        for (Channel channel : channels) {
-            channel.writeAndFlush(new GroupChatResponseMessage(msg.getFrom(), msg.getContent()));
-        }
-    }
-}
-```
-
-加入群聊
-
-```java
-@ChannelHandler.Sharable
-public class GroupJoinRequestMessageHandler extends SimpleChannelInboundHandler<GroupJoinRequestMessage> {
-    @Override
-    protected void channelRead0(ChannelHandlerContext ctx, GroupJoinRequestMessage msg) throws Exception {
-        Group group = GroupSessionFactory.getGroupSession().joinMember(msg.getGroupName(), msg.getUsername());
-        if (group != null) {
-            ctx.writeAndFlush(new GroupJoinResponseMessage(true, msg.getGroupName() + "群加入成功"));
-        } else {
-            ctx.writeAndFlush(new GroupJoinResponseMessage(true, msg.getGroupName() + "群不存在"));
-        }
-    }
-}
-```
-
-退出群聊
-
-```java
-@ChannelHandler.Sharable
-public class GroupQuitRequestMessageHandler extends SimpleChannelInboundHandler<GroupQuitRequestMessage> {
-    @Override
-    protected void channelRead0(ChannelHandlerContext ctx, GroupQuitRequestMessage msg) throws Exception {
-        Group group = GroupSessionFactory.getGroupSession().removeMember(msg.getGroupName(), msg.getUsername());
-        if (group != null) {
-            ctx.writeAndFlush(new GroupJoinResponseMessage(true, "已退出群" + msg.getGroupName()));
-        } else {
-            ctx.writeAndFlush(new GroupJoinResponseMessage(true, msg.getGroupName() + "群不存在"));
-        }
-    }
-}
-```
-
-查看成员
-
-```java
-@ChannelHandler.Sharable
-public class GroupMembersRequestMessageHandler extends SimpleChannelInboundHandler<GroupMembersRequestMessage> {
-    @Override
-    protected void channelRead0(ChannelHandlerContext ctx, GroupMembersRequestMessage msg) throws Exception {
-        Set<String> members = GroupSessionFactory.getGroupSession()
-                .getMembers(msg.getGroupName());
-        ctx.writeAndFlush(new GroupMembersResponseMessage(members));
+        ChatSession chatSession = SessionFactory.getChatSession();
+        ctx.writeAndFlush(new CommonMessage("创建成功！"));
+        usernames.forEach(username -> {
+            Channel channel = chatSession.getChannel(username);
+            channel.writeAndFlush(new CommonMessage("您已被拉入【" + groupName + "】群"));
+        });
     }
 }
 ```
@@ -1258,7 +1184,7 @@ ch.pipeline().addLast(new ChannelDuplexHandler() {
         IdleStateEvent event = (IdleStateEvent) evt;
         // 触发了写空闲事件
         if (event.state() == IdleState.WRITER_IDLE) {
-            //                                log.debug("3s 没有写数据了，发送一个心跳包");
+            // log.debug("3s 没有写数据了，发送一个心跳包");
             ctx.writeAndFlush(new PingMessage());
         }
     }

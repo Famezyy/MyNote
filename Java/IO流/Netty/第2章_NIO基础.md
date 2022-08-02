@@ -58,27 +58,27 @@ Buffer 中的重要概念：
 
 一开始
 
-![](https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/0021-c8a78053293105a1ce22334ebe26853f-55e46e.png)
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/0021-c8a78053293105a1ce22334ebe26853f-55e46e.png" style="zoom:80%;" />
 
 写模式下，position 是写入位置，limit 等于容量，下图表示写入了 4 个字节后的状态
 
-![](https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/0018-86a06b91acb74a9c2ff00a10004bdc3d-d3eb28.png)
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/0018-86a06b91acb74a9c2ff00a10004bdc3d-d3eb28.png" style="zoom:80%;" />
 
 flip 动作发生后，position 切换为读取位置，limit 切换为读取限制（Limit 为 5）
 
-![](https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/0019-c3197ff6217affbbcc20ab865ae58ee1-a195a6.png)
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/0019-c3197ff6217affbbcc20ab865ae58ee1-a195a6.png" style="zoom:80%;" />
 
 读取 4 个字节后，状态
 
-![](https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/0020-8202e9da57d2a913d86d057dc5140226-3bd91b.png)
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/0020-8202e9da57d2a913d86d057dc5140226-3bd91b.png" style="zoom:80%;" />
 
 clear 动作发生后，状态
 
-![](https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/0021-16575171511855-c8a78053293105a1ce22334ebe26853f-7081ea.png)
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/0021-16575171511855-c8a78053293105a1ce22334ebe26853f-7081ea.png" style="zoom:80%;" />
 
 compact 方法，是把未读完的部分向前压缩，然后切换至写模式
 
-![](https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/0022-a46df9c4e66a8e545792dbedfc4650fd-b94f43.png)
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/0022-a46df9c4e66a8e545792dbedfc4650fd-b94f43.png" style="zoom:80%;" />
 
 #### 3.Buffer常见方法
 
