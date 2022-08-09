@@ -163,6 +163,16 @@ public void parameterizedTest1(String string) {
 static Stream<String> method() {
     return Stream.of("apple", "banna");
 }
+
+// 传递两个参数
+static Stream<Arguments> provideStringsForIsBlank() {
+    return Stream.of(
+      Arguments.of(null, true),
+      Arguments.of("", true),
+      Arguments.of("  ", true),
+      Arguments.of("not blank", false)
+    );
+}
 ```
 
 ## 7.迁移指南
