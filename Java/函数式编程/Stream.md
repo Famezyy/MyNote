@@ -101,7 +101,7 @@ stream.filter(name -> name.startsWith("z"))
 
 ### 3.3 anyMatch
 
-`boolean anyMatch(Predicate<? super T> predicate)`：终结方法，有任何一个满足则返回 true。
+`boolean anyMatch(Predicate<? super T> predicate)`：终结方法，有任何一个满足则返回 true。空流返回 false。
 
 ```java
 Stream<String> stream = Stream.of("zhangsan", "lisi", "wangwu");
@@ -111,11 +111,11 @@ boolean result2 = stream.anyMatch(name -> name.length() > 8); // false
 
 ### 3.4 allMatch
 
-`boolean allMatch(Predicate<? super T> predicate)`：终结方法，所有都满足才返回 true。
+`boolean allMatch(Predicate<? super T> predicate)`：终结方法，所有都满足才返回 true。空流也返回 true。
 
 ### 3.5 noneMatch
 
-`boolean noneMatch(Predicate<? super T> predicate)`：终结方法，没有任何一个满足才返回 true。
+`boolean noneMatch(Predicate<? super T> predicate)`：终结方法，没有任何一个满足才返回 true。空流也返回 true。
 
 ### 3.6 findAny
 
