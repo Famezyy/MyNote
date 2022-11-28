@@ -598,6 +598,14 @@ public class MyMapperConfiguration implements WebMvcConfigurer {
 
 <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220621183514475-fd7e9ce762be13ab6a1c113b5d526fe3-47a1ee.png" alt="image-20220621183514475" style="zoom:80%;" />
 
+> **拦截器与过滤器区别**
+>
+> <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20221126145109515-e114f94e27ce22b901c7f0927a429035-150191.png" alt="image-20221126145109515" style="zoom:67%;" />
+>
+> 1. 过滤器和拦截器触发时机不一样，过滤器是在请求进入容器后，但请求进入 servlet 之前进行预处理的；拦截器是在进入 controller 前进行预处理
+>2. filter 接口在`javax.servlet`包下面，interceptor 在`org.springframework.web.servlet`下面，可以使用 spring 的组件
+> 3. filter 通过`dochain`放行，intercetor 通过`prehandler`放行，并且粒度更细，还有`posthandler`、`aftercompletion`方法来处理 controller 执行后或者异常发生后的逻辑
+
 ## 6.文件上传
 
 ### 6.1 页面表单
