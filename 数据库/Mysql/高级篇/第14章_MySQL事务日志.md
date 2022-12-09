@@ -117,7 +117,7 @@ redo log 的写入并不是直接写入磁盘的，InnoDB 引擎会在写 redo l
 
 - `设置为0`：提交事务的时候，不立即把 redo log buffer 里的数据刷入磁盘文件的，而是依靠 InnoDB 的主线程每秒执行一次刷新到磁盘（写入 page cache 中并通知文件系统进行刷盘操作）。此时可能你提交事务了，结果 mysql 宕机了，然后此时内存里的数据全部丢失。
 - `设置为1`：表示每次事务提交时都将进行同步，刷盘操作（`默认值`）
-- `设置为2`：表示每次事务提交时都只把 redo log buffer 内容写入 page cache（操作系统的缓存），不进行同步。由 os 自己决定什么时候同步到磁盘文件。
+- `设置为2`：表示每次事务提交时都只把 redo log buffer 内容写入 page cache（操作系统的缓存），每隔 1 秒进行一次同步。
 
 ```sql
 mysql> show variables like 'innodb_flush_log_at_trx_commit';
