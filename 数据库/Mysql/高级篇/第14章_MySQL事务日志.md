@@ -115,9 +115,9 @@ redo log 的写入并不是直接写入磁盘的，InnoDB 引擎会在写 redo l
 
 针对这种情况，InnoDB 给出<a id="innodb_flush_log_at_trx_commit参数">`innodb_flush_log_at_trx_commit`</a>==全局==参数，该参数控制 commit 提交事务时，如何将 redo log buffer 中的日志刷新到 redo log file 中。它支持三种策略：
 
-- `设置为0`：提交事务的时候，不立即把 redo log buffer 里的数据刷入磁盘文件的，而是依靠 InnoDB 的主线程每秒执行一次刷新到磁盘（写入 page cache 中并通知文件系统进行刷盘操作）。此时可能你提交事务了，结果 mysql 宕机了，然后此时内存里的数据全部丢失。
+- `设置为0`：提交事务的时候，不立即把 redo log buffer 里的数据刷入磁盘文件的，而是依靠 InnoDB 的主线程每秒执行一次刷新到磁盘（写入 page cache 中并通知文件系统进行刷盘操作）。此时可能你提交事务了，结果 mysql 宕机了，然后此时内存里的数据全部丢失
 - `设置为1`：表示每次事务提交时都将进行同步，刷盘操作（`默认值`）
-- `设置为2`：表示每次事务提交时都只把 redo log buffer 内容写入 page cache（操作系统的缓存），每隔 1 秒进行一次同步。
+- `设置为2`：表示每次事务提交时都只把 redo log buffer 内容写入 page cache（操作系统的缓存），每隔 1 秒进行一次同步
 
 ```sql
 mysql> show variables like 'innodb_flush_log_at_trx_commit';
