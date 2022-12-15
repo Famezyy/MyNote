@@ -62,3 +62,7 @@ public void testNoInvocations() {
 }
 ```
 
+## 泛型类型的方法返回值
+
+对于泛型类型的返回值，可以使用`doReturn().when().method()`语句。
+

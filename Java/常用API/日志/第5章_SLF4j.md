@@ -2,7 +2,7 @@
 
 ## 1.简单介绍
 
-SLF4J（ Simple Logging Facade For Java），即简单日志门面。主要是为了给 Java 日志访问提供一套标准、规范的 API 框架，其主要意义在于提供接口，具体的实现可以交由其他日志框架，例如：Log4j 或 Logback 等。
+SLF4J（Simple Logging Facade For Java），即简单日志门面。主要是为了给 Java 日志访问提供一套标准、规范的 API 框架，其主要意义在于提供接口，具体的实现可以交由其他日志框架，例如：Log4j 或 Logback 等。
 
 SLF4J 自身也提供了功能较为简单的实现，但是一般很少用到。对于一般的 Java 项目而言，日志框架会选择 slf4j-api 作为门面，配上具体的实现框架，中间使用桥接器完成桥接。所以 SLF4J 最重要的两个功能就是对于**日志框架的绑定**以及**日志框架的桥接**。
 
@@ -121,15 +121,17 @@ java.lang.ClassNotFoundException: User
 
 SLF4J 日志门面共有三种情况对日志实现进行绑定。
 
-- 在没有绑定任何日志实现框架的基础上，日志不能实现任何功能。slf4j-simple 是 SLF4J 官方提供的简单实现，也需要导入依赖，自动绑定到 SLF4J 日志门面上。
-- Logback 和 Simple（包括 nop） 是 SLF4 出现后提供的日志实现框架，所以 API 完全遵循 SLF4J 进行设计。只需要导入对应的日志实现依赖，即可与 SLF4J 无缝衔接。nop 虽然也划分到实现中，但它是指不实现日志记录。
-- Log4j 和 JUL 是 SLF4J 出现前就已经存在的日志实现框架，所以 API 不遵循 SLF4J 进行设计。需要通过适配桥接的技术，完成的与 SLF4J 的衔接。
+- 在没有绑定任何日志实现框架的基础上，日志不能实现任何功能。slf4j-simple 是 SLF4J 官方提供的简单实现，也需要导入依赖，自动绑定到 SLF4J 日志门面上
+- Logback 和 Simple（包括 nop） 是 SLF4 出现后提供的日志实现框架，所以 API 完全遵循 SLF4J 进行设计。只需要导入对应的日志实现依赖，即可与 SLF4J 无缝衔接。nop 虽然也划分到实现中，但它是指不实现日志记录
+- Log4j 和 JUL 是 SLF4J 出现前就已经存在的日志实现框架，所以 API 不遵循 SLF4J 进行设计。需要通过适配桥接的技术，完成的与 SLF4J 的衔接
 
 注意： 在 SLF4J 环境下，若同时导入多个日志实现框架，默认使用先导入的。在实际应用中，一般只集成一种日志实现。
 
 ## 7.集成 logback
 
-导入依赖：注释 slf4j-simple 依赖。
+导入依赖：若存在 slf4j-simple 依赖，则会提示出现多重绑定，默认使用配置文件中**第一个**导入的依赖（先声明的依赖）。
+
+一般只导入一种日志实现的集成即可。
 
 ```xml
 <!-- logback日志框架 -->
@@ -165,7 +167,7 @@ public void test01() {
 
 ## 8.集成 slf4j-nop
 
-导入依赖：注释 logback 依赖。
+导入依赖：若存在 slf4j-simple 或者 logback-classic 依赖，则会提示出现多重绑定，默认使用配置文件中**第一个**导入的依赖（先声明的依赖）。
 
 ```xml
 <dependency>
@@ -193,7 +195,7 @@ public void test01() {
 
 ## 9.集成 log4j
 
-导入依赖：注释 slf4j-nop 依赖。
+导入依赖
 
 ```xml
 <!-- log4j日志框架 -->
@@ -226,9 +228,9 @@ SLF4J: Defaulting to no-operation (NOP) logger implementation
 SLF4J: See http://www.slf4j.org/codes.html#StaticLoggerBinder for further details.
 ```
 
-因为 Log4j 是 SLF4J 出现前就已经存在的日志实现框架，所以 API 不遵循 SLF4J 进行设计。需要通过适配桥接的技术来完成的与 SLF4J 的衔接。
+因为 Log4j 是 SLF4J 出现前就已经存在的日志实现框架，所以 API 不遵循 SLF4J 进行设计。需要通过适配器来导入 SLF4J。
 
-导入依赖
+导入依赖：不能与 slf4j-simple、logback-classic 和 slf4j-nop 共存。
 
 ```xml
 <!-- log4j适配器 -->
@@ -270,9 +272,9 @@ log4j.appender.console.layout.conversionPattern=[%d{yyyy-MM-dd HH:mm:ss.SSS}] [%
 
 ## 10.集成 JUL
 
-因为 JUL 日志框架是 JDK 内置的工具包，无需导入依赖。JUL 是 SLF4J 出现前就已经存在的日志实现框架，所以 API 不遵循 SLF4J 进行设计。需要通过适配桥接的技术，完成的与 SLF4J 的衔接。
+因为 JUL 日志框架是 JDK 内置的工具包，无需导入依赖。JUL 是 SLF4J 出现前就已经存在的日志实现框架，所以 API 不遵循 SLF4J 进行设计。需要通过适配器完成的与 SLF4J 的衔接。
 
-导入依赖
+导入依赖：同理不能存在多个集成实现。
 
 ```xml
 <!-- jul适配器 -->
@@ -307,4 +309,19 @@ public void test01() {
 七月 01, 2022 12:50:56 下午 com.slf4j.Slf4jTest test01
 严重: error错误信息
 ```
+
+## 11.桥接已有的实现
+
+使用`jcl-over-slf4j`、`log4j-over-slf4j`、`jul-to-slf4j`桥接器可以解决项目的重构问题。如果系统中存在之前的 API，可以通过桥接器在不改变代码和导入包的情况下转换到 slf4j 的实现。
+
+1. 移出旧的日志框架依赖
+2. 导入相应的桥接器依赖（已有代码和导入包就不会报错了）
+
+测试可以发现，虽然代码没有变，但是使用了 slf4j，会根据导入的依赖不同使用不同的集成实现。
+
+> **注意**
+>
+> 导入桥接器后，不要再导入相应的适配器依赖。
+>
+> 若桥接器在适配器上方则会报错，若桥接器在适配器下方导入则不会执行桥接器。
 
