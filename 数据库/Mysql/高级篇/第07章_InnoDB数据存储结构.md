@@ -14,7 +14,7 @@
 
 > 记录是按照行来存储的，但是数据库的读取并不以行为单位，否则一次读取（IO操作）只能处理一行数据，效率会非常低
 
-<img src="img\image-20220213012558504.png" alt="image-20220213012558504" style="zoom:67%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220213012558504-83f1c66c9120851d4d13ebbe67bee578-fd1bd3.png" alt="image-20220213012558504" style="zoom:67%;" />
 
 ### 1.2 页结构概述
 
@@ -34,7 +34,7 @@ SHOW VARIABLES LIKE '%innodb_page_size%';
 
 ​    另外在数据库中，还存在着区（Extent）、段（Segment）和表空间（Tablespace）的概念。行、页、区、段、表空间的关系如下图：
 
-<img src="img\image-20220213013124200.png" alt="image-20220213013124200" style="zoom:67%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220213013124200-61f0cb6737e548093de4c4655dd28aae-a94440.png" alt="image-20220213013124200" style="zoom:67%;" />
 
 ​    区（Extent）是比页大一级的存储结构，在`InnoDB`存储引擎中，一个区会分配**64个连续的页**，因为`InnoDB`中的页默认大小是16kb，所以一个区的大小是64*16kb=**1MB**。
 
@@ -50,11 +50,11 @@ SHOW VARIABLES LIKE '%innodb_page_size%';
 
 ​    页结构的示意图如下：
 
-<img src="img\image-20220213141316276.png" alt="image-20220213141316276" style="zoom:67%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220213141316276-e749637b64f1def4c9d11961cf33aa24-977aec.png" alt="image-20220213141316276" style="zoom:67%;" />
 
 ​    这七个部分作用分别如下：
 
-<img src="img\image-20220213141452123.png" alt="image-20220213141452123" style="zoom:67%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220213141452123-9f245cf11c39474bb49b5c95c31ca88c-bb80a4.png" alt="image-20220213141452123" style="zoom: 67%;" />
 
 具体见：[参考](./第07章_InnoDB数据存储结构.mmap)
 
@@ -65,7 +65,7 @@ SHOW VARIABLES LIKE '%innodb_page_size%';
 - 叶子节点，B+ 树最底层的节点，节点高度为0，存储行记录
 - 非叶子节点，节点高度大于0，存储索引键和页面指针，并不存储行记录本身
 
-<img src="img\image-20220213152658171.png" alt="image-20220213152658171" style="zoom:67%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220213152658171-a963267a6db3d70c2cc0205da1dd7647-28b51c.png" alt="image-20220213152658171" style="zoom:67%;" />
 
 ​    当我们从页结构来理解 B+ 树的结构时，可以帮我们理解一些通过索引进行检索的原理：
 
@@ -79,7 +79,23 @@ SHOW VARIABLES LIKE '%innodb_page_size%';
 
 ## 3.InnoDB 行格式（或记录格式）
 
-每行大小不能超过数据页 16KB 的一半，即 8KB，超过的会存储在**溢出页**中。如果行格式是`Dynamic`，则在数据页中只存放 20 字节的指针指向溢出页。
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20221216001102735-ac901a48091e595d17b7844ac4951e54-f2312d.png" alt="image-20221216001102735" style="zoom: 50%;" />
+
+- 每行大小不能超过数据页 16KB 的一半，即 8KB，超过的会存储在**溢出页**（BLOB - Binary Large Object 页）中；`Compressed`和`Dynamic`这两种格式采用完全的行溢出方式，记录的真实数据处不会存储该列的一部分数据，只存储 20 个字节的指针来指向溢出页，而实际的数据都存储在溢出页中；对于`Compact`和`Redundant`行存储格式存放的数据，采用的是部分行溢出存储，前 768 字节还是会存放在当前数据页中的
+
+- 对于 text 和 blob 类型，在遇到使用临时表的情况时，无法使用内存临时表，只能在磁盘上创建临时表。对于行溢出数据，InnoDB 一次只会为一个列分配一页的空间，但是当该列超过 32 个页后会一次性分配 64 个页面，存储空间有一定的浪费。行溢出数据禁用了自适应哈希索引，只能使用部分前缀进行排序，默认是 1024 字节，可以通过 max_sort_length 进行设置
+
+- 针对不定长类型，如`varchar`，一般首先收到限制的是 MySQL 本身 65535B 的限制，受不到存储引擎限制是因为，不定长类型如果长度超过 8126B，会采用页外存储；针对定长类型，如`char`，首先会受到存储引擎 8126B 限制
+
+- NULL 值列表最少占用 1 字节，用来表示值为 NULL 的列，若 NULL 列数量超过 255 则会增加 1 字节
+
+- 行格式中「变长字段长度列表」的每个元素有时候是占用 1 字节，有时候是占用 2 字节：
+
+  - 如果变成字段允许存储的最大字节数小于等于 255 字节，「变长字段长度列表」就占用 1 个字节；
+
+  - 如果变成字段允许存储的最大字节数大于 255 字节，「变长字段长度列表」就占用 2 个字节；
+
+  可以看到，「变长字段长度列表」占用的字节数最大不会不超过 2 字节，2 个字节的最大值是 65535，从这里可以得出一个变长字段最大能存储 65535 字节的数据。如果有多个字段的话，要保证除了 TEXT 和 BLOB 外的`所有字段的长度 + 变长字段字节数列表所占用的字节数 + NULL值列表所占用的字节数 <= 65535`。
 
 具体见：[参考](./第07章_InnoDB数据存储结构.mmap)
 
@@ -271,13 +287,13 @@ SHOW VARIABLES LIKE 'innodb_file_per_talbe';
 
    ​    如果该数据存在于内存中，基本上执行时间在`1ms`左右，效率还是很高的。
 
-   <img src="img\image-20220213182644877.png" alt="image-20220213182644877" style="zoom:67%;" />
+   <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220213182644877-70e5a2dce5d2ba2f3dcae64849afa3e1-2461aa.png" alt="image-20220213182644877" style="zoom:67%;" />
 
 2. 随机读取
 
    ​    如果数据没有在内存中，就需要在磁盘上对该页进行查找，整体时间预估在`10ms`左右，这 10ms 中有 6ms 是磁盘的实际繁忙时间（包括了**寻道**和**半圈旋转时间**），有 3ms 是对可能发生的排队时间的估计值，还有 1ms 的传输时间，将页从磁盘服务器缓冲区传输到数据库缓冲区中。这 10ms 看起来很快，但实际上对于数据库来说已经非常长了，因为这还只是一个页的读取时间。
 
-   <img src="img\image-20220213183148970.png" alt="image-20220213183148970" style="zoom:67%;" />
+   <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220213183148970-f86a2ebb6a8ae2afc40977e57538597d-74b960.png" alt="image-20220213183148970" style="zoom:67%;" />
 
 3. 顺序读取
 

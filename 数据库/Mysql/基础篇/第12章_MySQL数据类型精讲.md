@@ -999,11 +999,11 @@ INSERT INTO temp_mul VALUES('男','睡觉,写代码,吃饭'); #成功
 
 MySQL中的二进制字符串类型主要存储一些二进制数据，比如可以存储图片、音频和视频等二进制数据。
 
-MySQL中支持的二进制字符串类型主要包括BINARY、VARBINARY、TINYBLOB、BLOB、MEDIUMBLOB 和 LONGBLOB类型。
+MySQL中支持的二进制字符串类型主要包括 BINARY、VARBINARY、TINYBLOB、BLOB、MEDIUMBLOB 和 LONGBLOB 类型。
 
 #### BINARY与VARBINARY类型
 
-BINARY和VARBINARY类似于CHAR和VARCHAR，只是它们存储的是二进制字符串。
+BINARY和VARBINARY 类似于 CHAR 和 VARCHAR，只是它们存储的是二进制字符串。
 
 BINARY (M)为固定长度的二进制字符串，M表示最多能存储的字节数，取值范围是0~255个字符。如果未指定(M)，表示只能存储`1个字节`。例如BINARY (8)，表示最多能存储8个字节，如果字段值不足(M)个字节，将在右边填充'\0'以补齐指定长度。
 
