@@ -1,65 +1,70 @@
 # 第6章_Logback
 
-01、简单介绍
+## 1.简单介绍
+
 Logback 官网：https://logback.qos.ch/
 
-Logback 是由 Log4j 创始人设计的又一个开源日志组件。作为流行的 Log4j 项目的继承者，在 log4j 1.x 停止的地方接手。其架构非常通用，可以在不同的情况下应用。目前分为三个模块，logback-core、logback-classic 和 logback-access 。
+Logback 是由 Log4j 创始人设计的又一个开源日志组件。作为流行的 Log4j 项目的继承者，在 log4j 1.x 停止的地方接手。其架构非常通用，可以在不同的情况下应用。
 
-logback-core 是其它两个模块的基础模块。
-logback-classic 是 Log4j 的一个改良版本，并原生实现了 SLF4J API，可以轻松地更换成其他日志框架，例如 log4j 1.x 或 JUL 。
-logback-access 与 Tomcat 和 Jetty 等 Servlet 容器集成，以提供 HTTP 访问日志功能。可以轻松在 logback-core 上构建自己的模块。
+目前分为三个模块，`logback-core`、`logback-classic`和`logback-access`。`logback-core`是其它两个模块的基础模块，可以轻松在`logback-core`上构建自己的模块。`logback-classic`（<a href="./第5章_SLF4j.md">第 5 章</a>）是 Log4j 的一个改良版本，并原生实现了 SLF4J API，可以轻松地更换成其他日志框架，例如 log4j 1.x 或 JUL。`logback-access`与 Tomcat 和 Jetty 等 Servlet 容器集成，以提供 HTTP 访问日志功能。
 
-02、组件介绍
-Logback 建立在三个主要类之上 Logger： Appender 和 Layout 。
-这三种类型的组件协同工作，使开发人员能够根据消息类型和级别记录消息，并在运行时控制这些消息的格式和报告位置。
+## 2.组件介绍
 
-2.1、记录器
-Loggers（记录器）控制日志的输出级别，规则是：只输出级别不低于设定级别的日志信息。以及引用 Appenders（输出器）。
-Loggers（记录器）有一个根记录器位于记录器层次结构的顶部，它从一开始就是每个层次结构的一部分。
+Logback 建立在三个主要类之上`Logger`、`Appender`和`Layout`。这三种类型的组件协同工作，使开发人员能够根据消息类型和级别记录消息，并在运行时控制这些消息的格式和报告位置。
+
+### 2.1 Logger-记录器
+
+Loggers 控制日志的输出级别，规则是：只输出级别不低于设定级别的日志信息。以及引用 Appenders（输出器）。
+
+Loggers 有一个根记录器位于记录器层次结构的顶部，它从一开始就是每个层次结构的一部分。
+
 Loggers（记录器）之间有继承关系，例如名为 “com.foo” 的记录器是名为 “com.foo.Bar” 的记录器的父级。 同样 “java” 是 “java.util” 的父级和 “java.util.Vector” 的祖先。
 
-2.2、输出器
+### 2.2 Appender-输出器
+
 Appender（输出器）将日志记录请求打印到多个目的地，如控制台、文件、数据库等等。
 
-2.3、格式器
-Layout（格式器）将事件转换成字符串，将日志信息格式化并输出。在 Logback 中 Layout 对象被封装在 encoder 中。
+### 2.3 Layout-格式器
+
+Layout（格式器）将事件转换成字符串，将日志信息格式化并输出。在 Logback 中 Layout 对象被封装在`encoder`中。
 
 Pattern Layout（自定义格式器）常用转换符：
 
-转换词	描述	性能
-%c	在记录事件的起源处输出记录器的名称	
-%C	输出发出日志请求的调用者的完全限定类名	差
-%d	用于输出记录事件的日期，如 %d{yyyy-MM-dd HH:mm:ss.SSS}	
-%F / file	输出发出记录请求的 Java 源文件的文件名	差
-%L / line	输出发出记录请求的行号	差
-%m / msg / message	输出与日志事件关联的应用程序提供的消息	
-%M / method	输出发出记录请求的方法名称	差
-%n	输出平台相关的行分隔符或字符	
-%p / le / level	输出日志事件的级别	
-%r / relative	输出从应用程序启动到创建日志记录事件所经过的毫秒数	
-%t / thread	输出生成日志事件的线程的名称	
-%20c	如果记录器名称的长度少于 20 个字符，则用空格填充	
-%-20c	如果记录器名称的长度少于 20 个字符，则用空格填充右侧	
-%.30c	如果记录器名称超过 30 个字符，则从头部截断	
-%.-30c	如果记录器名称超过 30 个字符， 则从尾部截断	
+| 转换词 | 描述 | 性能 |
+| :----: | :--: | :--: |
+|`%c`| 在记录事件的起源处输出记录器的名称 ||
+|`%C`|	输出发出日志请求的调用者的完全限定类名|	差|
+|`%d{}`| 用于输出记录事件的日期，如`%d{yyyy-MM-dd HH:mm:ss.SSS}` |	|
+|`%F / %file`|	输出发出记录请求的 Java 源文件的文件名|	差|
+|`%L / %line`|	输出发出记录请求的行号|	差|
+|`%m / %msg / %message`|	输出与日志事件关联的应用程序提供的消息	||
+|`%M / %method`|	输出发出记录请求的方法名称|	差|
+|`%n`|	输出平台相关的行分隔符或字符	||
+|`%p / %le / %level`|	输出日志事件的级别	||
+|`%r / %relative`|	输出从应用程序启动到创建日志记录事件所经过的毫秒数	||
+|`%t / %thread`|	输出生成日志事件的线程的名称	||
+|`%20c`	|如果记录器名称的长度少于 20 个字符，则用空格填充	||
+|`%-20c`|	如果记录器名称的长度少于 20 个字符，则用空格填充右侧	||
+|`%.30c`|	如果记录器名称超过 30 个字符，则从头部截断	||
+|`%.-30c`|	如果记录器名称超过 30 个字符， 则从尾部截断	||
 
+## 3.入门案例
 
-03、入门案例
 导入依赖： Logback 搭配 SLF4J 日志门面使用。
 
 ```xml
 <dependencies>
-    <!-- log4j日志门面 -->
+    <!-- log4j 日志门面 -->
     <dependency>
         <groupId>org.slf4j</groupId>
         <artifactId>slf4j-api</artifactId>
         <version>1.7.25</version>
     </dependency>
-    <!-- logback-core是logback-classic的基础模块，根据maven依赖传递性，无需重复导入 -->
+    <!-- logback-core 是 logback-classic 的基础模块，根据 maven 依赖传递性，无需重复导入 -->
     <dependency>
         <groupId>ch.qos.logback</groupId>
         <artifactId>logback-classic</artifactId>
-        <version>1.2.3</version>
+        <version>1.7.25</version>
     </dependency>
     <!-- 单元测试 -->
     <dependency>
@@ -74,18 +79,13 @@ Pattern Layout（自定义格式器）常用转换符：
 **代码示例：**
 
 ```java
-package com.logback;
-
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class LogbackTest {
     @Test
     public void test01() {
+        // trace < debug < info < warn < error
         Logger logger = LoggerFactory.getLogger(LogbackTest.class);
         logger.trace("trace追踪信息");
-        logger.debug("debug详细信息"); // 默认级别
+        logger.debug("debug详细信息"); // 默认级别，在此级别下不会打印 trace 信息
         logger.info("info关键信息");
         logger.warn("warn警告信息");
         logger.error("error错误信息");
@@ -102,17 +102,18 @@ public class LogbackTest {
 03:10:56.701 [main] ERROR com.logback.LogbackTest - error错误信息
 ```
 
-## 04、配置文件
+## 4.配置文件
 
-Logback 提供了 3 种配置文件： logback.groovy ，logback-test.xml ，logback.xml ，若都不存在则采用默认配置。
+Logback 提供了 3 种配置文件： `logback.groovy`，`logback-test.xml`，`logback.xml`，若都不存在则采用默认配置。
 
 创建配置：logback.xml 文件。
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- 根标签 -->
 <configuration>
 
-    <!-- 配置自定义日志输出格式 -->
+    <!-- 以 property 形式配置通用属性，可以在后续配置中被引用，这里配置自定义日志输出格式 -->
     <property name="pattern" value="[%d{yyyy-MM-dd HH:mm:ss.SSS}] [%-5p] [%t] [%c#%M-%L] %m%n"/>
 
     <!-- 配置控制台输出器 -->
@@ -121,12 +122,13 @@ Logback 提供了 3 种配置文件： logback.groovy ，logback-test.xml ，log
         <target>System.err</target>
         <!-- 配置日志输出格式 -->
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
-            <!-- 引用自定义日志输出格式 -->
+            <!-- 引用自定义通用日志输出格式 -->
             <pattern>${pattern}</pattern>
         </encoder>
     </appender>
 
     <!-- 配置记录器 -->
+    <!-- 日志级别 -->
     <root level="ALL">
         <!-- 引用控制台输出器 -->
         <appender-ref ref="consoleAppender"/>

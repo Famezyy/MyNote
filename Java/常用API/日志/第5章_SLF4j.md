@@ -1,4 +1,4 @@
-# 第5章_SLF4j
+# 		第5章_SLF4j
 
 ## 1.简单介绍
 
@@ -125,7 +125,7 @@ SLF4J 日志门面共有三种情况对日志实现进行绑定。
 - Logback 和 Simple（包括 nop） 是 SLF4 出现后提供的日志实现框架，所以 API 完全遵循 SLF4J 进行设计。只需要导入对应的日志实现依赖，即可与 SLF4J 无缝衔接。nop 虽然也划分到实现中，但它是指不实现日志记录
 - Log4j 和 JUL 是 SLF4J 出现前就已经存在的日志实现框架，所以 API 不遵循 SLF4J 进行设计。需要通过适配桥接的技术，完成的与 SLF4J 的衔接
 
-注意： 在 SLF4J 环境下，若同时导入多个日志实现框架，默认使用先导入的。在实际应用中，一般只集成一种日志实现。
+注意： 必须导入 SLF4J 的核心组件，同时在 SLF4J 环境下，若同时导入多个日志实现框架，默认使用先导入的。在实际应用中，一般只集成一种日志实现。
 
 ## 7.集成 logback
 
@@ -317,7 +317,32 @@ public void test01() {
 1. 移出旧的日志框架依赖
 2. 导入相应的桥接器依赖（已有代码和导入包就不会报错了）
 
-测试可以发现，虽然代码没有变，但是使用了 slf4j，会根据导入的依赖不同使用不同的集成实现。
+例：桥接 log4j
+
+```xml
+<!-- slf4j 核心 -->
+<dependency>
+    <groupId>org.slf4j</groupId>
+    <artifactId>slf4j-api</artifactId>
+    <version>1.7.25</version>
+</dependency>
+
+<!-- log4j 桥接 -->
+<dependency>
+    <groupId>org.slf4j</groupId>
+    <artifactId>log4j-over-slf4j</artifactId>
+    <version>1.7.25</version>
+</dependency>
+
+<!-- logback 核心 -->
+<dependency>
+    <groupId>ch.qos.logback</groupId>
+    <artifactId>logback-classic</artifactId>
+    <version>1.2.3</version>
+</dependency>
+```
+
+测试可以发现，虽然代码没有变，但是使用了 slf4j，会根据导入的依赖不同使用不同的集成实现（上面例子中最终使用了 logback 的实现）。
 
 > **注意**
 >
