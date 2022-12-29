@@ -161,7 +161,7 @@ public void test01() {
 [2022-07-02 04:19:59.479] [ERROR] [main] [com.logback.LogbackTest#test01-16] error错误信息
 ```
 
-## 05、保存日志
+## 5.持久化日志
 
 保存到 log 文件，相关配置：
 
@@ -184,15 +184,27 @@ public void test01() {
             <pattern>${pattern}</pattern>
         </encoder>
     </appender>
+    
+    <!-- 配置控制台输出器 -->
+    <appender name="consoleAppender" class="ch.qos.logback.core.ConsoleAppender">
+        <target>System.err</target>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>${pattern}</pattern>
+        </encoder>
+    </appender>
 
     <!-- 配置记录器 -->
+    <!-- 可同时配置多个 appender -->
     <root level="ALL">
-        <!-- 引用文件输出器-->
+        <!-- 引用文件输出器 -->
         <appender-ref ref="fileAppender"/>
+        <appender-ref ref="consoleAppender"/>
     </root>
     
 </configuration>
 ```
+
+默认以追加日志的形式写入文件。
 
 保存到 HTML 文件，相关配置：
 
@@ -200,25 +212,20 @@ public void test01() {
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
 
-    <!-- 配置自定义日志输出格式 -->
-    <property name="pattern1" value="%d{yyyy-MM-dd HH:mm:ss.SSS}%-5p%t%c%M%L%m%n"/>
-    <!-- 配置日志输出目录 -->
+    <!-- 去掉[]以在网页中正确显示log -->
+    <property name="pattern" value="%d{yyyy-MM-dd HH:mm:ss.SSS}%-5p%t%c#%M-%L%m%n"/>
     <property name="logDir" value="../logDir"/>
 
-    <!-- 配置HTML输出器-->
     <appender name="htmlAppender" class="ch.qos.logback.core.FileAppender">
-        <!-- 配置日志输出文件 -->
         <file>${logDir}//logback.html</file>
-        <!-- 配置日志输出格式 -->
+        <!-- 配置 HTML 日志输出格式 -->
         <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
             <layout class="ch.qos.logback.classic.html.HTMLLayout">
-                <!-- 引用自定义日志输出格式 -->
-                <pattern>${pattern1}</pattern>
+                <pattern>${pattern}</pattern>
             </layout>
         </encoder>
     </appender>
 
-    <!-- 配置记录器 -->
     <root level="ALL">
         <!-- 引用HTML输出器 -->
         <appender-ref ref="htmlAppender"/>
@@ -233,24 +240,21 @@ public void test01() {
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
 
-    <!-- 配置自定义日志输出格式 -->
     <property name="pattern" value="[%d{yyyy-MM-dd HH:mm:ss.SSS}] [%-5p] [%t] [%c#%M-%L] %m%n"/>
-    <!-- 配置日志输出目录 -->
     <property name="logDir" value="../logDir"/>
 
     <!-- 配置拆分归档输出器 -->
     <appender name="rollingFileAppender" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <!-- 配置日志输出文件 -->
         <file>${logDir}/rollingFile.log</file>
-        <!-- 配置日志输出格式 -->
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
-            <!-- 引用自定义日志输出格式 -->
             <pattern>${pattern}</pattern>
         </encoder>
-        <!-- 配置拆分规则 -->
+        <!-- 配置拆分规则 - 按大小和时间拆分 -->
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <!-- 按照时间和压缩格式声名文件名 -->
-            <fileNamePattern>../logDir/rollingFile.%d{yyyy-MM-dd}.log%i.gz</fileNamePattern>
+            <!-- 使用 TimeBasedRollingPolicy 必须指定 fileNamePattern -->
+            <!-- 按照时间和压缩格式 gz 声名文件名 -->
+            <!-- %i 表示序号 -->
+            <fileNamePattern>${logDir}/rollingFile.%d{yyyy-MM-dd}.log%i.gz</fileNamePattern>
             <!-- 按照指定文件大小进行拆分 -->
             <maxFileSize>1KB</maxFileSize>
         </rollingPolicy>
@@ -265,19 +269,22 @@ public void test01() {
 </configuration>
 ```
 
-## 06、日志过滤
+## 6.日志过滤
 
-过滤器写在 Appender 标签内，可以配置一个或多个，按照先后顺序执行。过滤器会对每个级别的日志设置枚举值，表示对日志的处理方式。
+过滤器写在`Appender`标签内，可以配置一个或多个，按照先后顺序执行。过滤器会对每个级别的日志设置枚举值，表示对日志的处理方式。
 
-过滤器枚举值	描述
-DENY	当前过滤器直接拒绝日志输出，不再经过后续的过滤器
-NEUTRAL	当前过滤器不做任何日志处理，若后续的过滤器返回的全部都是 NEUTRAL，则进行日志输出
-ACCEPT	当前过滤器直接进行日志输出，不再经过后续的过滤器。
+| 过滤器枚举值 |                             描述                             |
+| :----------: | :----------------------------------------------------------: |
+|     DENY     |       当前过滤器直接拒绝日志输出，不再经过后续的过滤器       |
+|   NEUTRAL    | 当前过滤器不做任何日志处理，若后续的过滤器返回的全部都是 NEUTRAL，则进行日志输出 |
+|    ACCEPT    |      当前过滤器直接进行日志输出，不再经过后续的过滤器。      |
 
-级别过滤器	描述
-level	设置日志级别
-onMatch	对符合过滤级别的日志操作
-onMismatch	对不符合过滤级别的日志操作
+| 级别过滤器 |            描述            |
+| :--------: | :------------------------: |
+|   level    |        设置日志级别        |
+|  onMatch   |  对符合过滤级别的日志操作  |
+| onMismatch | 对不符合过滤级别的日志操作 |
+
 
 相关配置：
 
@@ -285,32 +292,25 @@ onMismatch	对不符合过滤级别的日志操作
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
 
-    <!-- 配置自定义日志输出格式 -->
     <property name="pattern" value="[%d{yyyy-MM-dd HH:mm:ss.SSS}] [%-5p] [%t] [%c#%M-%L] %m%n"/>
 
-    <!-- 配置使用过滤器的控制台输出器 -->
     <appender name="consoleFilterAppender" class="ch.qos.logback.core.ConsoleAppender">
-        <!-- 配置日志字体颜色，默认黑色（System.out），红色（System.err） -->
         <target>System.err</target>
-        <!-- 配置日志输出格式 -->
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
-            <!-- 引用自定义日志输出格式 -->
             <pattern>${pattern}</pattern>
         </encoder>
         <!-- 配置级别过滤器 -->
         <filter class="ch.qos.logback.classic.filter.LevelFilter">
             <!-- 过滤级别 -->
             <level>ERROR</level>
-            <!-- 打印符合过滤级别的日志 -->
+            <!-- 大于等于 level 的级别则打印日志 -->
             <onMatch>ACCEPT</onMatch>
-            <!-- 屏蔽不符合过滤级别的日志 -->
+            <!-- 低于 level 的级别则屏蔽日志 -->
             <onMismatch>DENY</onMismatch>
         </filter>
     </appender>
 
-    <!-- 配置记录器 -->
     <root level="ALL">
-        <!-- 引用使用过滤器的控制台输出器 -->
         <appender-ref ref="consoleFilterAppender"/>
     </root>
 
@@ -337,42 +337,35 @@ public void test01() {
 [2022-07-02 09:45:54.411] [ERROR] [main] [com.logback.LogbackTest#test-16] error错误信息
 ```
 
-07、异步日志
-代码按照从上向下的顺序执行，只有当上面的代码全部执行完毕，你才会执行下面的代码。
+## 7.异步日志
 
-由此得出会发生的问题：
-
-只要是在记录日志，那么系统本身的功能就处于一种停滞的状态。
-当日志记录完毕后，才会执行系统本身业务代码。
-如果日志的记录量很大，那对于系统本身业务代码的执行效率会降低。
-所以 Logback 为此提供了异步日志功能。原理就是系统为日志操作单独分配一条线程，原本执行当前方法的主线程会继续向下执行，两条线程争夺 CPU 使用权。
+当日志记录完毕后，才会执行系统本身业务代码，如果日志的记录量很大，那对于系统本身业务代码的执行效率会降低。所以 Logback 为此提供了**异步日志功能**。原理就是系统为日志操作单独分配一条线程，原本执行当前方法的主线程会继续向下执行。
 
 相关配置：
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
 
-    <!-- 配置自定义日志输出格式 -->
     <property name="pattern" value="[%d{yyyy-MM-dd HH:mm:ss.SSS}] [%-5p] [%t] [%c#%M-%L] %m%n"/>
 
-    <!-- 配置控制台输出器 -->
     <appender name="consoleAppender" class="ch.qos.logback.core.ConsoleAppender">
-        <!-- 配置日志字体颜色，默认黑色（System.out），红色（System.err） -->
         <target>System.err</target>
-        <!-- 配置日志输出格式 -->
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
-            <!-- 引用自定义日志输出格式 -->
             <pattern>${pattern}</pattern>
         </encoder>
     </appender>
 
-    <!-- 配置异步输出器 -->
+    <!-- 配置异步输出器引用需要的 appender -->
     <appender name="asyncAppender" class="ch.qos.logback.classic.AsyncAppender">
-        <!-- 引用控制台输出器 -->
         <appender-ref ref="consoleAppender"/>
+        <!-- 以下两个属性保持默认即可 -->
+        <!-- 阻塞队列的最大长度 -->
+        <queSize>256</queSize>
+        <!-- when the blocking queue has 20% capacity remaining,
+        it will drop events of level TRACE, DEBUG and INFO, keeping only events of level WARN and ERROR.
+        To keep all events, set discardingThreshold to 0. -->
+        <discardingThreshold>-1</discardingThreshold>
     </appender>
-
-    <!-- 配置日志级别、控制器 -->
     <root level="ALL">
         <!-- 引用异步输出器 -->
         <appender-ref ref="asyncAppender"/>
@@ -417,7 +410,7 @@ public void test02() {
 略...
 ```
 
-## 08、自定义记录器
+## 8.自定义记录器
 
 相关配置：
 
@@ -425,21 +418,17 @@ public void test02() {
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
 
-    <!-- 配置自定义日志输出格式 -->
     <property name="pattern" value="[%d{yyyy-MM-dd HH:mm:ss.SSS}] [%-5p] [%t] [%c#%M-%L] %m%n"/>
 
-    <!-- 配置控制台输出器 -->
     <appender name="consoleAppender" class="ch.qos.logback.core.ConsoleAppender">
-        <!-- 配置日志字体颜色，默认黑色（System.out），红色（System.err） -->
         <target>System.err</target>
-        <!-- 配置日志输出格式 -->
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
-            <!-- 引用自定义日志输出格式 -->
             <pattern>${pattern}</pattern>
         </encoder>
     </appender>
     
 	<!-- 配置自定义记录器 -->
+    <!-- additivity="false" 表示不继承 root -->
     <logger name="com.logback" level="info" additivity="false">
         <appender-ref ref="consoleAppender"/>
     </logger>
@@ -469,3 +458,6 @@ public void test01() {
 [2022-07-02 11:31:12.661] [ERROR] [main] [com.logback.LogbackTest#test01-16] error错误信息
 ```
 
+## 9.log4j.properties转换为logback.xml
+
+https://logback.qos.ch/translator/services/propertiesTranslator.html
