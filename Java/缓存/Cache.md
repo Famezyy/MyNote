@@ -1,14 +1,14 @@
 # Cache
 
-## 一、ehcache
+## 1.ehcache
 
 > - 可以存放入硬盘
 
-### 1. 快速开始
+### 1.1 快速开始
 
 <a href="https://www.ehcache.org/" style="float:right">参考</a>
 
-1.1 环境引入
+**环境引入**
 
 - 引入 Spring 的 cache 支持
 
@@ -28,7 +28,7 @@
   </dependency>
   ```
 
-<p name="ehcache.xml">1.2 编写 xml 配置文件</p>
+**编写 xml 配置文件**
 
 ```xml
 <ehcache xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://www.ehcache.org/ehcache.xsd">
@@ -68,7 +68,7 @@
 
 ```
 
-1.3 运行
+**运行**
 
 ```java
 @Test
@@ -96,9 +96,9 @@ void test1() {
 }
 ```
 
-### 2. 与 Spring 的集成
+### 1.2 与 Spring 的集成
 
-2.1 环境引入
+**环境引入**
 
 - 引入 Spring 的 cache 支持
 
@@ -118,7 +118,7 @@ void test1() {
   </dependency>
   ```
 
-2.2 引入事务相关的包
+**引入事务相关的包**
 
 ```xml
 <dependency>
@@ -127,9 +127,9 @@ void test1() {
 </dependency>
 ```
 
-2.3 编写 xml 配置文件
+**编写 xml 配置文件**
 
-2.4 编写 spring 配置文件
+**编写 spring 配置文件**
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -164,7 +164,7 @@ void test1() {
 </beans>
 ```
 
-2.5 测试
+**测试**
 
 ```java
 @SpringBootTest
@@ -194,7 +194,7 @@ public class SpringEhcacheTest {
 
 - 实体类实现序列化接口
 
-### 3. 使用 Cacheable 注解
+### 1.3 使用 Cacheable 注解
 
 > 不知道并发如何，建议自己实现
 
@@ -234,17 +234,17 @@ User(name=zhao)
 User(name=zhao)
 ```
 
-### **4. 与 SpringBoot 的集成**
+### 1.4 与 SpringBoot 的集成
 
 > 不需要导入额外的包
 
-4.1 在 application.property 中配置 <a href="#ehcache.xml">ehcache.xml</a>> 位置
+4.1 在 application.property 中配置 ehcache.xml 位置
 
 ```properties
 spring.cache.ehcache.config=classpath:ehcache.xml
 ```
 
-4.2 加上 @EnableCaching 注解
+4.2 加上`@EnableCaching`注解
 
 ```java
 @SpringBootApplication
@@ -252,9 +252,9 @@ spring.cache.ehcache.config=classpath:ehcache.xml
 public class TestApplication {
 ```
 
-### 5.并发
+### 1.5 并发
 
-  在高并发的情况下，使用Ehcache缓存时，由于并发的读与写，我们读的数据有可能是错误的，我们写的数据也有可能意外的被覆盖。所幸的是Ehcache为我们提供了针对于缓存元素Key的Read（读）、Write（写）锁。当一个线程获取了某一Key的Read锁之后，其它线程获取针对于同一个Key的Read锁不会受到限制，但其它线程（包括获取了该Key的Read锁的线程）如果想获取针对同一个Key的Write锁就不行，它需要等到针对于该Key的Read锁释放后才能获取其Write锁；当一个线程获取了某一Key的Write锁之后，其它线程获取同一个Key的Read锁或者Write锁的请求将等待针对于该Key的Write锁释放后才能继续进行，但是同一个线程获取该Key对应的Read锁或者Write锁将不需要等待。获取了对应的锁之后，记得在不再需要该锁后释放该锁。并且需要注意不要引起死锁。
+在高并发的情况下使用 Ehcache 缓存时，由于并发的读与写，我们读的数据有可能是错误的，我们写的数据也有可能意外的被覆盖。所幸的是 Ehcache 为我们提供了针对于缓存元素 Key 的 Read、Write 锁。当一个线程获取了某一 Key 的 Read 锁之后，其它线程获取针对于同一个 Key 的 Read 锁不会受到限制，但其它线程（包括获取了该 Key 的 Read 锁的线程）如果想获取针对同一个 Key 的 Write 锁就不行，它需要等到针对于该 Key 的 Read 锁释放后才能获取其 Write 锁；当一个线程获取了某一 Key 的 Write 锁之后，其它线程获取同一个 Key 的 Read 锁或者 Write 锁的请求将等待针对于该 Key 的 Write 锁释放后才能继续进行，但是同一个线程获取该 Key 对应的 Read 锁或者 Write 锁将不需要等待。获取了对应的锁之后，记得在不再需要该锁后释放该锁。并且需要注意不要引起死锁。
 
 ```java
 // 在Ehcache接口中为我们定义了几个与Read、Write锁相关的方法，具体方法如下所示：
@@ -305,7 +305,7 @@ public interface Ehcache {
 }
 ```
 
-我们常用的Cache类已经为我们实现了这些方法，我们可以直接在程序中进行使用。以下是直接在程序中使用锁的一个简单示例。
+我们常用的 Cache 类已经为我们实现了这些方法，我们可以直接在程序中进行使用。以下是直接在程序中使用锁的一个简单示例。
 
 ```java
 @Test
@@ -324,28 +324,24 @@ public void test() {
 }
 ```
 
-> - 当一个线程取得某一缓存key的write锁之后:
->   1) 此线程可以取得该key的read锁(即此线程可以读取该key的值)
->   1) 其他线程不可以取得该key的read锁和write锁(即其他线程不能读取或写入该key的值). 要等到该线程释放该key的write锁后才能获得
-> - 当一个线程取得某一缓存key的read锁之后:
->   1) 此线程不可以取得该key的write锁(即此线程不能写入该key的值)
->   2) 其他线程可以取得该key的read锁, 但不能取得write锁(即其他线程可以读取该key的值, 但不能写入). 要等到该线程(或所有线程)释放该key的read锁后, 才能获得write锁
-> - 最后注意, acquireReadLockOnKey()和acquireWriteLockOnKey()方法都不会报错, 最多使进入阻塞状态. 但对于releaseReadLockOnKey()和releaseWriteLockOnKey()方法, 如果持有read锁或write锁的线程不是本线程, 或者本线程之前已经释放掉read锁或write锁, 那么再次调用这两个方法会报错
+> 注意
+>
+> `acquireReadLockOnKey()`和`acquireWriteLockOnKey()`方法都不会报错，最多使进入阻塞状态。但对于`releaseReadLockOnKey()`和`releaseWriteLockOnKey()`方法，如果持有 read 锁或 write 锁的线程不是本线程，或者本线程之前已经释放掉 read 锁或 write 锁，那么再次调用这两个方法会报错
 
 ---
 
-## 二、guava
+## 2.guava
 
-### 1. 单独使用
+### 2.1 单独使用
 
-#### 1.1 LocalloadingCache
+#### 1.LocalloadingCache
 
 > - 实现了 LoadingCache，最终实现了 Cache
 > - 线程安全
 >
 > - 特点：获取不到缓存中的值时，根据指定的 loader 加载，加载后自动放入缓存
 
-##### 1.1.1 引入依赖
+##### 1.1 引入依赖
 
 ```xml
 <dependency>
@@ -355,7 +351,7 @@ public void test() {
 </dependency>
 ```
 
-##### 1.1.2 build loadingCache
+##### 1.2 build loadingCache
 
 ```java
  @Test
@@ -399,15 +395,15 @@ void test1() throws InterruptedException {
 }
 ```
 
-#### 1.2 LocalManualCache
+#### 2.LocalManualCache
 
 > - 最终实现了 Cache
 >
 > - 类似 ehcache
 
-### 2. 自定义CacheManager
+### 2.2 自定义CacheManager
 
-#### 2.1 开启 Cache
+#### 1.开启 Cache
 
 ```java
 @SpringBootApplication
@@ -415,7 +411,7 @@ void test1() throws InterruptedException {
 public class TestApplication {
 ```
 
-#### 2.2 编写 GuavaCache
+#### 2.编写 GuavaCache
 
 ```java
 public class GuavaCache implements Cache {
@@ -478,7 +474,7 @@ public class GuavaCache implements Cache {
 }
 ```
 
-#### 2.3 编写 GuavaCacheCacheManager
+#### 3.编写 GuavaCacheCacheManager
 
 ```java
 /**
@@ -501,9 +497,9 @@ public class GuavaCacheCacheManager extends AbstractCacheManager {
 }
 ```
 
-### 3. 自定义 KeyGenerator
+### 2.3 自定义 KeyGenerator
 
-#### 3.1 实现 KeyGenerator
+#### 1.实现 KeyGenerator
 
 ```java
 @Component
@@ -540,7 +536,7 @@ public class MyKeyGenerator implements KeyGenerator {
 }
 ```
 
-#### 3.2 设置使用自定义 Keygenerator
+#### 2.设置使用自定义 Keygenerator
 
 ```java
 /**
@@ -560,7 +556,7 @@ public User getUser(User queryPram, int[] arr, String str) {
 
 ---
 
-## 三、JSR107 缓存规范（了解）
+## 3.JSR107 缓存规范（了解）
 
 > Java Specification Requests：例如：jdbc、lombok、validation
 
@@ -580,7 +576,7 @@ public User getUser(User queryPram, int[] arr, String str) {
 
 ---
 
-## 四、Spring 的缓存抽象
+## 4.Spring 的缓存抽象
 
 **API 结构**
 
@@ -588,7 +584,7 @@ public User getUser(User queryPram, int[] arr, String str) {
 
 ---
 
-## 五、自定义缓存
+## 5.自定义缓存
 
 > 如何设计？
 >
@@ -599,28 +595,28 @@ public User getUser(User queryPram, int[] arr, String str) {
 > - 统计命中率
 > - 序列化扩展
 
-### 1. LRU淘汰策略实现
+### 5.1 LRU淘汰策略实现
 
-#### 1.1 基于 LinkedHashMap 实现
+#### 1.基于 LinkedHashMap 实现
 
-  要实现基于 LRU 算法的溢出驱逐：
+要实现基于 LRU 算法的溢出驱逐：
 
-1. 按访问时间排序
+**按访问时间排序**
 
-   ```java
-   // 将accessOrder 设置为 true
-   LinkedHashMap<String, String> map = new LinkedHashMap<>(16, 0.75f, true);
-   map.put("a", "avalue");
-   map.put("b", "bvalue");
-   map.put("c", "cvalue");
-   System.out.println(map); // {a=avalue, b=bvalue, c=cvalue}
-   map.get("b");
-   System.out.println(map); // {a=avalue, c=cvalue, b=bvalue}
-   ```
+```java
+// 将accessOrder 设置为 true
+LinkedHashMap<String, String> map = new LinkedHashMap<>(16, 0.75f, true);
+map.put("a", "avalue");
+map.put("b", "bvalue");
+map.put("c", "cvalue");
+System.out.println(map); // {a=avalue, b=bvalue, c=cvalue}
+map.get("b");
+System.out.println(map); // {a=avalue, c=cvalue, b=bvalue}
+```
 
-2. 移除排在最前面的元素
+**移除排在最前面的元素**
 
-  **实现：**
+实现
 
 ```java
 public interface MyCache {
@@ -712,7 +708,7 @@ void test1(){
 }
 ```
 
-#### 1.2 基于 LinkedList 实现
+#### 2.基于 LinkedList 实现
 
 ```java
 public class MyCacheV2 implements MyCache{
@@ -796,7 +792,7 @@ void test1(){
 }
 ```
 
-### 2. 内存敏感能力
+### 5.2 内存敏感能力
 
 - 强引用：只要有引用就不会被回收
 
@@ -818,3 +814,94 @@ void test1(){
 
 - 弱引用：每次 GC 都会被回收
 - 虚引用：随时都有可能被回收
+
+## 6.Caffeine
+
+**引入依赖**
+
+```xml
+<dependency>
+    <groupId>com.github.ben-manes.caffeine</groupId>
+    <artifactId>caffeine</artifactId>
+    <version>2.9.3</version>
+</dependency>
+
+<dependency>
+    <groupId>org.springframework</groupId>
+    <artifactId>spring-context-support</artifactId>
+    <version>5.3.14</version>
+</dependency>
+```
+
+**入门案例**
+
+`CaffeineConfig.class`
+
+```java
+@Configuration
+@EnableCaching
+public class CaffeineConfig {
+
+    @Bean
+    public CacheManager oneHourCacheManager(){
+        SimpleCacheManager cacheManager = new SimpleCacheManager();
+        List<CaffeineCache> caches = new ArrayList<>();
+        caches.add(new CaffeineCache("CACHE_5SECS", getCaffeine(5)));
+        caches.add(new CaffeineCache("CACHE_10SECS", getCaffeine(10)));
+        caches.add(new CaffeineCache("CACHE_30SECS", getCaffeine(30)));
+        cacheManager.setCaches(caches);
+        return cacheManager;
+    }
+
+    public Cache<Object, Object> getCaffeine(int refreshAfterWriteTime){
+        return Caffeine.newBuilder()
+                //设置过期时间，最后一次写入或访问后过多久过期
+                //.expireAfterAccess(expireAfterAccessTime, TimeUnit.SECONDS)
+                //cache的初始容量值
+                .initialCapacity(100)
+                //maximumSize用来控制cache的最大缓存数量，maximumSize和maximumWeight(最大权重)不可以同时使用，
+                .maximumSize(1000)
+                //弱引用
+                //.weakKeys()
+                //.weakValues()
+                //写入多久后过期
+                .expireAfterWrite(refreshAfterWriteTime,TimeUnit.SECONDS)
+                .build();
+    }
+}
+```
+
+`UserService.class`
+
+```java
+@Service
+public class UserService {
+
+    /**
+     * 添加缓存
+     * 返回值会被放入缓存
+     */
+    @Cacheable(value="CACHE_30SECS", key="#userId")
+    public User getUser(long userId) {
+        return UserUtil.getUser(userId);
+    }
+
+    /**
+     * 更新缓存
+     * 返回值会被放入缓存
+     */
+    @CachePut(value="CACHE_30SECS", key="#user.userId")
+    public User updateUser(User user) {
+        return UserUtil.updateUser(user);
+    }
+
+    /**
+     * 删除缓存
+     */
+    @CacheEvict(value="CACHE_30SECS", key="#userId")
+    public boolean removeUser(long userId) {
+        return UserUtil.removeUser(userId);
+    }
+}
+```
+

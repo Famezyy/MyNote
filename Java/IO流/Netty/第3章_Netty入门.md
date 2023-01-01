@@ -25,6 +25,7 @@ Netty 在 Java 网络应用框架中的地位就好比 Spring 框架在 JavaEE �
 * Spark - 大数据分布式计算框架
 * Hadoop - 大数据分布式存储框架
 * RocketMQ - ali 开源的消息队列
+* Kafka - 消息队列
 * ElasticSearch - 搜索引擎
 * gRPC - rpc 框架
 * Dubbo - rpc 框架
@@ -33,7 +34,7 @@ Netty 在 Java 网络应用框架中的地位就好比 Spring 框架在 JavaEE �
 
 ### 1.4 Netty的优势
 
-* 自己开发 NIO 的话工作量大，bug 多。
+* 自己开发 NIO 的话工作量大，bug 多
   * 需要自己构建协议
   * 解决 TCP 传输问题，如粘包、半包
   * epoll 空轮询导致 CPU 100%

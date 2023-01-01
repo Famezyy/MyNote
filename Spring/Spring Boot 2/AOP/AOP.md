@@ -1,6 +1,14 @@
 # AOP
 
-## 1.功能测试
+## 1.Spring AOP
+
+**切面**相当于对象间的横切点，可以将其抽象为单独的模块把事务处理、日志打印等非功能性需求从业务逻辑中拆分出来。
+
+**连接点**表示能够插入切面的一个点。
+
+**通知**是指执行的具体逻辑。
+
+### 1.1 功能测试
 
 指在程序运行期间动态的将某段代码切入到指定方法指定位置进行运行的编程方式（动态代理）。
 
@@ -77,6 +85,14 @@
    }
    ```
 
+   > **execution 基本语法**
+   >
+   > `execution([方法修饰符] 方法返回值 [方法所在类路径] 方法名(方法参数)[方法抛出的异常])`，其中`[]`括起来的为可选。
+   >
+   > 在各个模式匹配中，`*`表示匹配所有。
+   >
+   > <a href="https://docs.spring.io/spring-framework/docs/current/reference/html/core.html#spring-core">参考</a>
+
 4. 开启 aop 模式，将目标方法和切面方法加入容器中
 
    - xml 方式
@@ -115,9 +131,9 @@
    }
    ```
 
-## 2.AOP组件的导入
+### 1.2 AOP组件的导入
 
-### 2.1 @EnableAspectJAutoproxy
+#### 1.@EnableAspectJAutoproxy
 
 给容器中导入`AspectJAutoProxyRegistrar`
 
@@ -127,7 +143,7 @@ public @interface EnableAspectJAutoProxy {
 }
 ```
 
-### 2.2 导入AspectJAutoProxyRegistrar
+#### 2.导入AspectJAutoProxyRegistrar
 
 `AspectJAutoProxyRegistrar`实现了`ImportBeanDefinitionRegistrar`接口，在【注册剩余`configClass`的`BeanDefinitions`】时被加载。
 
@@ -155,13 +171,13 @@ class AspectJAutoProxyRegistrar implements ImportBeanDefinitionRegistrar {
 }
 ```
 
-### 2.3 创建AnnotationAwareAspectJAutoProxyCreator
+#### 3.创建AnnotationAwareAspectJAutoProxyCreator
 
 由于`AnnotationAwareAspectJAutoProxyCreator`是一个`BeanPostProcessor`并实现了`Ordered`接口，在【注册`BeanPostProcessor`】时，创建了`AnnotationAwareAspectJAutoProxyCreator`，并加入了容器中。
 
 <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220614175802573-09483db5cde8b3cf6102a301fa5631d5-b2437a.png" alt="image-20220614175802573" style="zoom:80%;" />
 
-## 3.创建代理对象过程
+### 1.3 创建代理对象过程
 
 由于`AnnotationAwareAspectJAutoProxyCreator`实现了`InstantiationAwareBeanPostProcessor`，在【初始化所有剩下的单实例 Bean】，【执行`BeanPostProcessor`的`postProcessAfterInitialization()`】时，会调用父类`AbstractAutoProxyCreator`的`postProcessAfterInitialization()`来创建代理对象。
 
@@ -169,7 +185,7 @@ class AspectJAutoProxyRegistrar implements ImportBeanDefinitionRegistrar {
 
 在【Bean初始化】阶段，【执行`BeanPostProcessor`的`postProcessAfterInitialization()`】时，被`AnnotationAwareAspectJAutoProxyCreator`拦截，调用`AbstractAdvisorAutoProxyCreator`类的`getAdvicesAndAdvisorsForBean()`方法获取所有支持的增强器。
 
-## 4.执行目标方法
+### 1.4 执行目标方法
 
 实际的目标方法的代理对象容器中保存了组件的代理对象（CGlib 增强后的对象），还保存了详细信息：增强器，目标对象等。
 
@@ -179,7 +195,7 @@ class AspectJAutoProxyRegistrar implements ImportBeanDefinitionRegistrar {
 
 具体执行过程参考流程图。
 
-## 5.总结
+### 1.5 总结
 
 - `@EnableAspectJAutoProxy`：开启 AOP 功能
 
@@ -197,7 +213,7 @@ class AspectJAutoProxyRegistrar implements ImportBeanDefinitionRegistrar {
 
   1. 代理对象执行目标方法
 
-  2. CglibApoProxy.interceptor()
+  2. `CglibApoProxy.interceptor()`
 
      1. 得到目标方法的拦截器链（增强器包装成拦截器 MethodInterceptor）
 
@@ -207,3 +223,100 @@ class AspectJAutoProxyRegistrar implements ImportBeanDefinitionRegistrar {
 
         1. 无异常时：前置通知 - 目标方法 - 返回通知 - 后置通知
         2. 有异常时：前置通知 - 目标方法 - 异常通知 - 后置通知
+
+## 2.ProxyFactoryBean
+
+Spring 提供了`ProxyFactoryBean`类用于手动创建代理对象，并将该代理对象做为目标对象的 AOP 代理。
+
+两个重要属性（声明式 AOP 中在`EnableAspectJAutoProxy`设置，默认均为 false）
+
+- `proxyTargetClass`：设置为 true 时使用 CGLIB 创建代理，如果未设置该属性，则当墓表类实现了接口则使用 JDK 创建代理，否则使用 CGLIB 创建代理
+- `exposeProxy`：是否将当前代理暴露给`ThreadLocal`，设置为 true 时可以使用`AopContext.currentProxy()`获取代理对象
+
+创建前置通知
+
+```java
+public class TransferInterceptor implements MethodBeforeAdvice {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(TransferInterceptor.class);
+
+    @Override
+    public void before(Method arg0, Object[] arg1, Object arg2) throws Throwable {
+        LOGGER.info("transfer intercepted");
+
+    }
+}
+```
+
+创建配置类
+
+这里设置目标类为实现类`TransferServiceImpl`，并把`exposeProxy`设置为 true，这样就可以在`TransferServiceImpl`中通过`AopContext.currentProxy()`获取代理类。
+
+```java
+@Configuration
+public class ProxyFactoryBeanConfig {
+
+    @Bean
+    public Advisor transferServiceAdvisor() {
+        AspectJExpressionPointcut pointcut = new AspectJExpressionPointcut();
+        pointcut.setExpression("execution(* com.example.demo.aop.TransferService.checkBalance(..))");
+        return new DefaultPointcutAdvisor(pointcut, new TransferInterceptor());
+    }
+
+    @Bean
+    public ProxyFactoryBean transferService(){
+        ProxyFactoryBean proxyFactoryBean = new ProxyFactoryBean();
+        proxyFactoryBean.setTarget(new TransferServiceImpl());
+        proxyFactoryBean.addAdvisor(transferServiceAdvisor());
+        proxyFactoryBean.setExposeProxy(true);
+        return proxyFactoryBean;
+    }
+}
+```
+
+```java
+public interface TransferService {
+
+    boolean transfer(Account source, Account dest, int amount);
+
+    double checkBalance(Account a);
+}
+
+public class TransferServiceImpl implements TransferService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(TransferServiceImpl.class);
+
+    @Override
+    public boolean transfer(Account source, Account dest, int amount) {
+        // transfer amount from source account to dest account
+        LOGGER.info("Transferring " + amount + " from " + source.getAccountName() + " to " + dest.getAccountName());
+        ((TransferService)(AopContext.currentProxy())).checkBalance(source);
+        return true;
+    }
+
+    @Override
+    public double checkBalance(Account a) {
+        return 0;
+    }
+}
+```
+
+```java
+@Test
+public void test() {
+    AnnotationConfigApplicationContext applicationContext = null;
+    try {
+        //create proxy using ProxyFactoryBean
+        applicationContext = new AnnotationConfigApplicationContext(ProxyFactoryBeanConfig.class);
+        TransferService transferService = (TransferService)applicationContext.getBean("transferService");
+        LOGGER.info(transferService.getClass().getName());
+
+        Account a = new Account(123456, "Account1");
+        Account b = new Account(987654, "Account2");
+        transferService.transfer(a, b, 100);
+    } finally {
+        applicationContext.close();
+    }
+}
+```
+

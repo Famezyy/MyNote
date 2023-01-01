@@ -714,3 +714,106 @@ SpringBoot 2.2.0 版本开始后引入 Junit5 作为单元测试默认库，要�
 </dependency>
 ```
 
+## 读取Resources目录
+
+这是一个公共方法，用来读取文件中的内容的方法。
+
+```java
+public static void printFileContent(Object obj) throws IOException {
+    if (null == obj) {
+        throw new RuntimeException("参数为空");
+    }
+    BufferedReader reader = null;
+    // 如果是文件路径
+    if (obj instanceof String) {
+        reader = new BufferedReader(new FileReader(new File((String) obj)));
+    // 如果是文件输入流
+    } else if (obj instanceof InputStream) {
+        reader = new BufferedReader(new InputStreamReader((InputStream) obj));
+    }
+    String line = null;
+    while ((line = reader.readLine()) != null) {
+        System.out.println(line);
+    }
+    reader.close();
+}
+```
+
+- `T.class.getClassLoader().getResourceAsStream()`
+
+  此方法默认是从 classpath 路径（即：src 或 resources 路径下）下查找文件的，所以，路径前不需要加 “/”。
+
+  ```java
+  public class ResourceUtil {
+  
+      public void getResource(String fileName) throws IOException{
+          InputStream in = this.getClass().getClassLoader().getResourceAsStream(fileName);
+          printFileContent(in);
+      }
+  
+      public static void main(String[] args) throws IOException {
+          new ResourceUtil().getResource("config/test.properties");
+      }
+  
+  }
+  ```
+
+- `T.class..getResourceAsStream()`
+
+  此方法跟要读取的文件与当前.class 文件的位置有关。如果 test.properties 和 ResourceUtil 在同一个文件夹下，那么：`this.getClass().getResourceAsStream(“test.properties”)`，
+  如果 test.properties 和 ResourceUtil 不在同一个文件夹下，那么：`this.getClass().getResourceAsStream(“/config/test.properties”)`。
+
+  ```java
+  public void getResource2(String fileName) throws IOException{
+      InputStream in = this.getClass().getResourceAsStream("/" + fileName);
+      printFileContent(in);
+  }
+  
+  public static void main(String[] args) throws IOException {
+      new ResourceUtil().getResource2("config/test.properties");
+  }
+  ```
+
+- `ClassPathResource`
+
+  ```java
+  public void getResource3(String fileName) throws IOException{
+      ClassPathResource classPathResource = new ClassPathResource(fileName);
+      printFileContent(classPathResource.getInputStream());
+  }
+  
+  public static void main(String[] args) throws IOException {
+      new ResourceUtil().getResource3("config/test.properties");
+  }
+  ```
+
+  path 前加不加 “/” 无所谓。即使是一个 jar 包，也依旧能读取到。
+
+- `PathMatchingResourcePatternResolver`
+
+  ```java
+  private static final PathMatchingResourcePatternResolver RESOLVER = new PathMatchingResourcePatternResolver();
+  
+  public static Resource resolveConfigLocation(String configLocation) {
+      return RESOLVER.getResource(configLocation);
+  }
+  
+  /**
+   * 以相对文件路径的方式读取{@code resource}资源目录下的文件资源
+   *
+   * @param fileLocation 文件相对路径 比方说{@code resource}下的"file.txt"文件 那么参数便为"file.txt"
+   * @return 文件的字符内容
+   */
+  public static String readFileContent(String fileLocation) {
+      try (InputStream is = resolveConfigLocation(fileLocation).getInputStream()) {
+          StringWriter sw = new StringWriter();
+          IOUtils.copy(is, sw, StandardCharsets.UTF_8);
+          return sw.toString();
+      } catch (IOException e) {
+          throw new RuntimeException(String.format("相对路径{%s}文件读取失败", fileLocation));
+      }
+  }
+  ```
+
+  
+

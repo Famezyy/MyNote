@@ -307,8 +307,10 @@ public class MyMapperConfiguration implements WebMvcConfigurer {
 
 实现可以直接使用`RequestMappingHandlerAdapter`和`ExceptionHandlerExceptionResolver`进行注册，或者使用`@ControllerAdvice`进行注释，在这种情况下它们将被两者自动检测到。
 
+可用于记录 log。
+
 ```java
-@RestControllerAdvice
+@ControllerAdvice
 public class MyResponseBodyAdvice implements ResponseBodyAdvice<Object> {
 
     @Override

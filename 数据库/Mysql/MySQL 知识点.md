@@ -113,3 +113,36 @@
 - 一个表中允许存在一个聚簇索引和多个非聚簇索引，但是索引数不能创建太多，否则索引维护成本过高
 - 创建索引的时候，需要考虑到索引字段值的分散性，如果字段的重复数据过多，创建索引反而会带来性能降低
 - 若主键索引的长度过大，则由于不论是聚簇索引还是多个非聚簇索引，每个节点都会存储主键索引，因此会造成较大的空间开销
+
+## 备份、删除、回撤
+
+```sql
+# 备份
+CREATE TABLE mytable_2023_1_2 SELECT * FROM mytable;
+# 删除
+DELETE FROM mytable LIMIT 1;
+# 回撤
+INSERT INTO mytable SELECT * FROM mytable_2023_1_2;
+```
+
+**通过 EVENT 定时定量删除**
+
+```sql
+DROP EVENT event_delete;
+DELIMITER $$
+	CREATE EVENT IF NOT EXISTS event_delete
+	ON SCHEDULE EVERY 1 SECOND on COMPLETION PRESERVE
+	DO BEGIN
+		DECLARE num integer;
+		SELECT COUNT(*) INTO num FROM mytable;
+		IF num > 0 
+			THEN DELETE FROM mytable limit 1;
+		END IF;
+END$$
+```
+
+查看：`SHOW VARIABLES LIKE 'event_scheduler';`
+
+开启：`SET GLOBAL event_scheduler = 1; `
+
+关闭：`SET GLOBAL event_scheduler = 0;`

@@ -273,7 +273,7 @@ protected <T> T eval(RedisConnection connection, RedisScript<T> script, ReturnTy
 
 > ==注：==开发环境是 Windows，Redis 在 Linux 上部署，由于编码以及文件的换行符配置导致 Windows 下计算的 SHA1，与 Redis 在 Linux 下缓存的文件 SHA1 不匹配，导致每次都无法命中缓存，此时可以通过 IDEA 的文件换行设置，调整脚本文件使用 Unix 换行符，可以解决不同系统匹配问题。
 >
-> <img src="img\9095350-5186dc7073f4f01d.png" alt="img" style="zoom:80%;" />
+> <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/9095350-5186dc7073f4f01d-461403208c6dcd04ba28db87156ad896-f5087b.png" alt="img" style="zoom:80%;" />
 >
 > IDEA设置Linux换行符
 >

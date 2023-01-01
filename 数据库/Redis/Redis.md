@@ -187,7 +187,7 @@ redis-server
 >
 >   - **单线程 + 多路 IO 复用**
 >
->     <img src="img\image-20220114005411353.png" alt="image-20220114005411353" style="zoom:67%;" />
+>     <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220114005411353-34b19f6c85dd65cd4a7c75272fd3ca53-1d5764.png" alt="image-20220114005411353" style="zoom:67%;" />
 
 ---
 
@@ -310,7 +310,7 @@ redis-server
 
 > ​    String 的数据结构为简单动态字符串（Simple Dynamic String，缩写 SDS），是可以修改的字符串，内部结构实现上类似于 JAVA 的 ArrayList，采用预分配冗余空间的方式来减少内存的频繁分配。
 >
-> <img src="img\image-20220114015557740.png" alt="image-20220114015557740" style="zoom:80%;" />
+> <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220114015557740-5bafa158532915b834939cf25093b9a5-de5e51.png" alt="image-20220114015557740" style="zoom:80%;" />
 >
 > ​    如图所示，内部为当前字符串实际分配的空间 capacity 一般要高于实际字符串长度，当字符串长度小于 1M 时，扩容都是加倍现有的空间，如果超过 1M，扩容是一次只会多扩容 1M 的空间，需要注意的是字符串最大长度为 512M。
 
@@ -348,7 +348,7 @@ redis-server
 >
 > - 因为普通的链表需要的附加指针空间太大，会比较浪费空间。比如这个列表里存的只是 int 类型的数据，结构上还需要两个额外的指针 prev 和 next
 >
->   <img src="img\88b974e67c474683a08e4a19fa28bd8b.png" alt="img" style="zoom:80%;" />
+>   <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/88b974e67c474683a08e4a19fa28bd8b-ff58ddb40c2a34748f29ddbafb26631d-84c6c2.png" alt="img" style="zoom:80%;" />
 >
 > - Redis 将链表和 ziplist 结合起来组成了 quicklist。也就是将多个 ziplist 使用双向指针串起来使用。这样既满足了快速的插入删除性能，又不会出现太大的空间冗余
 
@@ -396,7 +396,7 @@ redis-server
 
 - 用户 ID 为查找的 key，存储的 value 用户对象包含姓名，年龄，生日等信息，如果用普通的 key/value 结构来存储主要有以下 2 种存储方式：
 
-  <img src="img\watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_70" alt="img" style="zoom: 80%;" />
+  <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_70-413c16bc5fbb4bd7c8a7eac17cc6defe-d93d2a" alt="img" style="zoom: 80%;" />
 
 #### 4.2 常用命令
 
@@ -462,13 +462,13 @@ redis-server
 >
 >- 有序链表
 >
->  <img src="img\27a06fae49d54080a4808cf5d6a11c06.png" alt="img" style="zoom:80%;" />
+>  <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/27a06fae49d54080a4808cf5d6a11c06-a765c3f9233f7fcac80f56a734e1544a-ace44a.png" alt="img" style="zoom:80%;" />
 >
 >  要查找值为51的元素，需要从第一个元素开始依次查找、比较才能找到。共需要6次比较
 >
 >- 跳跃表
 >
->  <img src="img\ad5021fa573549748ed6809b4b83f316.png" alt="img" style="zoom:80%;" />
+>  <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/ad5021fa573549748ed6809b4b83f316-7e2df50256227fc6307642ff155b2a13-4242ac.png" alt="img" style="zoom:80%;" />
 >
 >  - 从第2层开始，1节点比51节点小，向后比较
 >
@@ -706,7 +706,7 @@ redis-server
   > requirepass zhaoyouyi1993919
   > ````
   >
-  > <img src="img\watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_702" alt="img" style="zoom:80%;" />
+  > <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_702-4c0720650e2c246c146215bf97691293-3cf900" alt="img" style="zoom:80%;" />
 
 - **LIMITS限制**
 
@@ -849,7 +849,7 @@ redis-server
 
 1. 客户端可以订阅频道如下图
 
-<img src="img\d6d85c97cd934b26829090da30d8a928.png" alt="在这里插入图片描述"  />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/d6d85c97cd934b26829090da30d8a928-dd5e1cf8891ec4e1ed4f6d16b9f550fb-dd53c5.png" alt="在这里插入图片描述"  />
 
 2. 当给这个频道发布消息后，消息就会发送给订阅的客户端
 
@@ -857,17 +857,17 @@ redis-server
 
 - 打开一个客户端订阅 channel1：`SUBSCRIBE channel1`
 
-  <img src="img\a5e4d5496e12497d93d4b5a6c30396bb.png" alt="img" style="zoom:80%;" />
+  <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/a5e4d5496e12497d93d4b5a6c30396bb-39bb248035113f0b107fd5bec81153fd-7386ba.png" alt="img" style="zoom:80%;" />
 
 - 打开另一个客户端，给 channel1 发布消息 hello：`publish channel1 hello`
 
-  <img src="img\20568f1ac96b4d0491f1745db3d4b4b9.png" alt="img" style="zoom:80%;" />
+  <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/20568f1ac96b4d0491f1745db3d4b4b9-8a30831836e1f5a756ba815199233635-ea11b0.png" alt="img" style="zoom:80%;" />
 
   > 返回的1是订阅者数量
 
 - 打开第一个客户端可以看到发送的消息
 
-  <img src="img\c5c868e2eec64f7cbbd879b1c60799df.png" alt="img" style="zoom:80%;" />
+  <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/c5c868e2eec64f7cbbd879b1c60799df-7b9d8acc50482f194b9bd9fc24e72958-ad1628.png" alt="img" style="zoom:80%;" />
 
   > 注：发布的消息没有持久化，如果在订阅的客户端收不到 hello，只能收到订阅后发布的消息
 
@@ -881,7 +881,7 @@ redis-server
 
 > ​    现代计算机用二进制（位） 作为信息的基础单位， 1 个字节等于 8 位， 例如 “abc” 字符串是由 3 个字节组成， 但实际在计算机存储时将其用二进制表示， “abc” 分别对应的 ASCII 码分别是97、 98、 99， 对应的二进制分别是 01100001、 01100010和01100011，如下图
 >
-> <img src="img\60424e743cb64d28ac26156633efc915.png" alt="img" style="zoom:80%;" />
+> <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/60424e743cb64d28ac26156633efc915-2ba140fe52fb09eb913ee7321ddc9d8b-57b634.png" alt="img" style="zoom:80%;" />
 >
 > ​    合理地使用操作位能够有效地提高内存使用率和开发效率
 
@@ -904,11 +904,11 @@ Redis提供了 Bitmaps 这个“数据类型”可以实现对位的操作
 
     - 设置键的第 offset 个位的值（从 0 算起） ， 假设现在有20个用户，userid=1， 6， 11， 15， 19 的用户对网站进行了访问， 那么当前 Bitmaps 初始化结果如图
 
-    <img src="img\9070a0aa234e458a92da950e5b337752.png" alt="img" style="zoom:80%;" />
+    <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/9070a0aa234e458a92da950e5b337752-e662c75327e362830153513d821c9a5d-76d9cc.png" alt="img" style="zoom:80%;" />
 
     - users:20000911 代表 2000-09-11 这天的独立访问用户的 Bitmaps
 
-<img src="img\image-20220115193427992.png" alt="image-20220115193427992" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220115193427992-1019ba5a733593a85af0353132fcee80-0ba8e9.png" alt="image-20220115193427992" style="zoom:80%;" />
 
 > 注：
 >
@@ -924,7 +924,7 @@ Redis提供了 Bitmaps 这个“数据类型”可以实现对位的操作
 
     - 获取 id=8 的用户是否在 2000-09-11 这天访问过， 返回 0 说明没有访问过
 
-      <img src="img\image-20220115193507925.png" alt="image-20220115193507925"  />
+      <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220115193507925-ef39cd01924df4807c9fc49611728e6f-c5e730.png" alt="image-20220115193507925"  />
 
       > 注：因为 8 与 12 根本不存在，所以也是返回 0
 
@@ -938,11 +938,11 @@ Redis提供了 Bitmaps 这个“数据类型”可以实现对位的操作
 
     计算 2000 年 9 月 11 访问量
 
-    <img src="img\image-20220115194535400.png" alt="image-20220115194535400"  />
+    <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220115194535400-834739a841205a2f80e016adc4da2df4-86e1ef.png" alt="image-20220115194535400"  />
 
     start 和 end 代表起始和结束字节数， 下面操作计算用户 id 在第 1 个字节到第 3 个字节之间的独立访问用户数， 对应的范围是 8 ~ 31
 
-    <img src="img\image-20220115194553619.png" alt="image-20220115194553619"  />
+    <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220115194553619-72659993b5050ff043b53bab6f67875e-0f32f1.png" alt="image-20220115194553619"  />
 
   - 举例： K1 【01000001 01000000 00000000 00100001】，对应【0，1，2，3】
 
@@ -989,7 +989,7 @@ Redis提供了 Bitmaps 这个“数据类型”可以实现对位的操作
     (integer 2) # 与运算
     ```
 
-    <img src="img\watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_703" alt="img"  />
+    <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_703-155d9c595f5fb6eb194b7007918c907c-b4cd67" alt="img"  />
 
 #### 1.3 Bitmaps与set对比
 
@@ -1050,7 +1050,7 @@ Redis提供了 Bitmaps 这个“数据类型”可以实现对位的操作
 
   - 实例
 
-<img src="img\c23f0f23825946829d849acc0b150d1b.png" alt="img" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/c23f0f23825946829d849acc0b150d1b-5adb21e404fee03615784d71c8926669-138e15.png" alt="img" style="zoom:80%;" />
 
 - **pfmerge**
 
@@ -1058,7 +1058,7 @@ Redis提供了 Bitmaps 这个“数据类型”可以实现对位的操作
 
   - 实例
 
-    <img src="img\1b845dfaec8e4303b4d8a36b40325b55.png" alt="img" style="zoom:80%;" />
+    <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/1b845dfaec8e4303b4d8a36b40325b55-93fc75c6cb0b388b9bfaeedfab156257-3580e0.png" alt="img" style="zoom:80%;" />
 
 ### 3. Geospatial
 
@@ -1092,7 +1092,7 @@ Redis提供了 Bitmaps 这个“数据类型”可以实现对位的操作
 
   `geopos <key><member>[member...]`：获得指定地区的坐标值
 
-  <img src="img\9182ade18ffb44cbab39e98abfae98e9.png" alt="img" style="zoom:80%;" />
+  <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/9182ade18ffb44cbab39e98abfae98e9-eebfc2618e70d9d2862ef3c3f2dd0447-8f5281.png" alt="img" style="zoom:80%;" />
 
 - **geodist**
 
@@ -1100,7 +1100,7 @@ Redis提供了 Bitmaps 这个“数据类型”可以实现对位的操作
 
   获取两个位置之间的直线距离：
 
-  <img src="img\e3d1223b4e1245d5b13aef5a0f8d57f5.png" alt="img" style="zoom:80%;" />
+  <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/e3d1223b4e1245d5b13aef5a0f8d57f5-33633dacd1d9357d0a06a95b41f9fcc0-0c02fc.png" alt="img" style="zoom:80%;" />
 
   > 单位：
   >
@@ -1118,7 +1118,7 @@ Redis提供了 Bitmaps 这个“数据类型”可以实现对位的操作
 
   `georadius<key><longitude><latitude>radius m|km|ft|mi`：以给定的经纬度为中心，找出某一半径内的元素，四个参数——经度、纬度、距离、单位
 
-  <img src="img\ac2625720536437d9fc4662caa6c7f42.png" alt="img" style="zoom:80%;" />
+  <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/ac2625720536437d9fc4662caa6c7f42-61149c61ce4c30a23f39cb8e62fcfc2a-818760.png" alt="img" style="zoom:80%;" />
 
 ---
 
@@ -2076,7 +2076,7 @@ public final class RedisUtil {
 
 - 组队的过程中可以通过 discard
 
-<img src="img\watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_270" alt="img" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_270-fe4a48b969d2af7f36b71cc635f09ca7-fdb997" alt="img" style="zoom:80%;" />
 
 **实例**
 
@@ -2111,7 +2111,7 @@ OK
 
 - 组队时某个命令出现了错误，执行时整个的所有队列都会被取消
 
-  <img src="img\watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_470" alt="img" style="zoom:80%;" />
+  <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_470-ae1b01477afc0cd52731dcbc8ea7951b-3289f9" alt="img" style="zoom:80%;" />
 
   ```
   127.0.0.1:6379> set k1 1
@@ -2126,7 +2126,7 @@ OK
 
 - 如果执行阶段某个命令出现了错误，则只有报错的命令不会被执行，而其他的命令都会执行，不会回滚
 
-  <img src="img\watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t5_70" alt="img" style="zoom:80%;" />
+  <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t5_70-8574c623746bb68f783b92a589221b0e-3fee12" alt="img" style="zoom:80%;" />
   
   ```
   127.0.0.1:6379> multi
@@ -2153,17 +2153,17 @@ OK
 
 一个请求想给金额减 1000
 
-<img src="img\178a125a4a11408a9cf43ed1f63dee14.png" alt="img" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/178a125a4a11408a9cf43ed1f63dee14-cc8fa4e5bb0bc903a76a4c55c6de36f0-7158e0.png" alt="img" style="zoom:80%;" />
 
 #### 4.2 悲观锁
 
-<img src="img\148464141b62431ab1b5f3d1d98acd69.png" alt="img" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/148464141b62431ab1b5f3d1d98acd69-4aea3cf54ae127a6786bbd971748d301-c34f98.png" alt="img" style="zoom:80%;" />
 
 > ​    悲观锁（Pessimistic Lock），顾名思义，就是很悲观，每次去拿数据的时候都认为别人会修改，所以每次在拿数据的时候都会上锁，这样别人想拿这个数据就会block直到它拿到锁。传统的关系型数据库里边就用到了很多这种锁机制，比如行锁，表锁等，读锁，写锁等，都是在做操作之前先上锁。
 
 #### 4.3 乐观锁
 
-<img src="img\5358bb00c39e4c538d5bc4a668695375.png" alt="img" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/5358bb00c39e4c538d5bc4a668695375-23a90b71477c7249369b3d3397d31111-71acb5.png" alt="img" style="zoom:80%;" />
 
 > ​    乐观锁（Optimistic Lock），顾名思义，就是很乐观，每次去拿数据的时候都认为别人不会修改，所以不会上锁，但是在更新的时候会判断一下在此期间别人有没有去更新这个数据，可以使用版本号等机制。乐观锁适用于多读的应用类型，这样可以提高吞吐量。Redis 就是利用这种 check-and-set 机制实现事务的。
 
@@ -2216,7 +2216,7 @@ QUEUED
 
 - 创建 springBoot 项目，添加 webapp/WEB-INF 目录
 
-  <img src="img\image-20220118020316118.png" alt="image-20220118020316118" style="zoom:80%;" />
+  <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220118020316118-b2414d76668d98a36f070a03813d3159-c594e0.png" alt="image-20220118020316118" style="zoom:80%;" />
 
 - 导入 jar 包
 
@@ -2389,9 +2389,9 @@ QUEUED
 
 2. Jmeter
 
-<img src="img\image-20220118025612786.png" alt="image-20220118025612786" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220118025612786-b2a24df2db75d07d205d8b597154cf45-41d2b6.png" alt="image-20220118025612786" style="zoom:80%;" />
 
-<img src="img\image-20220118025559949.png" alt="image-20220118025559949" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220118025559949-d95d8216bf4e5ef302dfce0ab816d0ed-7a12b6.png" alt="image-20220118025559949" style="zoom:80%;" />
 
 - 并发暴露出来的问题
 
@@ -2399,7 +2399,7 @@ QUEUED
 
     - 超卖产生的原因
 
-    <img src="img\watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_750" alt="img" style="zoom:80%;" />
+    <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_750-b752efb862187d0dc7860544c4433b1e-865821" alt="img" style="zoom:80%;" />
 
   - 连接超时问题
 
@@ -2455,7 +2455,7 @@ QUEUED
 
 **利用乐观锁淘汰用户，解决超卖问题**
 
-<img src="img\watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_706" alt="img" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_706-185510c6527aa135d5fc104d5fa55c66-f5a534" alt="img" style="zoom:80%;" />
 
 ```java
 // RedisTemplate 的事务操作
@@ -2600,7 +2600,7 @@ public static boolean doSecKill(String uid,String prodid) throws IOException {
 >
 > - redis 2.6 版本以后，通过 lua 脚本解决争抢问题，实际上是 redis 利用其单线程的特性，用任务队列的方式解决多任务并发问题
 >
-> <img src="img\watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_7066" alt="img" style="zoom:80%;" />
+> <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_7066-9e99d50c60dfd745ff92ee1cc44b4e62-d0ddb1" alt="img" style="zoom:80%;" />
 
 ```java
 private boolean doSecKill(String userId, String proId) {
@@ -2687,7 +2687,7 @@ return 1;
 
 > ​    Redis 会单独创建（fork）一个子进程来进行持久化，会先将数据写入到一个临时文件中，待持久化过程都结束了，再用这个临时文件替换上次持久化好的文件。 整个过程中，主进程是不进行任何 IO 操作的，这就确保了极高的性能如果需要进行大规模数据的恢复，且对于数据恢复的完整性不是非常敏感，那 RDB 方式要比 AOF 方式更加的高效。RDB 的缺点是最后一次持久化后的数据可能丢失。
 
-<img src="img\watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_708" alt="img" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_708-7ea5c6238ab3d7ba0a8506008abddc9c-6f36b7" alt="img" style="zoom:80%;" />
 
 #### 1.2 Fork过程概述
 
@@ -2806,7 +2806,7 @@ return 1;
 - 节省磁盘空间
 - 恢复速度快
 
-<img src="img\watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_70123" alt="img" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_70123-a4119051a4f82a954f153e99029641b3-e15140" alt="img" style="zoom:80%;" />
 
 **劣势**
 
@@ -2822,7 +2822,7 @@ return 1;
 
 #### 1.7 总结
 
-<img src="img\watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,23" alt="img" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,23-b0df23fa27143972b5d47cd41d667b7e-cc51d7" alt="img" style="zoom:80%;" />
 
 > 注意持久化文件是在启动目录生成，不是一定在 /usr/local/bin 目录下
 
@@ -2834,15 +2834,15 @@ return 1;
 
 #### 2.2 AOF持久化流程
 
-- 客户端的请求写命令会被 append 追加到 AOF 缓冲区内；
+- 客户端的请求写命令会被追加到 AOF 缓冲区内
 
-- AOF 缓冲区根据 AOF 持久化策略  [always,everysec,no] 将操作 sync 同步到磁盘的 AOF 文件中；
+- AOF 缓冲区根据 AOF 持久化策略  [always,everysec,no] 将操作同步到磁盘的 AOF 文件中
 
-- AOF 文件大小超过重写策略或手动重写时，会对 AOF 文件 rewrite 重写，压缩 AOF 文件容量；
+- AOF 文件大小超过重写策略或手动重写时，会对 AOF 文件 rewrite 重写，压缩 AOF 文件容量
 
-- Redis 服务重启时，会重新 load 加载 AOF 文件中的写操作达到数据恢复的目的；
+- Redis 服务重启时，会重新 load 加载 AOF 文件中的写操作达到数据恢复的目的
 
-<img src="img\012496cf23cc497e9acdba1ca80a4315.png" alt="img" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/012496cf23cc497e9acdba1ca80a4315-9579153b7471e6808f2154582ddca0d4-b1fa75.png" alt="img" style="zoom:80%;" />
 
 #### 2.3 AOF的开启与说明
 
@@ -2888,11 +2888,11 @@ return 1;
 
 - **Rewrite压缩**
 
-  > ​    AOF 采用文件追加方式，文件会越来越大，为避免出现此种情况，新增了重写机制, 当 AOF 文件的大小超过所设定的阈值时，Redis 就会启动 AOF 文件的内容压缩，只保留可以恢复数据的最小指令集，2.4 版本后自动触发，可以使用命令 bgrewriteaof 手动触发
+  AOF 采用文件追加方式，文件会越来越大，为避免出现此种情况，新增了重写机制，当 AOF 文件的大小超过所设定的阈值时，Redis 就会启动 AOF 文件的内容压缩，只保留可以恢复数据的最小指令集，2.4 版本后自动触发，可以使用命令`bgrewriteaof`手动触发。
 
   - **重写原理，如何实现重写**
 
-    > ​    AOF文件持续增长而过大时，会 fork 出一条新进程来将文件重写(也是先写临时文件最后再 rename)，redis4.0 版本后的重写，是指上就是把 rdb 的快照，以二级制的形式附在新的aof 头部，作为已有的历史数据，替换掉原来的流水账操作。
+    > AOF文件持续增长而过大时，会 fork 出一条新进程来将文件重写(也是先写临时文件最后再 rename)，redis4.0 版本后的重写，是指上就是把 rdb 的快照，以二级制的形式附在新的aof 头部，作为已有的历史数据，替换掉原来的流水账操作。
     >
     > **no-appendfsync-on-rewrite：**
     >
@@ -2917,20 +2917,20 @@ return 1;
 
   - **重写流程**
 
-    > - bgrewriteaof 触发重写，判断是否当前有 bgsave 或 bgrewriteaof 在运行，如果有，则等待该命令结束后再继续执行
-    > - 主进程 fork 出子进程执行重写操作，保证主进程不会阻塞
-    > - 子进程遍历 redis 内存中数据到临时文件，客户端的写请求同时写入 aof_buf 缓冲区和  aof_rewrite_buf 重写缓冲区保证原 AOF 文件完整以及新 AOF 文件生成期间的新的数据修改动作不会丢失
-    >   - 子进程写完新的 AOF 文件后，向主进程发信号，父进程更新统计信息
-    >   - 主进程把 aof_rewrite_buf 中的数据写入到新的 AOF 文件
-    > - 使用新的 AOF 文件覆盖旧的 AOF 文件，完成 AOF 重写
-    >
-    > <img src="img\watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_7120" alt="img" style="zoom:80%;" />
+    - bgrewriteaof 触发重写，判断是否当前有 bgsave 或 bgrewriteaof 在运行，如果有，则等待该命令结束后再继续执行
+    - 主进程 fork 出子进程执行重写操作，保证主进程不会阻塞
+    - 子进程遍历 redis 内存中数据到临时文件，客户端的写请求同时写入 aof_buf 缓冲区和 aof_rewrite_buf 重写缓冲区保证原 AOF 文件完整以及新 AOF 文件生成期间的新的数据修改动作不会丢失
+      - 子进程写完新的 AOF 文件后，向主进程发信号，父进程更新统计信息
+      - 主进程把 aof_rewrite_buf 中的数据写入到新的 AOF 文件
+    - 使用新的 AOF 文件覆盖旧的 AOF 文件，完成 AOF 重写
+    
+    <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_7120-1735135b3d1b339c7cee7f909293a187-e752b6" alt="img" style="zoom:80%;" />
 
 #### 2.4 优势与劣势
 
 - **优势**
 
-  <img src="img\046d490cb9a34a999d1c126150ad6a2f.png" alt="img" style="zoom:80%;" />
+  <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/046d490cb9a34a999d1c126150ad6a2f-deacc465740f0161a96029dc9def151a-8c032f.png" alt="img" style="zoom:80%;" />
 
   > - 备份机制更稳健，丢失数据概率更低
   > - 可读的日志文本，通过操作AOF
@@ -2944,7 +2944,7 @@ return 1;
 
 #### 2.5 总结
 
-<img src="img\16,color_FFFFFF,t_70" alt="img" style="zoom: 80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/16,color_FFFFFF,t_70-68f5998be645b238a49e7587f2ff62b1-188829" alt="img" style="zoom: 80%;" />
 
 #### 2.6 AOF和RDB的选择
 
@@ -2996,7 +2996,7 @@ return 1;
 - 读写分离，性能扩展
 - 容灾快速恢复
 
-<img src="img\color_FFFFFF,t_70" alt="在这里插入图片描述" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/color_FFFFFF,t_70-672b4e0a0953978ebcafd576b567dda6-861724" alt="在这里插入图片描述" style="zoom:80%;" />
 
 ### 2.搭建主从复制
 
@@ -3037,7 +3037,7 @@ return 1;
   masterauth 主机密码
   ```
 
-  > ​    linux 系统中 /var/run/ 目录下的 *.pid 文件是一个文本文件，其内容只有一行，即某个进程的 PID。.pid 文件的作用是防止进程启动多个副本，只有获得特定 pid 文件（固定路径和文件名）的写入权限（F_WRLCK）的进程才能正常启动并将自身的进程 PID 写入该文件，其它同一程序的多余进程则自动退出。
+  > linux 系统中`/var/run/`目录下的 *.pid 文件是一个文本文件，其内容只有一行，即某个进程的 PID。.pid 文件的作用是防止进程启动多个副本，只有获得特定 pid 文件（固定路径和文件名）的写入权限（F_WRLCK）的进程才能正常启动并将自身的进程 PID 写入该文件，其它同一程序的多余进程则自动退出。
 
 - 同时启动三个端口的 redis
 
@@ -3049,7 +3049,7 @@ return 1;
 
 - 查看服务是否启动
 
-  <img src="img\1410863119fc4e30adb2d5a09baa2883.png" alt="img" style="zoom:80%;" />
+  <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/1410863119fc4e30adb2d5a09baa2883-4d2c50b87fe38d9f505c6e39a384c28f-aafe36.png" alt="img" style="zoom:80%;" />
 
 - 查看三台主机运行情况
 
@@ -3058,7 +3058,7 @@ return 1;
   info replication  # 打印主从复制的相关信息
   ```
 
-  <img src="img\watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_70" alt="img" style="zoom:80%;" />
+  <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_70-10065086431a215738170929e384cd93-a8f270" alt="img" style="zoom:80%;" />
 
 - 配从(库)不配主(库)
 
@@ -3068,15 +3068,15 @@ return 1;
   masterauth # 配置主机密码
   ```
 
-  <img src="img\_70" alt="img" style="zoom:80%;" />
+  <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/_70-8cf790e20895bbd1ebf4092daa441b35-7c4036" alt="img" style="zoom:80%;" />
 
-  <img src="img\1234" alt="img" style="zoom:80%;" />
+  <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/1234-66011c61d29e43e2485132ec2c715fe6-53304c" alt="img" style="zoom:80%;" />
 
 - 在主机上写，在从机上可以读取数据，在从机上写数据报错
 
-  <img src="img\12345" alt="img" style="zoom:80%;" />
+  <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/12345-a628ea2da9a545db50060d11938fc3f2-0533b5" alt="img" style="zoom:80%;" />
 
-  <img src="img\0e78c208482b4c0db62af54bc7ca9b60.png" alt="img" style="zoom:80%;" />
+  <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/0e78c208482b4c0db62af54bc7ca9b60-6cd1fadfadba239fd2449f6b78afc595-cc719b.png" alt="img" style="zoom:80%;" />
 
   
 
@@ -3110,32 +3110,32 @@ return 1;
 
 - Slave 启动成功连接到 Master 后会发送一个 sync 命令
 
-- Master 接到命令启动后台的存盘进程，同时收集所有接收到的用于修改数据集命令， 在后台进程执行完毕之后，master 将传送整个数据文件（RDB 文件）到 Slave，以完成一次完全同步
+- Master 接到命令启动后台的存盘进程，同时收集所有接收到的用于修改数据集命令，在后台进程执行完毕之后，master 将传送整个数据文件（RDB 文件）到 Slave，以完成一次完全同步
 
 - 全量复制：Slave 服务在接收到数据库文件数据后，将其存盘并加载到内存中
 
 - 增量复制：Master 继续将新的所有收集到的修改命令依次传给 Slave，完成同步
 
-- 但是只要是重新连接 Master,一次完全同步（全量复制）将被自动执行
+- 但是只要是重新连接 Master，一次完全同步（全量复制）将被自动执行
 
-<img src="img\e1858fc3316944678d28a3e140715ffb.png" alt="img" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/e1858fc3316944678d28a3e140715ffb-1db810251341cc7299d2a119fd098cd8-1edcab.png" alt="img" style="zoom:80%;" />
 
 #### 3.2 薪火相传
 
-> - 上一个 slave 可以是下一个 slave 的 Master，slave 同样可以接收其他 slaves 的连接和同步请求，那么该 slave 作为了链条中下一个的 master, 可以有效减轻 master 的写压力，去中心化降低风险
+> - 上一个 slave 可以是下一个 slave 的 Master，slave 同样可以接收其他 slaves 的连接和同步请求，那么该 slave 作为了链条中下一个的 master，可以有效减轻 master 的写压力，去中心化降低风险
 >
 > - 用 slaveof
 >   - 中途变更转向：会清除之前的数据，重新建立拷贝最新的
 >   - 风险是一旦某个 slave 宕机，后面的 slave 都没法备份
 >   - 主机挂了，从机还是从机，无法写数据了
 
-<img src="img\352e37d65a0e443985a4aef24d724048.png" alt="img" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/352e37d65a0e443985a4aef24d724048-e43500397464d2cf3dc0bcef41ba3923-57eced.png" alt="img" style="zoom:80%;" />
 
-<img src="img\1" alt="img" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/1-fe6b655c713540aeb3cd37b904c90342-b3c3c0" alt="img" style="zoom:80%;" />
 
-<img src="img\2" alt="img" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/2-d1c40f8065528cab41573f3c86247688-bd0da0" alt="img" style="zoom:80%;" />
 
-<img src="img\3" alt="img" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/3-f40dfc9f5587c74df385b9508b592b96-bfb702" alt="img" style="zoom:80%;" />
 
 #### 3.3 反客为主
 
@@ -3145,11 +3145,11 @@ return 1;
 
 - 6379 down 了
 
-  <img src="img\4" alt="img" style="zoom:80%;" />
+  <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/4-a78d9db0c9fb30fbbcb6c6a152589324-c65c71" alt="img" style="zoom:80%;" />
 
 - 让 6380 反客为主
 
-  <img src="img\5" alt="img" style="zoom:80%;" />
+  <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/5-b0f887bc37007372d18aa98361062c6a-a4955b" alt="img" style="zoom:80%;" />
 
 ### 4 哨兵模式
 
@@ -3168,21 +3168,21 @@ sentinel monitor mymaster 127.0.0.1 6379 1
 
 - 启动哨兵，执行 `redis-sentinel /myredis/sentinel.conf`
 
-  <img src="img\6" alt="img" style="zoom:80%;" />
+  <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/6-0abccb9bc00c74a79877057e50f87691-195b9f" alt="img" style="zoom:80%;" />
 
 - 当主机挂掉，从机选举中产生新的主机
 
-  <img src="img\7" alt="img" style="zoom:80%;" />
+  <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/7-4e81fcce68d07bb65b39fa4d300164df-3dc468" alt="img" style="zoom:80%;" />
 
 - 重新启动原主机，**原主机重启后会变为从机**
 
 **复制延时**
 
-> ​    由于所有的写操作都是先在 Master 上操作，然后同步更新到 Slave 上，所以从 Master 同步到 Slave 机器有一定的延迟，当系统很繁忙的时候，延迟问题会更加严重，Slave 机器数量的增加也会使这个问题更加严重。
+由于所有的写操作都是先在 Master 上操作，然后同步更新到 Slave 上，所以从 Master 同步到 Slave 机器有一定的延迟，当系统很繁忙的时候，延迟问题会更加严重，Slave 机器数量的增加也会使这个问题更加严重。
 
 **故障恢复**
 
-<img src="img\8" alt="img" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/8-2c16654cf1f1d79f31da411d4349c12c-9b839c" alt="img" style="zoom:80%;" />
 
 > 优先级在 redis.conf 中设置，默认：replica-priority 100，值越小优先级越高
 >
@@ -3242,7 +3242,7 @@ public static  Jedis getJedisFromSentinel(){
 >
 > 之前通过代理主机来解决，但是 redis3.0 中提供了解决方案，就是无中心化集群配置
 
-<img src="img\9" alt="img" style="zoom: 50%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/9-94bb17e057e1bb9b924e9a52852cc760-90b6ae" alt="img" style="zoom: 50%;" />
 
 **集群概述**
 
@@ -3265,24 +3265,21 @@ public static  Jedis getJedisFromSentinel(){
   pidfile "/var/run/redis_6391.pid"
   port 6391
   dbfilename "dump6391.rdb"
+  # 打开集群模式
   cluster-enabled yes
+  # 设定节点配置文件名
   cluster-config-file nodes-6391.conf
+  # 设定节点失联时间，超过该时间（毫秒），集群自动进行主从切换
   cluster-node-timeout 15000
   ```
-
-> cluster-enabled yes 打开集群模式
->
-> cluster-config-file nodes-6379.conf 设定节点配置文件名
->
-> cluster-node-timeout 15000 设定节点失联时间，超过该时间（毫秒），集群自动进行主从切换
 
 > `:%s/6379/6380` 是 vim 的替换命令
 
 - **启动6个服务**
 
-  <img src="img\10" alt="img" style="zoom:80%;" />
+  <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/10-839ab6bde63464f3f25e7adf10f63a46-4e94da" alt="img" style="zoom:80%;" />
 
-  > 要确保 nodes-xxxx.conf 生成
+  要确保 nodes-xxxx.conf 生成。
 
 - **将六个节点合成一个集群**
 
@@ -3304,7 +3301,7 @@ public static  Jedis getJedisFromSentinel(){
 
    --replicas 1 配置集群，一台主机，一台从机，正好三组
 
-  <img src="img\11" alt="image-20220122173502725" style="zoom:67%;" />
+  <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/11-0fd3114dd0dd55fd2bcd74d6bc7ce79e-d780de" alt="image-20220122173502725" style="zoom:67%;" />
 
 - **查看是否集成成功**
 
@@ -3315,7 +3312,7 @@ public static  Jedis getJedisFromSentinel(){
   cluster nodes
   ```
 
-  <img src="img\12" alt="img" style="zoom:80%;" />
+  <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/12-17e7a6d7cd1f0db638de1d6547fcc4a4-f2bf21" alt="img" style="zoom:80%;" />
 
 ### 3 集群操作和故障恢复
 
@@ -3327,7 +3324,7 @@ public static  Jedis getJedisFromSentinel(){
   cluster nodes
   ```
 
-  <img src="img\13" alt="img" style="zoom:80%;" />
+  <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/13-17e7a6d7cd1f0db638de1d6547fcc4a4-473321" alt="img" style="zoom:80%;" />
 
 - **redis cluster 如何分配这六个节点**
 
@@ -3337,11 +3334,11 @@ public static  Jedis getJedisFromSentinel(){
   >
   > 分配原则尽量保证每个主数据库运行在不同的 IP 地址，每个从库和主库不在一个 IP 地址上
 
-- 什么是slots？
+- **什么是slots？**
 
   > 在运行集成集群命令后，会出现 ""[OK] All 16384 slots covered "。
   >
-  > 说明：一个 Redis 集群包含 16384 个插槽（hash slot），数据库中的每个键都属于这 16384 个插槽的其中一个，集群使用公式 CRC16(key) %16384 来计算键 key 属于哪个槽。其中 CRC16(key) 语句用于计算键 key 的 CRC16 校验和 
+  > 说明：一个 Redis 集群包含 16384 （0~16383） 个插槽（hash slot），数据库中的每个键都属于这 16384 个插槽的其中一个，集群使用公式 CRC16(key) %16384 来计算键 key 属于哪个槽。其中 CRC16(key) 语句用于计算键 key 的 CRC16 校验和 
   >
   > 集群中的每个节点负责处理一部分插槽。 举个例子， 如果一个集群可以有主节点，其中：
   >
@@ -3351,19 +3348,19 @@ public static  Jedis getJedisFromSentinel(){
   >
   > 节点 C 负责处理 10923 号至 16383 号插槽
   >
-  > <img src="img\334f25bc51ac497392a47a861695f3f6.png" alt="img" style="zoom:80%;" />
+  > <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/334f25bc51ac497392a47a861695f3f6-7dcb223e18ff25ac7f30b950709e5f58-f1499b.png" alt="img" style="zoom:80%;" />
 
 - **在集群中录入值**
 
-  <img src="img\9a10c18b4d714794b3c6cfd0be45214f.png" alt="img" style="zoom:80%;" />
+  <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/9a10c18b4d714794b3c6cfd0be45214f-0b14ffcf8cdffb50d20fb604724c1fd0-b2edaf.png" alt="img" style="zoom:80%;" />
 
-  <img src="img\94006ddd9ef540c68d5015167bdd0b43.png" alt="img" style="zoom:80%;" />
+  <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/94006ddd9ef540c68d5015167bdd0b43-318c3f20aa55a5e8ad4eefd105a7f8fb-d5cf9c.png" alt="img" style="zoom:80%;" />
 
   > **注意：**在用 mset 同时设置多个值的时候，需要把这些 key 放到同一个组中，不然会报错。可以通过 {} 来定义组的概念，从而使 key 中 {} 内相同内容的键值对放到一个 slot 中去
   >
   > `mset fieldName1{group} fieldValue1 fieldName{group} fieldValue2 ...`
 
-  <img src="img\86e56a7080914797a34a178f211f8db7.png" alt="img" style="zoom:80%;" />
+  <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/86e56a7080914797a34a178f211f8db7-58bfb85d8cb70ef2f06104ab21f2a3e6-15cdee.png" alt="img" style="zoom:80%;" />
 
 - **查询集群中的值**
 
@@ -3371,31 +3368,31 @@ public static  Jedis getJedisFromSentinel(){
   cluster keyslot k1 # 查询k1的插槽值
   ```
 
-  <img src="img\9ed0fcb60b9f47d68134c3d4189ffaf9.png" alt="img" style="zoom:80%;" />
+  <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/9ed0fcb60b9f47d68134c3d4189ffaf9-bc2d19537024512cc1ea5c992f64b804-bb1d16.png" alt="img" style="zoom:80%;" />
 
   ```bash
   cluster countkeysinslot 12706 
   # 查看指定插槽中的key数量，注意只能在插槽值所在的主机上能成功，例如：12706 插槽在 6381 端口的主机上则只能在 6381 端口的主机上查到，在其他端口则查询失败
   ```
   
-  <img src="img\cfb702f6cd1b46bf821d3df0f41fb699.png" alt="img" style="zoom:80%;" />
+  <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/cfb702f6cd1b46bf821d3df0f41fb699-416e383638f3442c3a643f8cc9266ce8-803de7.png" alt="img" style="zoom:80%;" />
   
   ```bash
   cluster getkeysinslot 5474 2 # 返回指定插槽的指定数量的key
   ```
   
-  <img src="img\bdea7f4d54684a70a2dc6ea1f6a27883.png" alt="img" style="zoom:80%;" />
+  <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/bdea7f4d54684a70a2dc6ea1f6a27883-aa718a72898b8365791244eb6c100bc7-eafdda.png" alt="img" style="zoom:80%;" />
 
 #### 3.2 故障恢复
 
 - 如果主节点下线？从节点能否自动升为主节点？注意：**15秒超时**，15秒内恢复连接则还是主机，否则原从机晋升为主机
 
-<img src="img\f0edf11f6fe64e868302ce7b818762b2.png" alt="img" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/f0edf11f6fe64e868302ce7b818762b2-87348e11e7c825a1f86fa6c8dbaca97b-6d9dbe.png" alt="img" style="zoom:80%;" />
 
 - 主节点恢复后，主从关系会如何？
   - 主节点回来变成从机
 
-<img src="img\7c956da3f1ee49688a9e2c3a944c7e9b.png" alt="img" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/7c956da3f1ee49688a9e2c3a944c7e9b-4b6c1813c2ee512fbabbfce6ff3bce00-3b5ee3.png" alt="img" style="zoom:80%;" />
 
 - 如果所有某一段插槽的主从节点都宕掉，redis服务是否还能继续?
 
@@ -3423,7 +3420,7 @@ public class JedisClusterTest {
 }
 ```
 
-<img src="img\63518e61becb471694009257e8b854aa.png" alt="img" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/63518e61becb471694009257e8b854aa-8e1045f4eea86d4708e88e3547726ce3-fe4b4e.png" alt="img" style="zoom:80%;" />
 
 #### 3.4 SpringBoot配置
 
@@ -3457,7 +3454,7 @@ public class JedisClusterTest {
 
 > ​    key 对应的数据在数据源并不存在，每次针对此 key 的请求从缓存获取不到，请求都会压到数据源，从而可能压垮数据源。比如用一个不存在的用户 id 获取用户信息，不论缓存还是数据库都没有，若黑客利用此漏洞进行攻击可能压垮数据库。
 
-<img src="img/Redis/66" alt="img" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/66-126b76aeeee37e32c6ddfa83ad47cda4-acf56f" alt="img" style="zoom:80%;" />
 
 #### 1.2 解决方案
 
@@ -3465,13 +3462,13 @@ public class JedisClusterTest {
 
 **解决方案：**
 
-- 对空值缓存：如果一个查询返回的数据为空（不管是不是由于数据不存在），我们仍然把这个空结果（null）进行缓存（比如设置 value 为 -1，代表没有数据），设置空结果的过期时间会很短，最长不超过五分钟。
+- 对空值缓存：如果一个查询返回的数据为空（不管是不是由于数据不存在），我们仍然把这个空结果（null）进行缓存（比如设置 value 为 -1，代表没有数据），设置空结果的过期时间会很短，最长不超过五分钟
 
-- 设置可访问的名单（白名单）：使用 bitmaps 类型定义一个可以访问的名单，名单 id 作为 bitmaps 的偏移量，每次访问和 bitmap 里面的 id 进行比较，如果访问 id 不在 bitmaps 里面，进行拦截，不允许访问。
+- 设置可访问的名单（白名单）：使用 bitmaps 类型定义一个可以访问的名单，名单 id 作为 bitmaps 的偏移量，每次访问和 bitmap 里面的 id 进行比较，如果访问 id 不在 bitmaps 里面，进行拦截，不允许访问，可使用`stringRedisTemplate.opsForValue().setBit(key, hash, value)`命令
 
-- 采用布隆过滤器：布隆过滤器（Bloom Filter）是1970年由布隆提出的。它实际上是一个很长的二进制向量（位图）和一系列随机映射函数（哈希函数）。布隆过滤器可以用于检索一个元素是否在一个集合中。它的优点是空间效率和查询时间都远远超过一般的算法，缺点是有一定的误识别率和删除困难。将所有可能存在的数据哈希到一个足够大的 bitmaps 中，一个一定不存在的数据会被 这个 bitmaps 拦截掉，从而避免了对底层存储系统的查询压力。
+- 采用布隆过滤器：布隆过滤器（Bloom Filter）是1970年由布隆提出的。它实际上是一个很长的二进制向量（位图）和一系列随机映射函数（哈希函数）。布隆过滤器可以用于检索一个元素是否在一个集合中。它的优点是空间效率和查询时间都远远超过一般的算法，缺点是有一定的误识别率和删除困难。将所有可能存在的数据哈希到一个足够大的 bitmaps 中，一个一定不存在的数据会被 这个 bitmaps 拦截掉，从而避免了对底层存储系统的查询压力
 
-- 进行实时监控：当发现的命中率开始急速降低，需要排查访问对象和访问的数据，和运维人员配合，可以设置黑名单限制服务。
+- 进行实时监控：当发现的命中率开始急速降低，需要排查访问对象和访问的数据，和运维人员配合，可以设置黑名单限制服务
 
 ### 2.缓存击穿
 
@@ -3479,7 +3476,7 @@ public class JedisClusterTest {
 
 > key 对应的数据存在，但在 redis 中过期，此时若有大量并发请求过来，这些请求发现缓存过期一般都会从后端 DB 加载数据并回设到缓存，这个时候大并发的请求可能会瞬间把后端DB压垮。
 
-<img src="img/Redis/77" alt="img" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/77-1bccd278163e13c26f3a4bcdaf957891-6b1a31" alt="img" style="zoom:80%;" />
 
 #### 2.2 解决方案
 
@@ -3497,7 +3494,7 @@ public class JedisClusterTest {
   - 当操作返回成功时，再进行 load db 的操作，并回设缓存，最后删除 mutex key
   - 当操作返回失败，证明有线程在 load db，当前线程睡眠一段时间再重试整个 get 缓存的方法
 
-<img src="img/Redis/88" alt="img" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/88-849ac892c8530ccc3fb4db3e8f72587f-1c0b44" alt="img" style="zoom:80%;" />
 
 ### 3.缓存雪崩
 
@@ -3505,7 +3502,7 @@ public class JedisClusterTest {
 
 > ​    key 对应的数据存在，但在 redis 中过期，此时若有大量并发请求过来，这些请求发现缓存过期一般都会从后端 DB 加载数据并回设到缓存，这个时候大并发的请求可能会瞬间把后端 DB 压垮。缓存雪崩与缓存击穿的区别在于这里针对很多 key 缓存，前者则是某一个 key 正常访问
 
-<img src="img/Redis/99" alt="img" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/99-01593c763ea28451367ac326f9e265f4-79f806" alt="img" style="zoom:80%;" />
 
 #### 3.2 解决方案
 
@@ -3544,7 +3541,7 @@ del key   # 删除锁
 expire users 30
 ```
 
-<img src="img/Redis/111" alt="img" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/111-264ac3f661bb6ab89a57b0ffd1d74179-772d02" alt="img" style="zoom:80%;" />
 
 > 这样设置的问题：如果设置时间和上锁分开进行的话，可能存在上完锁，服务器 down 了，就没有设置过期时间。
 
@@ -3591,11 +3588,11 @@ public void testLock(){
 
 不过代码除了修改的设置过期时间问题，还存在问题，入下图所示：
 
-<img src="img/Redis/12332" alt="img" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/12332-0245e4507f9b33a3d627bd3810e576bb-011a5d" alt="img" style="zoom:80%;" />
 
 解决方法：
 
-<img src="img/Redis/123456" alt="img" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/123456-733d3189fc225ec9ea0fab2ccde884ac-56502f" alt="img" style="zoom:80%;" />
 
 代码实现：
 
@@ -3625,7 +3622,7 @@ public void testLock(){
 
 原因：
 
-<img src="img/Redis/a" alt="img" style="zoom:67%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/a-dd3ba5ffe823fdeea6293d38e1f69aa1-ffd425" alt="img" style="zoom:67%;" />
 
 解决方案：使用lua脚本保证删除的原子性
 
@@ -3709,21 +3706,21 @@ public void testLockLua() {
 
 - 使用 `acl list` 命令展现用户权限列表
 
-  <img src="img/Redis/f6ef6cd7875b46fb8419e9ba054d24be.png" alt="img" style="zoom:80%;" />
+  <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/f6ef6cd7875b46fb8419e9ba054d24be-e892977e4904c6d0cd266d6ef6cf891b-701b35.png" alt="img" style="zoom:80%;" />
 
 - 使用 `acl cat` 命令
 
   - 查看添加权限指令类别
 
-    <img src="img/Redis/d90cfb671048494fb06a42deb8f7e6d3.png" alt="img" style="zoom:80%;" />
+    <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/d90cfb671048494fb06a42deb8f7e6d3-203f1240afc49bf2290e8c934ee161a4-5701f9.png" alt="img" style="zoom:80%;" />
 
   - 加参数类型名可以查看类型下具体命令
 
-    <img src="img/Redis/b8104e4448a74ef5837e6825b33f6902.png" alt="img" style="zoom:80%;" />
+    <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/b8104e4448a74ef5837e6825b33f6902-7fc8dc8a8cd095ef554608e70d0b0a4c-6e05dd.png" alt="img" style="zoom:80%;" />
 
 - 使用 `acl whoami` 命令查看当前用户
 
-  <img src="img/Redis/db1aba8f89704486bb1e9efd01cf6f31.png" alt="img"  />
+  <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/db1aba8f89704486bb1e9efd01cf6f31-fae00f7e55e55a5a9c408dc206846151-db8bc0.png" alt="img"  />
 
 - 使用 aclsetuser 命令创建和编辑用户 ACL
 
@@ -3749,7 +3746,7 @@ public void testLockLua() {
     acl setuser user1
     ```
 
-    <img src="img/Redis/72dd8294941e452fbc573d3633d82a1c.png" alt="img" style="zoom:80%;" />
+    <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/72dd8294941e452fbc573d3633d82a1c-194f51f60c7eca3e5a98719ce4cb40a6-94154a.png" alt="img" style="zoom:80%;" />
 
     > 在上面的示例中，我根本没有指定任何规则。如果用户不存在，这将使用 just created 的默认属性来创建用户。如果用户已经存在，则上面的命令将不执行任何操作。
 
@@ -3759,11 +3756,11 @@ public void testLockLua() {
     acl setuser user2 on >password ~cached:* +get # 只能 get 以 cached: 开头的 key
     ```
 
-    <img src="img/Redis/beaea2f2692447238d58336a0fa01bfe.png" alt="img"  />
+    <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/beaea2f2692447238d58336a0fa01bfe-25d013389a155ae1e80adb186d0c776d-81358a.png" alt="img"  />
 
   - 切换用户，验证权限
 
-    <img src="img/Redis/0d0fd42952cf4553be17a1d6c7a7166f.png" alt="img"  />
+    <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/0d0fd42952cf4553be17a1d6c7a7166f-4846b5a7947c27880eb2d5eb798f9d8a-a106a8.png" alt="img"  />
 
 ### 2 IO多线程
 
@@ -3772,7 +3769,7 @@ public void testLockLua() {
 **原理架构**
 
 ​    Redis 6 加入多线程,但跟 Memcached 这种从 IO 处理到数据访问多线程的实现模式有些差异。Redis 的多线程部分只是用来处理网络数据的读写和协议解析，执行命令仍然是单线程。之所以这么设计是不想因为多线程而变得复杂，需要去控制 key、lua、事务，LPUSH/LPOP 等等的并发问题。整体的设计大体如下：
-<img src="img/Redis/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,s_16,color_FFFFFF,t_70" alt="img" style="zoom:150%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,s_16,color_FFFFFF,t_70-61465d8de75b35087f550923b6168cd7-1fbac7" alt="img" style="zoom:150%;" />
 
 > 另外，多线程 IO 默认也是不开启的，需要再配置文件中配置
 >
@@ -3784,7 +3781,7 @@ public void testLockLua() {
 
 ​    之前老版 Redis 想要搭集群需要单独安装 ruby 环境，Redis 5 将 redis-trib.rb 的功能集成到 redis-cli 。另外官方 redis-benchmark 工具开始支持 cluster 模式了，通过多线程的方式对多个分片进行压测压。
 
-![img](img/Redis/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,)
+![img](https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,-8e77f934bd4da0ffa59838205c62bf7e-d8465b)
 
 > Redis6新功能还有：
 >
