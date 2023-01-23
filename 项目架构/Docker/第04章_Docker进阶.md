@@ -303,17 +303,17 @@ $ docker image prune
 
     ```bash
     # 基础镜像使用java
-    FROM java:8
+    FROM openjdk:8
     # 作者
     MAINTAINER youyi
     # VOLUME 指定临时文件目录为/tmp，在主机 /var/lib/docker 目录下创建了一个临时文件夹并链接到容器的 /tmp
     VOLUME /tmp
     # 将 jar 包添加到容器中并更名为 microservice.jar
-    ADD docker_boot-0.0.1-SNAPSHOT.jar microservice.jar
+    ADD docker_boot-0.0.1-SNAPSHOT.jar /microservice.jar
     # 运行jar包
-    ENTRYPOINT ["java","-jar","/zzyy_docker.jar"]
-    #暴露 6001 端口作为微服务
-    EXPOSE 6001
+    ENTRYPOINT ["java","-jar","/microservice.jar"]
+    #暴露 8080 端口作为微服务，要和微服务的端口一致
+    EXPOSE 8080
     ```
 
   - 将微服务 jar 包和 Dockerfile 文件上传到同一个目录下
@@ -323,3 +323,211 @@ $ docker image prune
   - 执行`docker run -d -p 6001:6001 microservice:1.0`运行容器
 
 ## 3.Docker网络
+
+docker 不启动时，默认有三个网络参数：`ens33`、`lo`、`virbr0`。
+
+在 CentOS7 的安装过程中如果有选择相关虚拟化的的服务安装系统后，启动网卡时会发现有一个以网桥连接的私网地址的 virbr0 网卡（virbr0 网卡：它还有一个固定的默认IP地址 192.168.122.1），是做虚拟机网桥的使用的，其作用是为连接其上的虚机网卡提供 NAT 访问外网的功能。
+
+我们之前学习 Linux 安装，勾选安装系统的时候附带了 libvirt 服务才会生成的一个东西，如果不需要可以直接将 libvirtd 服务卸载
+
+```bash
+$ yum remove libvirt-libs.x86_64
+```
+
+docker 启动后，会产生一个名为 docker0 的虚拟网桥：`docker0`、`ens33`、`lo`
+
+查看 docker 网络：
+
+```bash
+$ docker network ls
+NETWORK ID     NAME      DRIVER    SCOPE
+aea5aa18dd94   bridge    bridge    local
+d57374a995d7   host      host      local
+c03ed094b709   none      null      local
+```
+
+### 3.1 常用命令
+
+- 查询网络：`docker network ls`
+- 创建网络：`docker network create [网络名字]`
+- 查看网络源数据：`docker network inspect [网络名字]`
+- 删除网络：`docker network rm [网络名字]`
+
+### 3.2 网络模式
+
+| 网络模式  | 简介                                                         |
+| --------- | ------------------------------------------------------------ |
+| bridge    | `--network bridge`，为每一个容器分配、设置 IP 等，并将容器连接到一个`docker0`虚拟网桥，默认为`bridge`模式 |
+| host      | `--network host`，容器不会虚拟出自己的网卡，配置自己的 IP 等，而是使用宿主机的 IP 和端口 |
+| none      | `--network none`，容器有独立的 Network namespace，但并没有对其进行任何网络设置，如分配 veth pair 和网桥连接，IP 等 |
+| container | `--network container:NAME`，新创建的容器不会创建自己的网卡和配置自己的 IP，而是和一个指定的容器共享 IP、端口范围等 |
+
+**容器实例内默认网络 IP 生产规则**
+
+先启动两个 ubuntu 容器
+
+```bash
+$ docker run -it --name u1 ubuntu bash
+$ docker run -it --name u2 ubuntu bash
+```
+
+检查容器可以发现，u1 分配的 IP 为 172.17.0.2， u2 分配的 IP 为 172.17.0.3。
+
+```bash
+$ docker inspect u1 | tail -n 20
+            "Networks": {
+                "bridge": {
+                    "IPAMConfig": null,
+                    "Links": null,
+                    "Aliases": null,
+                    "NetworkID": "aea5aa18dd946a6671f21669249c154a5ef012f610e975a1d5565f3459ac7573",
+                    "EndpointID": "28518501381cdfa9dee850fe50cd47977e75bbe431255b3b3aeed4f6e5034621",
+                    "Gateway": "172.17.0.1",
+                    "IPAddress": "172.17.0.2",
+                    "IPPrefixLen": 16,
+                    "IPv6Gateway": "",
+                    "GlobalIPv6Address": "",
+                    "GlobalIPv6PrefixLen": 0,
+                    "MacAddress": "02:42:ac:11:00:02",
+                    "DriverOpts": null
+                }
+            }
+        }
+    }
+]
+```
+
+```bash
+$ docker inspect u2 | tail -n 20
+            "Networks": {
+                "bridge": {
+                    "IPAMConfig": null,
+                    "Links": null,
+                    "Aliases": null,
+                    "NetworkID": "aea5aa18dd946a6671f21669249c154a5ef012f610e975a1d5565f3459ac7573",
+                    "EndpointID": "003069fc0f846ea4b0ff33e900580ee576669322b68a3ece6f8f55266ffbd0aa",
+                    "Gateway": "172.17.0.1",
+                    "IPAddress": "172.17.0.3",
+                    "IPPrefixLen": 16,
+                    "IPv6Gateway": "",
+                    "GlobalIPv6Address": "",
+                    "GlobalIPv6PrefixLen": 0,
+                    "MacAddress": "02:42:ac:11:00:03",
+                    "DriverOpts": null
+                }
+            }
+        }
+    }
+]
+```
+
+接下来关闭 u2，新建 u3，查看 IP 变化
+
+```bash
+$ docker stop u2
+$ docker run -it --name u3 ubuntu bash
+$ docker inspect u3 | tail -n 20
+            "Networks": {
+                "bridge": {
+                    "IPAMConfig": null,
+                    "Links": null,
+                    "Aliases": null,
+                    "NetworkID": "aea5aa18dd946a6671f21669249c154a5ef012f610e975a1d5565f3459ac7573",
+                    "EndpointID": "c2167be3811cb2a4c6481f4a7d8ccc4221628739d3998fee46504488a998829a",
+                    "Gateway": "172.17.0.1",
+                    "IPAddress": "172.17.0.3",
+                    "IPPrefixLen": 16,
+                    "IPv6Gateway": "",
+                    "GlobalIPv6Address": "",
+                    "GlobalIPv6PrefixLen": 0,
+                    "MacAddress": "02:42:ac:11:00:03",
+                    "DriverOpts": null
+                }
+            }
+        }
+    }
+]
+```
+
+可以发现，u3 分配的 IP 为 172.17.0.3。说明 docker 容器内部的 IP 是有可能发生变换的。
+
+#### 1.bridge
+
+Docker 服务默认会创建一个 docker0 网桥（其上有一个 docker0 内部接口），该桥接网络的名称为 docker0，它在内核层连通了其他的物理或虚拟网卡，将所有容器和本地主机都放到同一个物理网络。Docker 默认指定了 docker0 接口 的 IP 地址和子网掩码，让主机和容器之间可以通过网桥相互通信。
+
+查看 bridge 网络的详细信息，并通过 grep 获取名称项：
+
+```bash
+$ docker network inspect bridge | grep name
+            "com.docker.network.bridge.name": "docker0",
+```
+
+```bash
+$ ifconfig | grep docker
+docker0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+```
+
+**解释**
+
+Docker 使用 Linux 桥接，在宿主机虚拟一个 Docker 容器网桥（docker0），Docker 启动一个容器时会根据 Docker 网桥的网段分配给容器一个 IP 地址，称为 Container-IP，同时 Docker 网桥是每个容器的默认网关。因为在同一宿主机内的容器都接入同一个网桥，这样容器之间就能够通过容器的 Container-IP 直接通信。
+
+`docker run`的时候，没有指定 network 的话默认使用的网桥模式就是 bridge，使用的就是 docker0。在宿主机 ifconfig，就可以看到 docker0 和自己 create 的 network eth0，eth1，eth2……代表网卡一，网卡二，网卡三……，lo代表 127.0.0.1，即 localhost，inet addr 用来表示网卡的 IP 地址。
+
+网桥 docker0 会创建一对对等虚拟设备接口一个叫 veth，另一个叫 eth0，成对匹配。
+
+- 整个宿主机的网桥模式都是 docker0，类似一个交换机有一堆接口，每个接口叫 veth，在本地主机和容器内分别创建一个虚拟接口，并让他们彼此联通（这样一对接口叫 veth pair）
+- 每个容器实例内部也有一块网卡，每个接口叫 eth0
+- docker0 上面的每个 veth 匹配某个容器实例内部的 eth0，两两配对，一一匹配
+
+ 通过上述，将宿主机上的所有容器都连接到这个内部网络上，两个容器在同一个网络下,会从这个网关下各自拿到分配的 ip，此时两个容器的网络是互通的。
+
+**验证**
+
+先运行两个微服务
+
+```bash
+$ docker run -d -p 8081:8080 --name micro1 microservice:1.0
+$ docker run -d -p 8082:8080 --name micro2 microservice:1.0
+```
+
+在主机上查看 IP 地址情况
+
+```bash
+$ ip addr | tail -n 8
+33: vethc4d4e89@if32: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master docker0 state UP group default 
+    link/ether a2:8c:2e:08:09:61 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet6 fe80::a08c:2eff:fe08:961/64 scope link 
+       valid_lft forever preferred_lft forever
+35: veth4aafe45@if34: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master docker0 state UP group default 
+    link/ether 96:e2:34:87:e1:88 brd ff:ff:ff:ff:ff:ff link-netnsid 1
+    inet6 fe80::94e2:34ff:fe87:e188/64 scope link 
+       valid_lft forever preferred_lft forever
+```
+
+分别在容器内部查看 IP 地址情况，可能需要安装`apt-get install -y iproute2`
+
+```bash
+$ ip addr
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+32: eth0@if33: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default 
+    link/ether 02:42:ac:11:00:02 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 172.17.0.2/16 brd 172.17.255.255 scope global eth0
+       valid_lft forever preferred_lft forever
+```
+
+```bash
+$ ip addr
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+34: eth0@if35: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default 
+    link/ether 02:42:ac:11:00:03 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 172.17.0.3/16 brd 172.17.255.255 scope global eth0
+       valid_lft forever preferred_lft forever
+```
+
+可以发现主机上的`33: vethc4d4e89@if32`匹配 micro1 的`32: eth0@if33`，`35: veth4aafe45@if34`匹配 micro2 的`34: eth0@if35`。

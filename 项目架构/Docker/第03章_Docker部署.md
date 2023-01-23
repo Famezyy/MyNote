@@ -674,6 +674,8 @@ spring.redis.password=123456
   例：
 
   ```bash
+  # 查看所有端口
+  $ firewall-cmd --list-ports
   # 添加 6391 端口
   $ firewall-cmd --zone=public --add-port=6391/tcp --permanent
   # 刷新防火墙
