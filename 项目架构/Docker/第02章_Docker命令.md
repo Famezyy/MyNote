@@ -48,7 +48,10 @@ hello-world   latest    feb5d9fea6a5   15 months ago   13.3kB
 **OPTIONS 说明**
 
 - `-a`：列出本地所有的镜像（含历史映像层）
+
 - `-q`：只显示镜像 ID
+
+  `-f`：过滤
 
 ### 2.2 查找镜像
 
@@ -109,6 +112,92 @@ redislabs/redisearch                Redis With the RedisSearch module pre-loaded
 
 提交容器副本使之成为一个新的镜像。所有改动都会被保存，同`export`和`import`命令。
 
+### 2.7 发布到阿里云
+
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20230119213036399-7c77f043af85167eb6a71d74f1182b57-eb1c80.png" alt="image-20230119213036399" style="zoom:80%;" />
+
+阿里云开发者平台：https://promotion.aliyun.com/ntms/act/kubernetes.html
+
+官方Docker Hub地址：https://hub.docker.com/
+
+**创建镜像仓库**
+
+容器镜像服务 - 个人版 - 创建命名空间 - 创建镜像仓库（最后一步选择本地仓库）- 访问凭证设置密码
+
+**推送与拉取**
+
+进入镜像仓库，复制相应的推送脚本执行
+
+### 2.8 发布到私有库
+
+Docker Registry 是官方提供的工具，可以用于构建私有镜像仓库。
+
+- 下载镜像 Docker Registry
+
+  ```bash
+  $ docker pull registry
+  ```
+
+- 运行私有库 Registry，相当于本地有个私有 Docker hub
+
+  ```bash
+  $ docker run -d -p 5000:5000 -v /zzyyuse/myregistry/:/tmp/registry --privileged=true registry
+  ```
+
+  > **注意**
+  >
+  > 默认情况，仓库被创建在容器的`/var/lib/registry`目录下，建议自行用容器卷映射，方便于宿主机联调。
+
+- `curl`命令查看私服库上有什么镜像
+
+  ```bash
+  $ curl -XGET http://127.0.0.1:5000/v2/_catalog
+  {"reporsitories":[]}
+  # 查看 image 的版本号 list
+  $ curl -XGET http://127.0.0.1:5000/v2/[image]/tags/list
+  ```
+
+- 将镜像 myUbuntu:1.2 修改成符合私服规范的 Tag
+
+  ```bash
+  $ docker tag [image:Tag] Host:Port/Repository:Tag
+  ```
+
+  例：
+
+  ```bash
+  $ docker tag  myUbuntu:1.2  127.0.0.1:5000/myUbuntu:1.0
+  ```
+
+- docker 默认不允许 http 方式推送镜像，通过配置选项来取消这个限制：修改配置文件使之支持 http
+
+  ```bash
+  $ vim /etc/docker/daemon.json
+  # 添加如下配置
+  {
+    "registry-mirrors": ["https://aa25jngu.mirror.aliyuncs.com"],
+    "insecure-registries": ["127.0.0.1:5000"]
+  }
+  ```
+
+  > **注意**
+  >
+  > registry-mirrors 配置的是国内阿里提供的镜像加速地址，不用加速的话访问官网的会很慢。
+  >
+  > 另外建议修改配置后重启 docker：`systemctl restart docker`
+
+- `push`推送到私服库
+
+  ```bash
+  $ docker push 127.0.0.1:5000/myUbuntu:1.0
+  ```
+
+- `pull`到本地并运行
+
+  ```bash
+  $ docker pull 192.168.111.162:5000/myUbuntu:1.0
+  ```
+
 ### 面试题：docker 虚悬镜像
 
 仓库名、标签都是\<none\>的镜像，俗称虚悬镜像 dangling image。
@@ -143,7 +232,7 @@ redislabs/redisearch                Redis With the RedisSearch module pre-loaded
   >
   > `/bin/bash`：放在镜像后的是命令，这条命令会打开交互式 Shell。同`bash`
 
-- `-P`：随机端口映射
+- `-P`：随机端口映射，主机的映射端口会被随机分配
 
 - `-p`：指定端口映射
 
@@ -185,13 +274,13 @@ redislabs/redisearch                Redis With the RedisSearch module pre-loaded
 
 强制停止：`docker kill [container id or name]`
 
-### 3.7 删除已经停止的容器
+### 3.7 删除容器
 
 `docker rm [container id or name]`
 
 强制删除：`docker rm -f [container id or name]`
 
-删除全部容器：`docker rm -f $（docker ps -aq）`or`docker ps -aq | xargs docker rm`
+删除全部容器：`docker rm -f $(docker ps -aq)`or`docker ps -aq | xargs docker rm`
 
 ### 3.8 查看容器运行状况
 
@@ -223,11 +312,15 @@ redislabs/redisearch                Redis With the RedisSearch module pre-loaded
 
 例：`docker cp esafr42:/usr/local/a.txt /tmp`
 
+> **注意**
+>
+> 把文件路径反过来即可从主机拷贝文件到容器。
+
 ### 3.11 导入和导出容器
 
 导出容器的内容为一个 tar 归档文件：`docker export [container id or name] > fileName.tar`
 
-从 tar 包中创建一个新的镜像：`cat fileName.tar | docker import - [iamgeUser]imageName[:tag]`
+从 tar 包中创建一个新的镜像：`cat fileName.tar | docker import - [prefix/]imageName[:tag]`
 
 ### 3.12 总结
 
@@ -272,4 +365,77 @@ unpause   Unpause a paused container                    # 取消暂停容器
 version   Show the docker version information           # 查看 docker 版本号
 wait      Block until a container stops, then print its exit code   # 截取容器停止时的退出状态值
 ```
+
+## 4.容器数据卷
+
+Docker 挂载主机目录访问如果出现`cannot open directory .: Permission denied`，解决办法：在挂载目录后多加一个`--privileged=true`参数即可，表示给容器 root 权限。
+
+如果是 CentOS7 安全模块会比之前系统版本加强，不安全的会先禁止，所以目录挂载的情况被默认为不安全的行为，在 SELinux 里面挂载目录被禁止掉了，如果要开启，我们一般使用`--privileged=true`命令，扩大容器的权限解决挂载目录没有权限的问题，也即使用该参数，container 内的 root 拥有真正的 root 权限，否则，container 内的 root 只是外部的一个普通用户权限。
+
+### 4.1 卷
+
+指目录或文件，存在于一个或多个容器中，由 Docker 挂载到容器，但不属于联合文件系统，因此能够绕过 Union File System 提供一些用于持续存储或共享数据的特性。
+
+Docker 容器产生的数据如果不备份，那么当容器实例删除后容器内的数据自然也就没有了。卷的设计目的就是数据的持久化，完全独立于容器的生存周期，因此 Docker 不会在容器删除时删除其挂载的数据卷。有点类似 Redis 里面的 rdb 和 aof 文件，将 docker 容器内的数据保存进宿主机的磁盘中。
+
+特点：
+
+- 数据卷可在容器之间共享或重用数据
+- 卷中的更改可以直接实时生效（挂载的特性）
+- 数据卷中的更改不会包含在镜像的更新中
+- 数据卷的生命周期一直持续到没有容器使用它为止
+
+运行一个带有容器卷存储功能的容器实例：
+
+```bash
+$ docker run -it --privileged=true -v [/宿主机绝对路径目录:/容器内目录][:ws] [镜像名]
+```
+
+### 4.2 案例
+
+开启一个 ubuntu 容器，将容器内的`/tmp/myDockerData`目录挂载到主机的`/tmp/myHostData`目录：
+
+```bash
+$ docker run -it --privileged=true -v /tmp/myHostData:/tmp/myDockerData ubuntu bash
+```
+
+查看数据卷是否挂载成功
+
+```bash
+$ docker inspect [容器ID]
+```
+
+容器和宿主机之间数据共享：
+
+- docker 修改，主机同步获得 
+
+- 主机修改，docker 同步获得
+
+- docker 容器 stop，主机修改，docker 容器重启看数据是否同步
+
+### 4.3 读写规则
+
+默认情况下启动时是读写都可（`ws`），需要限制容器实例内部只能读取不能写时：
+
+```bash
+$ docker run -it --privileged=true -v /宿主机绝对路径目录:/容器内目录:ro 镜像名
+```
+
+此时如果宿主机写入内容，可以同步给容器内，容器可以读取到。
+
+### 4.4 继承和共享
+
+映射的继承是相互独立的，不会因为 u1 的容器下线而失效。
+
+- 容器 1 完成和宿主机的映射
+
+  ```bash
+  $ docker run -it  --privileged=true -v /mydocker/u:/tmp --name u1 ubuntu
+  ```
+
+- 容器 2 继承容器 1 的卷规则
+
+  ```bash
+  $ ·	docker run -it  --privileged=true --volumes-from u1 --name u2 ubuntu
+  ```
 

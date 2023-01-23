@@ -20,6 +20,12 @@ GitHub 是最大的 Git 版本库托管商，是成千上万的开发者和项�
 
 在这个页面点击“Add an SSH key”按钮，给你的公钥起一个名字，将你的 ~/.ssh/id_rsa.pub（或者自定义的其它名字）公钥文件的内容粘贴到文本区，然后点击“Add key”。
 
+> **生成 ssh-key**
+>
+> ```bash
+> ssh-keygen -t rsa
+> ```
+
 ### 1.2 头像
 
 下一步，如果愿意的话，你可以将生成的头像换成你喜欢的图片。首先，来到“Profile”标签页（在“SSH Keys”标签页上方），点击“Upload new picture”。

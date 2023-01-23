@@ -500,8 +500,7 @@ redis-server
   > # units are case insensitive so 1GB 1Gb 1gB are all the same.
   > ```
   >
-  > 
-
+  
 - **INCLUDES包含**
 
   > 类似 jsp 中的 include，多实例的情况可以把公用的配置文件提取出来
@@ -3032,8 +3031,9 @@ return 1;
   logfile "6380.log"
   #slaveof表示作为从库的配置
   slaveof 127.0.0.1 6379
-  #从库只能读操作
+  #从库只能读操作（默认）
   slave-read-only yes
+  # 设置主机密码
   masterauth 主机密码
   ```
 
@@ -3220,11 +3220,13 @@ public static  Jedis getJedisFromSentinel(){
 
 ### 5 SpringBoot配置
 
-> ```properties
-> #哨兵监听的redis server 名称
-> spring.redis.sentinel.master=mymaster
-> spring.redis.sentinel.nodes=39.107.119.256:26379,39.107.119.256:26380
-> ```
+```properties
+# 哨兵监听的 redis server 名称
+spring.redis.sentinel.master=mymaster
+# 哨兵的端口
+spring.redis.sentinel.nodes=192.168.11.101:26379
+spring.redis.password=123456
+```
 
 ---
 
@@ -3232,23 +3234,16 @@ public static  Jedis getJedisFromSentinel(){
 
 ### 1.集群的简介
 
-> 集群之前遇到的问题
->
-> 1、容量不够，redis 如何进行扩容？
->
-> 2、并发写操作， redis 如何分摊？
->
-> 3、另外，主从模式，薪火相传模式，主机宕机，导致 ip 地址发生变化，应用程序中配置需要修改对应的主机地址、端口等信息
->
-> 之前通过代理主机来解决，但是 redis3.0 中提供了解决方案，就是无中心化集群配置
+redis 的哨兵模式基本已经可以实现高可用，读写分离 ，但是在这种模式下每台redis服务器都存储相同的数据，很浪费内存，所以在 redis3.0 上加入了 cluster 模式，实现的 redis 的分布式存储，也就是说每台 redis 节点上存储不同的内容。
+Redis-Cluster 采用无中心结构，它的特点如下：
+
+- 所有的 redis 节点彼此互联（P2P），内部使用二进制协议优化传输速度和带宽
+- 节点的 fail 是通过集群中超过半数的节点检测失效时才生效
+- 客户端与 redis 节点直连，不需要中间代理层，客户端不需要连接集群所有节点,连接集群中任何一个可用节点即可
+- Redis 集群实现了对 Redis 的水平扩容，即启动 N 个 redis 节点，将整个数据库分布存储在这 N 个节点中，每个节点存储总数据的 1/N
+- Redis 集群通过分区（partition）来提供一定程度的可用性（availability）： 即使集群中有一部分节点失效或者无法进行通讯， 集群也可以继续处理命令请求
 
 <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/9-94bb17e057e1bb9b924e9a52852cc760-90b6ae" alt="img" style="zoom: 50%;" />
-
-**集群概述**
-
-> - Redis 集群实现了对 Redis 的水平扩容，即启动 N 个 redis 节点，将整个数据库分布存储在这 N 个节点中，每个节点存储总数据的 1/N
->
-> - Redis 集群通过分区（partition）来提供一定程度的可用性（availability）： 即使集群中有一部分节点失效或者无法进行通讯， 集群也可以继续处理命令请求
 
 ### 2.集群的搭建
 
@@ -3256,9 +3251,9 @@ public static  Jedis getJedisFromSentinel(){
 >
 >  6389,6390,6391 上下对应主从
 
-- **删除文件夹中的全部持久化文件 rdb 或者 aof**
+- 删除文件夹中的全部持久化文件 rdb 或者 aof
 
-- **新建六个配置文件，内容如下：(除了端口号不一样，其他都一样)**
+- 新建六个配置文件，内容如下：(除了端口号不一样，其他都一样)
 
   ```bash
   include /myredis/redis.conf
@@ -3275,13 +3270,13 @@ public static  Jedis getJedisFromSentinel(){
 
 > `:%s/6379/6380` 是 vim 的替换命令
 
-- **启动6个服务**
+- 启动6个服务
 
   <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/10-839ab6bde63464f3f25e7adf10f63a46-4e94da" alt="img" style="zoom:80%;" />
 
   要确保 nodes-xxxx.conf 生成。
 
-- **将六个节点合成一个集群**
+- 将六个节点合成一个集群
 
   > 组合之前，请确保所有 redis 实例启动后，nodes-xxxx.conf 文件都生成正常
 
@@ -3326,7 +3321,7 @@ public static  Jedis getJedisFromSentinel(){
 
   <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/13-17e7a6d7cd1f0db638de1d6547fcc4a4-473321" alt="img" style="zoom:80%;" />
 
-- **redis cluster 如何分配这六个节点**
+- redis cluster 如何分配这六个节点
 
   > 一个集群至少要有三个主节点
   >
@@ -3334,23 +3329,27 @@ public static  Jedis getJedisFromSentinel(){
   >
   > 分配原则尽量保证每个主数据库运行在不同的 IP 地址，每个从库和主库不在一个 IP 地址上
 
-- **什么是slots？**
+- 什么是slots？
 
-  > 在运行集成集群命令后，会出现 ""[OK] All 16384 slots covered "。
-  >
-  > 说明：一个 Redis 集群包含 16384 （0~16383） 个插槽（hash slot），数据库中的每个键都属于这 16384 个插槽的其中一个，集群使用公式 CRC16(key) %16384 来计算键 key 属于哪个槽。其中 CRC16(key) 语句用于计算键 key 的 CRC16 校验和 
-  >
-  > 集群中的每个节点负责处理一部分插槽。 举个例子， 如果一个集群可以有主节点，其中：
-  >
-  > 节点 A 负责处理 0 号至 5460 号插槽
-  >
-  > 节点 B 负责处理 5461 号至 10922 号插槽
-  >
-  > 节点 C 负责处理 10923 号至 16383 号插槽
-  >
-  > <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/334f25bc51ac497392a47a861695f3f6-7dcb223e18ff25ac7f30b950709e5f58-f1499b.png" alt="img" style="zoom:80%;" />
+  在运行集成集群命令后，会出现 ""[OK] All 16384 slots covered "。
 
-- **在集群中录入值**
+  说明：一个 Redis 集群包含 16384 （0~16383） 个插槽（hash slot），数据库中的每个键都属于这 16384 个插槽的其中一个，集群使用公式 CRC16(key) %16384 来计算键 key 属于哪个槽。其中 CRC16(key) 语句用于计算键 key 的 CRC16 校验和 
+
+  集群中的每个节点负责处理一部分插槽。 举个例子， 如果一个集群可以有主节点，其中：
+
+  节点 A 负责处理 0 号至 5460 号插槽
+
+  节点 B 负责处理 5461 号至 10922 号插槽
+
+  节点 C 负责处理 10923 号至 16383 号插槽
+
+  <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/334f25bc51ac497392a47a861695f3f6-7dcb223e18ff25ac7f30b950709e5f58-f1499b.png" alt="img" style="zoom:80%;" />
+
+- 为什么是 16384？
+
+  集群点越多，心跳包的消息携带的数据就越多，因此 redis 作者建议集群节点数量不要超过 1000 个，对于 1000 以内的集群数量，16384 足以。
+
+- 在集群中录入值
 
   <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/9a10c18b4d714794b3c6cfd0be45214f-0b14ffcf8cdffb50d20fb604724c1fd0-b2edaf.png" alt="img" style="zoom:80%;" />
 
@@ -3401,6 +3400,8 @@ public static  Jedis getJedisFromSentinel(){
 > - 如果某一段插槽的主从都挂掉，而 cluster-require-full-coverage 为 no ，那么，该插槽数据全都不能使用，也无法存储，其他插槽可以使用
 >
 > - redis.conf 中的参数 cluster-require-full-coverage
+
+- 从机在集群中充当“冷备”，不能缓解读压力
 
 #### 3.3 集群的Jedis开发
 
