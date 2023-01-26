@@ -141,7 +141,10 @@ Docker Registry 是官方提供的工具，可以用于构建私有镜像仓库�
 - 运行私有库 Registry，相当于本地有个私有 Docker hub
 
   ```bash
-  $ docker run -d -p 5000:5000 -v /zzyyuse/myregistry/:/tmp/registry --privileged=true registry
+  $ $ docker run -d \
+      -p 5000:5000 \
+      -v /opt/data/registry:/var/lib/registry \
+      registry
   ```
 
   > **注意**
@@ -160,13 +163,13 @@ Docker Registry 是官方提供的工具，可以用于构建私有镜像仓库�
 - 将镜像 myUbuntu:1.2 修改成符合私服规范的 Tag
 
   ```bash
-  $ docker tag [image:Tag] Host:Port/Repository:Tag
+  $ docker tag [image:Tag] Registry_Host:Registry_Port/Repository:Tag
   ```
 
   例：
 
   ```bash
-  $ docker tag  myUbuntu:1.2  127.0.0.1:5000/myUbuntu:1.0
+  $ docker tag  myUbuntu:1.2  192.168.11.101:5000/myUbuntu:1.0
   ```
 
 - docker 默认不允许 http 方式推送镜像，通过配置选项来取消这个限制：修改配置文件使之支持 http
@@ -176,7 +179,7 @@ Docker Registry 是官方提供的工具，可以用于构建私有镜像仓库�
   # 添加如下配置
   {
     "registry-mirrors": ["https://aa25jngu.mirror.aliyuncs.com"],
-    "insecure-registries": ["127.0.0.1:5000"]
+    "insecure-registries": ["192.168.11.101:5000"]
   }
   ```
 
@@ -197,6 +200,10 @@ Docker Registry 是官方提供的工具，可以用于构建私有镜像仓库�
   ```bash
   $ docker pull 192.168.111.162:5000/myUbuntu:1.0
   ```
+
+> **配置高级仓库**
+>
+> https://yeasy.gitbook.io/docker_practice/repository/nexus3_registry
 
 ### 面试题：docker 虚悬镜像
 
@@ -243,6 +250,8 @@ Docker Registry 是官方提供的工具，可以用于构建私有镜像仓库�
   |     `-p ip::containerPort`      |   随机分配端口`-p 10.0.0.100::80`   |
   | `-p hostPort:containerPort:udp` |      指定协议`-p 8080:80:tcp`       |
   |      `-p 81:80 -p 443:443`      |              指定多个               |
+
+- `--restart=always`：docker 重启后会自动重启该容器
 
 ### 3.2 列出当前正在运行的容器
 

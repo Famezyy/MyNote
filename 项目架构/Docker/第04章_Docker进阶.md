@@ -67,8 +67,14 @@ Dockerfile 面向开发，Docker 镜像成为交付标准，Docker 容器则涉�
     RUN ["/bin/bash","./start.sh"]
     ```
 
-- `EXPOSE`：当前容器对外暴露出的端口
+- `EXPOSE`：当前容器对外暴露出的端口，可以一次设置多个端口号，用空格隔开
 
+  或者可以在`docker run`时指定`--expose=1234`，这两种方式作用相同。但是，`--expose`可以接受端口范围作为参数，比如`--expose=2000-3000`。`EXPOSE`和`--expose`都不依赖于宿主机器。默认状态下，这些规则并不会使这些端口可以通过宿主机来访问。
+
+  `EXPOSE` 指令是声明容器运行时提供服务的端口，这**只是一个声明**，在容器运行时并不会因为这个声明应用就会开启这个端口的服务。在 Dockerfile 中写入这样的声明有两个好处，一个是帮助镜像使用者理解这个镜像服务的守护端口，以方便配置映射；另一个用处则是在运行时使用随机端口映射时，也就是 `docker run -P` 时，会自动随机映射 `EXPOSE` 的端口。
+
+  要将 `EXPOSE` 和在运行时使用 `-p <宿主端口>:<容器端口>` 区分开来。`-p`，是映射宿主端口和容器端口，换句话说，就是将容器的对应端口服务公开给外界访问，而 `EXPOSE` 仅仅是声明容器打算使用什么端口而已，并不会自动在宿主进行端口映射。
+  
 - `WORKDIR`：指定在创建容器后，终端默认登陆的进来工作目录，一个落脚点
 
 - `USER`：指定该镜像以什么样的用户去执行，如果都不指定，默认是 root
@@ -531,3 +537,375 @@ $ ip addr
 ```
 
 可以发现主机上的`33: vethc4d4e89@if32`匹配 micro1 的`32: eth0@if33`，`35: veth4aafe45@if34`匹配 micro2 的`34: eth0@if35`。
+
+#### 2.hoat
+
+直接使用宿主机的 IP 地址与外界进行通信，不再需要额外进行NAT 转换。容器将不会获得一个独立的 Network Namespace，而是和宿主机共用一个 Network Namespace。容器将不会虚拟出自己的网卡而是使用宿主机的 IP 和端口。
+
+因为直接映射到宿主机的端口，所以`host`不能配合`-p`一起使用，例如下面的命令将会产生警告：
+
+```bash
+$ docker run -d -p 8083:8080 --network host --name micro microservice:1.0
+WARNING: Published ports are discarded when using host network mode
+d2dee142f94dc505d019c2912454cf8cc2996443050026ae7f902fb22206190c
+```
+
+此时`-p`设置的参数不会起到任何作用，端口号是微服务默认的端口号`8080`。
+
+启动时直接使用下面的命令即可：
+
+```bash
+$ docker run -d --network host --name micro microservice:1.0
+```
+
+此时查看 micro 容器的网络情况：
+
+```bash
+$ docker inspect micro | tail -n 20
+            "Networks": {
+                "host": {
+                    "IPAMConfig": null,
+                    "Links": null,
+                    "Aliases": null,
+                    "NetworkID": "d57374a995d721d98ea3393b4c688a70a8747b31ddc2d68361a176276a549e94",
+                    "EndpointID": "f99a63966c72e80baa45842d497c0dede0eac9741ab7522eeb4bd6c58ad77955",
+                    "Gateway": "",
+                    "IPAddress": "",
+                    "IPPrefixLen": 0,
+                    "IPv6Gateway": "",
+                    "GlobalIPv6Address": "",
+                    "GlobalIPv6PrefixLen": 0,
+                    "MacAddress": "",
+                    "DriverOpts": null
+                }
+            }
+        }
+    }
+]
+```
+
+可以发现没有使用网关和分配 IP 地址，因为使用的是宿主机的 IP 地址和端口，即外部主机与容器可以直接通信，从外部访问时直接访问`http://宿主机IP:8080`即可。
+
+```bash
+$ curl http://172.16.16.128:8080/hello
+hello world
+```
+
+#### 3.none
+
+在此模式下，并不为 Docker 容器进行任何网络配置，即这个 Docker 容器没有网卡、IP、路由等信息，只有一个 lo（表示本地回环），需要我们自己为 Docker 容器添加网卡、配置 IP 等。
+
+```bash
+$ docker run -d --network none --name micro microservice:1.0
+4557daa3219dbfff2acae5d98f8c24abd711423557ba0dc48e31e0e47df30459
+$ docker inspect micro | tail -n 20
+            "Networks": {
+                "none": {
+                    "IPAMConfig": null,
+                    "Links": null,
+                    "Aliases": null,
+                    "NetworkID": "c03ed094b7097d0cde29369c81790fb0df0309418a6ff55863465e1e32427a25",
+                    "EndpointID": "cda18dd88a08e4e69305352d38f04826b939ea4b8d82a095c208f2c73f659951",
+                    "Gateway": "",
+                    "IPAddress": "",
+                    "IPPrefixLen": 0,
+                    "IPv6Gateway": "",
+                    "GlobalIPv6Address": "",
+                    "GlobalIPv6PrefixLen": 0,
+                    "MacAddress": "",
+                    "DriverOpts": null
+                }
+            }
+        }
+    }
+]
+```
+
+#### 4.container
+
+新建的容器和已经存在的一个容器共享一个网络 IP 配置而不是和宿主机共享。新创建的容器不会创建自己的网卡，配置自己的IP，而是和一个指定的容器共享 IP、端口范围等。同样，两个容器除了网络方面，其他的如文件系统、进程列表等还是隔离的。
+
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202301250314194.png" alt="image-20230121190827447" style="zoom:67%;" />
+
+此时要注意新建的容器所暴露的端口不能和原容器相同，否则会出错：
+
+```bash
+$ docker run -it -p 8080:8080 --name alpine1 alpine /bin/sh
+8b10dd18d9e5eadc30ef64182d33a7efc0e824b7a8242f95587200728df3ca64
+$ docker run -it -p 8081:8080 --network container:alpine1 --name alpine1 alpine /bin/sh
+docker: Error response from daemon: conflicting options: port publishing and the container type network mode.
+See 'docker run --help'.
+```
+
+> **Alpine**
+>
+> Alpine Linux 是一款独立的、非商业的通用 Linux 发行版，专为追求安全性、简单性和资源效率的用户而设计。 可能很多人没听说过这个 Linux 发行版本，但是经常用 Docker 的朋友可能都用过，因为他小，简单，安全而著称，所以作为基础镜像是非常好的一个选择，可谓是麻雀虽小但五脏俱全，镜像非常小巧，不到 6M的大小，所以特别适合容器打包。
+
+**验证共用搭桥**
+
+```bash
+$ docker run -it --name alpine1 alpine /bin/sh
+/ # ip addr
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+16: eth0@if17: <BROADCAST,MULTICAST,UP,LOWER_UP,M-DOWN> mtu 1500 qdisc noqueue state UP 
+    link/ether 02:42:ac:11:00:02 brd ff:ff:ff:ff:ff:ff
+    inet 172.17.0.2/16 brd 172.17.255.255 scope global eth0
+       valid_lft forever preferred_lft forever
+```
+
+```bash
+$ docker run -it --network container:alpine1 --name alpine2 alpine /bin/sh
+/ # ip addr
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+16: eth0@if17: <BROADCAST,MULTICAST,UP,LOWER_UP,M-DOWN> mtu 1500 qdisc noqueue state UP 
+    link/ether 02:42:ac:11:00:02 brd ff:ff:ff:ff:ff:ff
+    inet 172.17.0.2/16 brd 172.17.255.255 scope global eth0
+       valid_lft forever preferred_lft forever
+```
+
+可以发现，alpine1 和 alpine2 共用同一个`eth`。
+
+如果此时关闭 alpine1，再观察 alpine2:
+
+```bash
+$ docker stop alpine1
+alpine1
+$ docker exec -it alpine2 ip addr
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+```
+
+可以发现`eth0`消失了。
+
+#### 5.自定义网络
+
+> `link`模式已过时
+
+如果我们正常创建两个容器使用`bridge`网络，并在容器中分别 ping 另一容器的 IP 地址是可以 ping 通的，但是如果按照容器名是 ping 不同的。这样当 IP 发生变动时，就会变得很麻烦。
+
+**ping IP**
+
+```bash
+$ docker run -it --name alpine1 alpine /bin/sh
+/ # ip addr
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+18: eth0@if19: <BROADCAST,MULTICAST,UP,LOWER_UP,M-DOWN> mtu 1500 qdisc noqueue state UP 
+    link/ether 02:42:ac:11:00:02 brd ff:ff:ff:ff:ff:ff
+    inet 172.17.0.2/16 brd 172.17.255.255 scope global eth0
+       valid_lft forever preferred_lft forever
+/ # ping 172.17.0.3
+PING 172.17.0.3 (172.17.0.3): 56 data bytes
+```
+
+```bash
+$ docker run -it --name alpine2 alpine /bin/sh
+/ # ip addr
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+20: eth0@if21: <BROADCAST,MULTICAST,UP,LOWER_UP,M-DOWN> mtu 1500 qdisc noqueue state UP 
+    link/ether 02:42:ac:11:00:03 brd ff:ff:ff:ff:ff:ff
+    inet 172.17.0.3/16 brd 172.17.255.255 scope global eth0
+       valid_lft forever preferred_lft forever
+/ # ping 172.17.0.2
+PING 172.17.0.2 (172.17.0.2): 56 data bytes
+64 bytes from 172.17.0.2: seq=0 ttl=64 time=0.322 ms
+```
+
+**ping 容器名**
+
+```bash
+ping alpine2
+ping: bad address 'alpine2'
+```
+
+```bash
+/ # ping alpine1
+ping: bad address 'alpine1'
+```
+
+使用自定义桥接网络可以通过容器名访问相应容器，自定义网络默认使用的是桥接网络 bridge。
+
+**新建自定义网络**
+
+```bash
+$docker network create my_net
+24e287841354b6f99a13ef4606956550fab5f740a8ff0f5d8e658712c7ad3afd
+$ docker network ls
+NETWORK ID     NAME      DRIVER    SCOPE
+2a452f365325   bridge    bridge    local
+d57374a995d7   host      host      local
+24e287841354   my_net    bridge    local
+c03ed094b709   none      null      local
+```
+
+**新建容器使用自定义网络**
+
+```bash
+$ docker run -it --network my_net --name alpine1 alpine /bin/sh
+$ docker run -it --network my_net --name alpine2 alpine /bin/sh
+```
+
+**测试 ping 容器名**
+
+```bash
+/ # ping alpine2
+PING alpine2 (172.18.0.3): 56 data bytes
+64 bytes from 172.18.0.3: seq=0 ttl=64 time=0.295 ms
+```
+
+```bash
+/ # ping alpine1
+PING alpine1 (172.18.0.2): 56 data bytes
+64 bytes from 172.18.0.2: seq=0 ttl=64 time=0.347 ms
+```
+
+可以发现，自定义网络维护了主机名和 ip 的对应关系（ip 和域名都能通）。
+
+## 4.Docker-Compose容器编排
+
+Compose 是 Docker 公司推出的一个工具软件，可以管理多个 Docker 容器组成一个应用。你需要定义一个 YAML 格式的配置文件 docker-compose.yml，写好多个容器之间的调用关系。然后，只要一个命令，就能同时启动/关闭这些容器。
+
+官方文档：https://docs.docker.com/compose/compose-file/compose-file-v3/
+
+安装卸载：https://docs.docker.com/compose/install/
+
+> **注意**
+>
+> 选择相应的架构！
+
+### 4.1 核心概念
+
+- `docker-compose.yml`
+- 服务：一个个应用容器实例，比如订单微服务、库存微服务、mysql 容器、nginx 容器或者 redis 容器
+- 工程：由一组关联的应用容器组成的一个完整业务单元，在 docker-compose.yml 文件中定义
+
+### 4.2 使用步骤
+
+- 编写 Dockerfile 定义各个微服务应用并构建出对应的镜像文件
+- 使用 docker-compose.yml 定义一个完整业务单元，安排好各个容器服务
+- 执行`docker-compose up`命令启动整个应用程序
+
+### 4.3 常用命令
+
+| 命令 | 作用 |
+| ---- | ---- |
+|`docker-compose -h`|              查看帮助|
+|`docker-compose up`| 启动所有 docker-compose 服务 |
+|`docker-compose up -d`| 启动所有 docker-compose 服务并后台运行 |
+|`docker-compose down`|             停止并删除容器、网络、卷、镜像|
+|`docker-compose exec yml里面的服务id`| 进入容器实例内部`docker-compose exec docker-compose.yml文件中写的服务id /bin/bash` |
+|`docker-compose ps`| 展示当前 docker-compose 编排过的运行的所有容器 |
+|`docker-compose top`| 展示当前 docker-compose 编排过的容器进程 |
+|`docker-compose logs yml里面的服务id`|   查看容器输出日志|
+|`docker-compose config`|   检查配置|
+|`docker-compose config -q`| 检查配置，有问题才有输出|
+|`docker-compose restart`|  重启服务|
+|`docker-compose start`|   启动服务|
+|`docker-compose stop`|    停止服务|
+
+### 4.4 编排微服务
+
+参考文档：https://yeasy.gitbook.io/docker_practice/compose/compose_file
+
+编写 docker-compose.yml 文件
+
+```yaml
+version: "3"
+
+services:
+  microService-fromDockerFile:
+    # 可通过 build 指定 Dockerfile 的路径
+    build:
+    	context: ./dir
+    	dockerfile: Dockerfile
+    	args:
+    	  arg1: 1
+  # 相当于：docker run -p 6001:6001 -v /app/microService:/data --network atguigu_net --name ms01 zzyy_docker1:6
+  microService:
+    image: zzyy_docker:1.6
+    # 不指定名称则会使用“路径前缀 + 定义的 service 名 + 数字后缀“作为容器名称
+    container_name: ms01
+    ports:
+      - "6001:6001"
+    volumes:
+      - /app/microService:/data
+    networks: 
+      - atguigu_net 
+    depends_on: 
+      - redis
+      - mysql
+ 
+  redis:
+    image: redis:6.0.8
+    ports:
+      - "6379:6379"
+    volumes:
+      - /app/redis/redis.conf:/etc/redis/redis.conf
+      - /app/redis/data:/data
+    networks: 
+      - atguigu_net
+    command: redis-server /etc/redis/redis.conf
+ 
+  mysql:
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: '123456'
+			MYSQL_ALLOW_EMPTY_PASSWORD: 'no'
+      MYSQL_DATABASE: 'db2021'
+      MYSQL_USER: 'zzyy'
+      MYSQL_PASSWORD: 'zzyy123'
+    ports:
+       - "3306:3306"
+    volumes:
+       - /app/mysql/db:/var/lib/mysql
+       - /app/mysql/conf/my.cnf:/etc/my.cnf
+       - /app/mysql/init:/docker-entrypoint-initdb.d
+    networks:
+      - atguigu_net
+    command: --default-authentication-plugin=mysql_native_password #解决外部无法访问
+
+# 相当于：docker network create atguigu_net
+networks: 
+   atguigu_net: 
+```
+
+由于都部署在同一个 docker 中，因此微服务访问数据库时可以使用 network 而不用 ip：
+
+```properties
+spring.datasource.url=jdbc:mysql://mysql:3306/db2021?
+...
+spring.redis.host=redis
+```
+
+执行`docker compose up`或者`docker compose up -d`即可同时启动三个容器，执行`docker-compose stop`即可同时停止三个容器。
+
+## 5.可视化工具Portainer
+
+Portainer 是一款轻量级的应用，它提供了图形化界面，用于方便地管理 Docker 环境，包括单机环境和集群环境。
+
+官网：https://www.portainer.io/
+
+通过命令行安装
+
+```bash
+$ docker run -d -p 8000:8000 -p 9443:9443 --name portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer-ce:latest
+```
+
+第一次登录需创建 admin 密码，访问地址：https://172.16.16.128:9443
+
+## 6.容器监控
+
+CAdvisor + influxDB + Granfana
