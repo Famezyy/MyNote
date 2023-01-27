@@ -1344,7 +1344,7 @@ new Thread(() -> {
   }
   ```
 
-### ==扩展：==应用之缓存
+### 扩展：应用之缓存
 
 **缓存更新策略**
 
@@ -1459,7 +1459,7 @@ class GenericCachedDao<T> {
 >
 > 乐观锁实现：用 CAS 去更新
 
-### ==扩展：==读写锁原理
+### 扩展：读写锁原理
 
 **图解流程**
 
@@ -2005,6 +2005,16 @@ public static void main(String[] args) {
 
 [ˈsɛməˌfɔr] 信号量，用来限制能同时访问共享资源的线程上限。
 
+**原理**
+
+- `semaphore.acquire()`：获得，假设如果已经满了，等待，等待被释放为止
+
+- `semaphore.release()`： 释放，会将当前的信号量释放 + 1，然后唤醒等待的线程
+
+**作用**
+
+多个共享资源互斥的使用！并发限流，控制最大的线程数。
+
 ```java
 public static void main(String[] args) {
     // 1. 创建 semaphore 对象
@@ -2389,7 +2399,7 @@ private void doReleaseShared() {
 
 ## 4.CountdownLatch
 
-用来进行线程同步协作，等待所有线程完成倒计时。其中构造参数用来初始化等待计数值，`await()`用来等待计数归零，`countDown()`用来让计数减一。
+用来进行线程同步协作，等待所有线程完成倒计时。其中构造参数用来初始化等待计数值，`await()`用来等待计数归零，`countDown()`用来让计数减 1，当计数器变为 0 时，`countDownLatch.await()`就会被唤醒继续执行。
 
 ```java
 public static void main(String[] args) throws InterruptedException {
@@ -2484,7 +2494,7 @@ public static void main(String[] args) throws InterruptedException {
 18:52:27.835 c.TestCountDownLatch [pool-1-thread-4] - wait end... 
 ```
 
-### ==扩展：==应用之同步等待多线程准备完毕
+### 扩展：应用之同步等待多线程准备完毕
 
 ```java
 AtomicInteger num = new AtomicInteger(0);
@@ -2527,7 +2537,7 @@ service.shutdown();
 游戏开始... 
 ```
 
-### ==扩展：==应用之同步等待多个远程调用结束
+### 扩展：应用之同步等待多个远程调用结束
 
 ```java
 @RestController
@@ -3849,29 +3859,6 @@ public E take() throws InterruptedException {
 
 事实上，`ConcurrentLinkedQueue`应用还是非常广泛的，例如之前讲的 Tomcat 的 Connector 结构时，Acceptor 作为生产者向 Poller 消费者传递事件信息时，正是采用了`ConcurrentLinkedQueue`将 SocketChannel 给 Poller 使用。
 
-## 10.CopyOnWriteArrayList
-
-`CopyOnWriteArraySet`是它的马甲，底层实现采用了写入时拷贝的思想，增删改操作会将底层数组拷贝一份，更改操作在新数组上执行，这时不影响其它线程的**并发读，读写分离**。以新增为例：
-
-```java
-public boolean add(E e) {
-    synchronized (lock) {
-        // 获取旧的数组
-        Object[] es = getArray();
-        int len = es.length;
-        // 拷贝新的数组（这里是比较耗时的操作，但不影响其它读线程）
-        es = Arrays.copyOf(es, len + 1);
-        // 添加新元素
-        es[len] = e;
-        // 替换旧的数组
-        setArray(es);
-        return true;
-    }
-}
-```
-
-> 这里的源码版本是 Java 11，在 Java 1.8 中使用的是可重入锁而不是 synchronized
-
 其它读操作并未加锁，例如：
 
 ```java
@@ -3884,42 +3871,91 @@ public void forEach(Consumer<? super E> action) {
 }
 ```
 
-适合**读多写少**的应用场景。
-
-### 10.1 get弱一致性
-
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220819144405146-2bce14506bcb988a7c596fd8e6669831-288688.png" alt="image-20220819144405146" style="zoom:80%;" />
-
-| 时间点 | 操作                         |
-| ------ | ---------------------------- |
-| 1      | Thread-0 getArray()          |
-| 2      | Thread-1 getArray()          |
-| 3      | Thread-1 setArray(arrayCopy) |
-| 4      | Thread-0 array[index]        |
-
-> 不容易测试，但问题确实存在
-
-### 10.2 迭代器弱一致性
+## 10.ReadWriteLock
 
 ```java
-CopyOnWriteArrayList<Integer> list = new CopyOnWriteArrayList<>();
-list.add(1);
-list.add(2);
-list.add(3);
-Iterator<Integer> iter = list.iterator();
-new Thread(() -> {
-    list.remove(0);
-    System.out.println(list);
-}).start();
- 
-sleep1s();
-// 迭代器依然是旧的引用，所以还是会遍历到 0 号元素
-while (iter.hasNext()) {
-    System.out.println(iter.next());
+/**
+ * 独占锁（写锁） 一次只能被一个线程占有
+ * 共享锁（读锁） 多个线程可以同时占有
+ * ReadWriteLock
+ * 读-读  可以共存！
+ * 读-写  不能共存！
+ * 写-写  不能共存！
+ */
+public class ReadWriteLockDemo {
+    public static void main(String[] args) {
+        //MyCache myCache = new MyCache();
+        MyCacheLock myCacheLock = new MyCacheLock();
+        // 写入
+        for (int i = 1; i <= 5; i++) {
+            final int temp = i;
+            new Thread(()->{
+                myCacheLock.put(temp + "",temp + "");
+            }, String.valueOf(i)).start();
+        }
+        // 读取
+        for (int i = 1; i <= 5; i++) {
+            final int temp = i;
+            new Thread(()->{
+                myCacheLock.get(temp + "");
+            }, String.valueOf(i)).start();
+        }
+    }
+}
+/**
+ * 自定义缓存
+ * 加锁的
+ */
+class MyCacheLock{
+    private volatile Map<String,Object> map = new HashMap<>();
+    // 读写锁：更加细粒度的控制，锁的对象是this
+    private ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
+    // private Lock lock = new ReentrantLock();
+    // 存，写入的时候，只希望同时只有一个线程写
+    public void put(String key,Object value){
+        readWriteLock.writeLock().lock();
+        try {
+            System.out.println(Thread.currentThread().getName() + "写入" + key);
+            map.put(key,value);
+            System.out.println(Thread.currentThread().getName() + "写入OK");
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            readWriteLock.writeLock().unlock();
+        }
+    }
+    // 取，读，所有人都可以读！
+    public void get(String key){
+        readWriteLock.readLock().lock();
+        try {
+            System.out.println(Thread.currentThread().getName() + "读取" + key);
+            Object o = map.get(key);
+            System.out.println(Thread.currentThread().getName() + "读取OK");
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            readWriteLock.readLock().unlock();
+        }
+    }
+}
+/**
+ * 自定义缓存
+ * 不加锁的
+ */
+class MyCache{
+    private volatile Map<String,Object> map = new HashMap<>();
+    // 存，写
+    public void put(String key,Object value){
+        System.out.println(Thread.currentThread().getName() + "写入" + key);
+        map.put(key,value);
+        System.out.println(Thread.currentThread().getName() + "写入OK");
+    }
+    // 取，读
+    public void get(String key){
+        System.out.println(Thread.currentThread().getName() + "读取" + key);
+        Object o = map.get(key);
+        System.out.println(Thread.currentThread().getName() + "读取OK");
+    }
 }
 ```
 
-> 不要觉得弱一致性就不好
->
-> - 数据库的 MVCC 都是弱一致性的表现
-> - 并发高和一致性是矛盾的，需要权衡

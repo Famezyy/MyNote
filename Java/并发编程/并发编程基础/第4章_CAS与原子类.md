@@ -200,7 +200,7 @@ public static void main(String[] args) {
 0 cost: 302 ms 
 ```
 
-## 2.CAS 与 volatile
+## 2.CAS
 
 前面看到的`AtomicInteger`的解决方法，内部并没有用锁来保护共享变量的线程安全。那么它是如何实现的呢？
 
@@ -237,19 +237,7 @@ public void withdraw(Integer amount) {
 >
 > 在多核状态下，某个核执行到带 lock 的指令时，CPU 会让总线锁住，当这个核把此指令执行完毕，再开启总线。这个过程中不会被线程的调度机制所打断，保证了多个线程对内存操作的准确性，是原子的。
 
-### 2.1 volatile
-
-获取共享变量时，为了保证该变量的可见性，需要使用 volatile 修饰。
-
-它可以用来修饰成员变量和静态成员变量，他可以避免线程从自己的工作缓存中查找变量的值，必须到主存中获取它的值，线程操作 volatile 变量都是直接操作主存。即一个线程对 volatile 变量的修改，对另一个线程可见。
-
-> **注意**
->
-> volatile 仅仅保证了共享变量的可见性，让其它线程能够看到最新值，但不能解决指令交错问题（不能保证原子性）
-
-CAS 必须借助 volatile 才能读取到共享变量的最新值来实现【比较并交换】的效果。
-
-### 2.2 为什么无锁效率高
+### 2.1 无锁效率高
 
 无锁情况下，即使重试失败，线程始终在高速运行，没有停歇，而 synchronized 会让线程在没有获得锁的时候，发生上下文切换，进入阻塞。
 
@@ -259,15 +247,84 @@ CAS 必须借助 volatile 才能读取到共享变量的最新值来实现【比
 
 <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220818144746273-73b1ffb388892e6722fe59673637ab18-8fba56.png" alt="image-20220818144746273" style="zoom:67%;" />
 
-### 2.3 CAS 的特点
+### 2.2 CAS 的特点
 
-结合 CAS 和 volatile 可以实现无锁并发，适用于线程数少、多核 CPU 的场景下。
+CAS 必须借助 volatile 才能读取到共享变量的最新值来实现【比较并交换】的效果。结合 CAS 和 volatile 可以实现无锁并发，适用于线程数少、多核 CPU 的场景下。
 
 - CAS 是基于**乐观锁**的思想：最乐观的估计，不怕别的线程来修改共享变量，就算改了也没关系，我吃亏点再重试呗
 - synchronized 是基于**悲观锁**的思想：最悲观的估计，得防着其它线程来修改共享变量，我上了锁你们都别想改，我改完了解开锁，你们才有机会
 - CAS 体现的是无锁并发、无阻塞并发，请仔细体会这两句话的意思
   - 因为没有使用 synchronized，所以线程不会陷入阻塞，这是效率提升的因素之一
   - 但如果竞争激烈，可以想到重试必然频繁发生，反而效率会受影响
+
+### 2.3 自旋锁
+
+我们来自定义一个锁测试：
+
+```java
+// 自旋锁
+public class SpinlockDemo {    
+    /**
+     * 原子引用
+     * 默认值
+     * int 0
+     * Thread null
+     */
+    AtomicReference<Thread> atomicReference = new AtomicReference<>();    
+    // 加锁    
+    public void myLock(){        
+        Thread thread = Thread.currentThread();        
+        System.out.println(Thread.currentThread().getName()+ "==> mylock");        
+        // 自旋锁：如果 atomicReference 的值为空，则执行 thread
+        while (!atomicReference.compareAndSet(null,thread)) {
+
+        }
+    }    
+    // 解锁   
+    public void myUnLock(){        
+        Thread thread = Thread.currentThread();        
+        System.out.println(Thread.currentThread().getName() + "==> myUnlock");        
+        atomicReference.compareAndSet(thread,null);// 解锁    
+    }
+}
+```
+
+测试
+
+```java
+public class TestSpinLock {    
+    public static void main(String[] args) throws InterruptedException {
+        //ReentrantLock reentrantLock = new ReentrantLock();
+        //reentrantLock.lock();
+        //reentrantLock.unlock();        
+        // 底层使用的自旋锁CAS       
+        SpinlockDemo lock = new SpinlockDemo();// 定义锁        
+        new Thread(()-> {            
+            lock.myLock();// 加锁            
+            try {                
+                TimeUnit.SECONDS.sleep(5);            
+            } catch (Exception e) {                
+                e.printStackTrace();            
+            } finally {                
+                lock.myUnLock();// 解锁            
+            }        
+        },"T1").start();        
+        TimeUnit.SECONDS.sleep(1);        
+        new Thread(()-> {            
+            lock.myLock();            
+            try {                
+                TimeUnit.SECONDS.sleep(1);            
+            } catch (Exception e) {                
+                e.printStackTrace();            
+            } finally {                
+                lock.myUnLock();            
+            }        
+        },"T2").start();    
+    }
+}
+```
+
+当第一个线程 T1 获取锁的时候，能够成功获取到，不会进入 while 循环，如果此时线程 T1 没有释放锁，另一个线程 T2 又来获取锁，此时由于不满足 CAS，所以就会进入 while 循环，不断判断是否满足 CAS，直到 A 线程调用 unlock 方法释放了该锁。
 
 ## 3.原子整数
 
@@ -817,7 +874,7 @@ transient volatile long base;
 transient volatile int cellsBusy;
 ```
 
-#### 1）CAS 锁
+#### 1.CAS 锁
 
 ```java
 // 不要用于实践！！！
@@ -876,7 +933,7 @@ new Thread(() -> {
 18:27:08.204 c.Test42 [Thread-1] - unlock... 
 ```
 
-#### 2）原理：伪共享
+#### 2.原理：伪共享
 
 其中 Cell 即为累加单元
 
@@ -928,7 +985,7 @@ CPU 要保证数据的一致性，如果某个 CPU 核心更改了数据，其�
 
 <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220818145800319-4e5132707f1396ae9e404273b2ad845f-84fe38.png" alt="image-20220818145800319" style="zoom:80%;" />
 
-#### 3）源码分析
+#### 3.源码分析
 
 累加主要调用下面的方法
 
@@ -1156,18 +1213,3 @@ Account.demo(new Account() {
     }
 });
 ```
-
-## 9.本章小结
-
-- CAS 与 volatile
-- API
-  - 原子整数
-  - 原子引用
-  - 原子数组
-  - 字段更新器
-  - 原子累加器
-  - Unsafe
-
-* 原理方面
-* LongAdder 源码
-* 伪共享

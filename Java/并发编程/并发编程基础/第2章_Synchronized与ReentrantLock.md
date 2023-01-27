@@ -231,7 +231,10 @@ public class Test1 {
 }
 ```
 
-### 2.1 方法上的synchronized
+### 2.1 锁的对象
+
+- 普通`synchronized`方法的锁是调用的对象
+- `static synchronized`方法的锁是 Class 本身
 
 ```java
 class Test{
@@ -1757,6 +1760,26 @@ public static void main(String[] args) throws InterruptedException {
 - WAITING 线程会在 Owner 线程调用 notify 或 notifyAll 时唤醒，但**唤醒后并不意味者立刻获得锁**，仍需进入 
 - EntryList 重新竞争
 
+**wait/sleep 区别**
+
+1. 二者来自不同的类
+
+   - wait => Object
+
+   - sleep => Thread
+
+2. 关于锁的释放
+
+   - wait 会释放锁
+
+   - sleep 不会释放
+
+3. 使用的范围是不同的
+
+   - wait 必须在同步代码块中使用
+
+   - sleep 可以在任何地方睡眠
+
 **API**
 
 - `obj.wait()`让进入 object 监视器的线程到 waitSet 等待
@@ -2093,7 +2116,7 @@ synchronized(lock) {
 }
 ```
 
-### ==扩展：==模式之保护性暂停 
+### 扩展：模式之保护性暂停 
 
 #### 1.定义
 
@@ -2450,7 +2473,7 @@ public static void main(String[] args) throws InterruptedException {
 10:35:06.689 c.People [Thread-1] - 收到信 id:3, 内容:内容3
 ```
 
-### ==扩展：==异步模式之生产者消费者
+### 扩展：异步模式之生产者消费者
 
 #### 1.定义
 
@@ -2790,7 +2813,7 @@ t 线程用`synchronized(obj)`获取了对象锁后
 
 当前线程所有代码运行完毕，进入 TERMINATED
 
-## 7.多把锁下的死锁问题
+## 7.死锁
 
 ### 7.1 案例
 
@@ -3418,7 +3441,7 @@ try {
 18:19:41.547 [t1] c.TestTimeout - 获取等待 1s 后失败，返回
 ```
 
-### ==扩展：==使用 tryLock 解决哲学家就餐问题
+### 扩展：使用 tryLock 解决哲学家就餐问题
 
 ```java
 class Chopstick extends ReentrantLock {
@@ -3476,7 +3499,9 @@ class Philosopher extends Thread {
 
 ### 8.4 公平锁
 
-`ReentrantLock`默认是不公平的。
+- 公平锁：竞争锁资源的线程严格按照请求的顺序来分配锁。
+
+- 非公平锁：竞争锁资源的线程可以插队来竞争锁资源 （ReentrantLock 默认非公平）
 
 ```java
 ReentrantLock lock = new ReentrantLock(false);
@@ -3546,6 +3571,32 @@ t481 running...
 ```
 
 公平锁一般没有必要，会**降低并发度**，后面分析原理时会讲解。
+
+**原理**
+
+非公平锁（NonfairSync）源码：
+
+
+```java
+/**
+ * Nonfair version of Sync
+ */
+static final class NonfairSync extends Sync {
+    private static final long serialVersionUID = -8159625535654395037L;
+    final boolean writerShouldBlock() {
+        return false; // writers can always barge
+    }
+    final boolean readerShouldBlock() {
+        return apparentlyFirstQueuedIsExclusive();
+    }
+}
+```
+
+可以看到，对于读和写操作是否应该被阻塞，公平锁和非公平锁采取了不同的策略。
+
+公平锁的策略是判断 AQS 队列中是否有正在等待的线程，如果有，返回 true，表明应该进入等待状态，并将该线程放入 AQS 队列尾部（一个 FIFO 的双向队列）；
+
+非公平锁的写操作不管三七二十一，我就是要参与竞争去，会先去尝试竞争锁资源，如果抢占不到，就会再加入到 AQS 同步队列中去等待；非公平锁的读操作需要判断等待队列里的头结点是不是写操作（通过是否共享来判断锁类型，读锁是共享的，写锁是独占的）。
 
 ### 8.5 条件变量
 
@@ -3645,7 +3696,15 @@ private static void sendBreakfast() {
 18:52:28.683 [Thread-0] c.TestCondition - 等到了它的烟
 ```
 
-## ==扩展：==同步模式之顺序控制
+### 8.6 与 Lock 区别
+
+- Synchronized 内置的 Java 关键字， Lock 是一个 Java 类
+- Synchronized 无法判断获取锁的状态，Lock 可以判断是否获取到了锁
+- Synchronized 会自动释放锁，lock 必须要手动释放锁
+- Synchronized **可重入锁，不可以中断的，非公平**；Lock ，**可重入锁，可打断，可设置公平**
+- Synchronized 适合锁少量的代码同步问题，Lock 适合锁大量的同步代码
+
+## 扩展：同步模式之顺序控制
 
 ### 1.固定运行顺序
 
