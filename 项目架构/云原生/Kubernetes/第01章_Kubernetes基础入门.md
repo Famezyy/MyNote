@@ -219,9 +219,9 @@ modprobe -- ip_vs
 modprobe -- ip_vs_rr
 modprobe -- ip_vs_wrr
 modprobe -- ip_vs_sh
+modprobe -- nf_conntrack_ipv4
 # 高版本内核下使用
-modprobe -- nf_conntrack
-# modprobe -- nf_conntrack_ipv4
+# modprobe -- nf_conntrack
 EOF
 # 3.为脚本添加执行权限
 chmod +x /etc/sysconfig/modules/ipvs.modules
@@ -256,16 +256,33 @@ systemctl enable docker
 阿里云：https://developer.aliyun.com/mirror/kubernetes?spm=a2c6h.13651102.0.0.73281b11YKT2nT
 
 ```bash
+# 国内
 cat <<EOF > /etc/yum.repos.d/kubernetes.repo
 [kubernetes]
 name=Kubernetes
-# baseurl=https://mirrors.aliyun.com/kubernetes/yum/repos/kubernetes-el7-aarch64/
 baseurl=https://mirrors.aliyun.com/kubernetes/yum/repos/kubernetes-el7-x86_64/
 enabled=1
 gpgcheck=1
 repo_gpgcheck=1
 gpgkey=https://mirrors.aliyun.com/kubernetes/yum/doc/yum-key.gpg https://mirrors.aliyun.com/kubernetes/yum/doc/rpm-package-key.gpg
 EOF
+```
+
+```bash
+# 国外
+cat <<EOF > /etc/yum.repos.d/kubernetes.repo
+[kubernetes]
+name=Kubernetes
+baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
+enabled=1
+gpgcheck=1
+repo_gpgcheck=1
+gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg
+        https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+EOF
+```
+
+```bash
 yum install -y kubelet kubeadm kubectl
 ```
 
@@ -303,11 +320,10 @@ images=(
   registry.k8s.io/etcd:3.5.6-0
   registry.k8s.io/coredns/coredns:v1.9.3
 )
+```
 
-# for imageName in ${images[@]};do
-#	 docker pull $imageName
-# done
-
+```bash
+# 国内
 for imageName in ${images[@]};do
 	# 从阿里源拉取镜像文件，但是名字格式不同
 	docker pull registry.cn-hangzhou.aliyuncs.com/google_containers/$imageName
@@ -317,23 +333,27 @@ for imageName in ${images[@]};do
 done
 ```
 
+```bash
+# 国外
+for imageName in ${images[@]};do
+	docker pull $imageName
+done
+```
+
 #### 2.集群初始化
 
 下面的操作只需要在 master 节点上执行即可
 
 ```bash
 # 创建集群
-kubeadm init \
-  # --apiserver-advertise-address=127.16.19.200 \
-  # --image-repository=registry.aliyuncs.com/google_containers \
-  --kubernetes-version=1.26.1 \
-  --service-cidr=10.96.0.0/12 \
-  --pod-network-cidr=10.244.0.0/16
+kubeadm init --apiserver-advertise-address=192.168.11.100 --kubernetes-version=1.26.1 --service-cidr=10.96.0.0/12 --pod-network-cidr=10.244.0.0/16 # --image-repository=registry.aliyuncs.com/google_containers
 
-echo "export KUBECONFIG=/etc/kubernetes/admin.conf" >> ~/.bash_profile
-source ~/.bash_profile
+# 执行下面的命令
+export KUBECONFIG=/etc/kubernetes/admin.conf
 ```
 
+> **问题**
+>
 > 出现以下错误时`[ERROR CRI]: container runtime is not running`的解决方案：
 >
 > ```bash
@@ -341,19 +361,111 @@ source ~/.bash_profile
 > systemctl restart containerd
 > ```
 
-下面的操作只需要在 node 节点上执行即可
+等初始化完成后会显示 node 节点加入集群的命令，只需要在 node 节点上执行即可。
 
-```
-kubeadm join 192.168.0.100:6443 --token awk15p.t6bamck54w69u4s8 \
-    --discovery-token-ca-cert-hash sha256:a94fa09562466d32d29523ab6cff122186f1127599fa4dcd5fa0152694f17117 
-```
+> **在 master 上查看节点信息**
+>
+> ```bash
+> kubectl get nodes
+> ```
+>
+> **需要重置时**
+>
+> ```bash
+> kubeadm reset
+> rm -rf /etc/cni/net.d
+> ipvsadm --clear
+> rm -rf $HOME/.kube/config
+> ip link delete flannel.1
+> ip link delete cni0
+> systemctl restart containerd
+> ```
 
-在 master 上查看节点信息
+#### 3.安装网络插件
+
+kubernetes 支持多种网络插件，如 flannel，calico，cannal 等，本次选择 flannel，只在 master 节点操作即可，插件会通过 DaemonSet 控制器同步安装
 
 ```bash
-kubectl get nodes
-NAME    STATUS   ROLES     AGE   VERSION
-master  NotReady  master   6m    v1.17.4
-node1   NotReady   <none>  22s   v1.17.4
-node2   NotReady   <none>  19s   v1.17.4
+wget https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
 ```
+
+> **注意**
+>
+> 国内使用时修改文件中 quay.io 仓库为`quay-mirror.qiniu.com`。
+>
+> 由于外网不好访问，如果出现无法访问的情况，可以直接用下面的：
+>
+> ```bash
+> https://github.com/flannel-io/flannel/tree/master/Documentation/kube-flannel.yml
+> ```
+
+使用配置文件启动 fannel
+
+```bash
+kubectl apply -f kube-flannel.yml
+```
+
+> **问题**
+>
+> - 若是集群状态一直是 notready，用下面语句查看原因
+>
+>   ```bash
+>   journalctl -f -u kubelet.service
+>   ```
+>
+> - 若显示`cni plugin not initialized`，可尝试重启`contained`
+
+### 2.9 测试
+
+**创建一个 nginx 服务**
+
+```bash
+kubectl create deployment nginx --image=nginx:1.14-alpine
+```
+
+**暴露端口**
+
+```bash
+kubectl expose deploy nginx --port=80 --target-port=80 --type=NodePort
+```
+
+**查看服务**
+
+```bash
+kubectl get pod
+NAME                     READY   STATUS    RESTARTS   AGE
+nginx-6db6dff665-nr59s   1/1     Running   0          9s
+
+kubectl get svc
+NAME         TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)        AGE
+kubernetes   ClusterIP   10.96.0.1        <none>        443/TCP        81s
+nginx        NodePort    10.106.114.184   <none>        80:32513/TCP   10s
+```
+
+> **问题**
+>
+> - pod 始终处于`containerCreating`状态时，使用以下命令查看日志
+>
+>   ```bash
+>   kubectl describe pod nginx-6db6dff665-9fglb
+>   ```
+>
+> - 错误为`"cni0" already has an IP address`时，重置 kubernetes
+
+可以访问任意节点 IP：`192.168.11.101:32513`
+
+## 3.资源管理
+
+在 kubernetes 中，所有的内容都抽象为**资源**，用户需要通过操作资源来管理 kubernetes。
+
+kubernetes 的本质上就是一个集群系统，用户可以在集群中部署各种服务，所谓的部署服务，其实就是在 kubernetes 集群中运行一个个的容器，并将指定的程序跑在容器中。
+
+kubernetes 的最小管理单元是`pod`而不是容器，所以只能将容器放在`pod`中，而 kubernetes 一般也不会直接管理`pod`，而是通过`pod控制器`来管理`pod`的。
+
+`pod`可以提供服务之后，就要考虑如何访问`pod`中服务，kubernetes 提供了`service`资源实现这个功能。
+
+当然，如果`pod`中程序的数据需要持久化，kubernetes 还提供了各种`存储`系统。
+
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20200406225334627-102ffc00a84026635682f8cfd33e6d1e-ef403f.png" alt="img" style="zoom: 67%;" />
+
+学习 kubernetes 的核心，就是学习如何对集群上的`Pod、Pod控制器、Service、存储`等各种资源进行操作。
