@@ -172,6 +172,10 @@ Docker Registry 是官方提供的工具，可以用于构建私有镜像仓库�
   $ docker tag  myUbuntu:1.2  192.168.11.101:5000/myUbuntu:1.0
   ```
 
+  > **注意**
+  >
+  > `docker tag`会新创建一个镜像，但是镜像 ID 与之前相同，不占用额外空间
+
 - docker 默认不允许 http 方式推送镜像，通过配置选项来取消这个限制：修改配置文件使之支持 http
 
   ```bash

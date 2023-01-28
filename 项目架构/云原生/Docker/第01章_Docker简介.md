@@ -146,7 +146,7 @@ https://docs.docker.com/engine/install/centos/
 - 安装 Docker CE
 
   ```bash
-  sudo yum install docker-ce docker-ce-cli containerd.io docker-compose-plugin
+  sudo yum -y install docker-ce docker-ce-cli containerd.io docker-compose-plugin
   ```
 
 - 开启 Docker
@@ -214,3 +214,5 @@ https://promotion.aliyun.com/ntms/act/kubernetes.html
 2. docker 利用的是宿主机的内核，而不需要加载操作系统 OS 内核
 
    当新建一个容器时，docker 不需要和虚拟机一样重新加载一个操作系统内核。当新建一个虚拟机时，虚拟机软件需要加载 OS，返回新建过程是分钟级别的。而 docker 由于直接利用宿主机的操作系统，则省略了返回过程，因此新建一个 docker 容器只需要几秒钟。
+
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202301281534918.png" alt="image-20200505183738289" style="zoom:80%;" />
