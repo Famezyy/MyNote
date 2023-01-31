@@ -26,7 +26,7 @@ Pod 是 kubernetes 的最小管理单元，在 kubernetes 中，按照 Pod 的�
 
 ReplicaSet 的主要作用是**保证一定数量的 pod 正常运行**，它会持续监听这些 Pod 的运行状态，一旦 Pod 发生故障，就会重启或重建。同时它还支持对 Pod 数量的扩缩容和镜像版本的升降级。
 
-![img](https://gitee.com/yooome/golang/raw/main/k8s%E8%AF%A6%E7%BB%86%E6%95%99%E7%A8%8B-%E8%B0%83%E6%95%B4%E7%89%88/Kubenetes.assets/image-20200612005334159.png)
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302010049810.png" alt="img"  />
 
 ReplicaSet 的资源清单文件：
 
@@ -207,7 +207,7 @@ replicaset.apps "pc-replicaset" deleted
 
 ## 3.Deployment(Deploy)
 
-![img](https://gitee.com/yooome/golang/raw/main/k8s%E8%AF%A6%E7%BB%86%E6%95%99%E7%A8%8B-%E8%B0%83%E6%95%B4%E7%89%88/Kubenetes.assets/image-20200612005524778.png)
+![img](https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302010049470.png)
 
 Deployment主要功能有下面几个：
 
@@ -420,7 +420,7 @@ pc-deployment-c848d767-rrqcn    0/1     Terminating         0          34m
 
 滚动更新的过程：
 
-![img](https://gitee.com/yooome/golang/raw/main/k8s%E8%AF%A6%E7%BB%86%E6%95%99%E7%A8%8B-%E8%B0%83%E6%95%B4%E7%89%88/Kubenetes.assets/image-20200416140251491.png)
+![img](https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302010049338.png)
 
 镜像更新中rs的变化
 

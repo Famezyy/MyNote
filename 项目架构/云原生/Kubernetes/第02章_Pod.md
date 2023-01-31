@@ -1623,7 +1623,7 @@ taint3-6bf445bf69-ftdhf   1/1     Running   0          24m   10.244.2.4   node2 
 
 上面介绍了污点的作用，我们可以在 Node 上添加污点用于拒绝 Pod 调度上来，但是如果就是想将一个 Pod 调度到一个有污点的 Node 上去，这就要使用到容忍。
 
-<img src="https://gitee.com/yooome/golang/raw/main/k8s详细教程-调整版/Kubenetes.assets/image-20200514095913741.png" alt="image-20200514095913741" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302010048143.png" alt="image-20200514095913741" style="zoom:80%;" />
 
 
 
