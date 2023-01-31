@@ -565,6 +565,8 @@ public static void main(java.lang.String[]);
 
 由于 Monitor 锁的成本非常高，如果每次都使用 Monitor 的话非常的耗时。因此 Java6 开始对 synchronized 获取锁的方式进行了改进，增加了**轻量级锁**和**偏向锁**。
 
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/0cccd54042594f038dc445f081392fc3-ab80f68986eef758c3ee92aca69bedd3-7f5c16.png" alt="img" style="zoom:80%;" />
+
 #### 1.轻量级锁
 
 轻量级锁的使用场景：如果一个对象虽然有多线程要加锁，但**加锁的时间是错开的**（也就是没有竞争），那么可以使用轻量级锁来优化。
@@ -684,46 +686,55 @@ public static void method1() {
 
 #### 4.偏向锁
 
+##### 4.1 简介
+
 轻量级锁在没有竞争时（就自己这个线程），每次重入仍然需要执行 CAS 操作。
 
 Java 6 中引入了偏向锁来做进一步优化：**只有第一次**使用 CAS 将线程 ID 设置到对象的 Mark Word 头，之后发现这个线程 ID 是自己的就表示没有竞争，不用重新 CAS。以后只要不发生竞争，这个对象就归该线程所有。
 
 > 如果线程 A 拿到了偏向锁还没有释放，线程 B 尝试获取这个锁时会膨胀为重量级锁。
 
-例如：
+**加锁流程**
 
-```java
-static final Object obj = new Object();
-public static void m1() {
-    synchronized( obj ) {
-        // 同步块 A
-        m2();
-    }
-}
-public static void m2() {
-    synchronized( obj ) {
-        // 同步块 B
-        m3();
-    }
-}
-public static void m3() {
-    synchronized( obj ) {
-        // 同步块 C
-    }
-}
-```
+1. 当 JVM 启动了偏向锁模式（Java 6和Java 7里是默认启动的），新创建对象的 Mark Word 中的 ThreadID 为 0，说明此对象处于偏向锁状态（但未偏向任何线程），也叫作匿名偏向锁状态
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220815185454612-b0b2b04b548e99e6e980a22b60e720ba-420524.png" alt="image-20220815185454612" style="zoom:67%;" />
+2. 线程 A 第一次访问同步代码块时，先检查对象头 Mark Word 中锁标志位是否为 01，依此判断此时对象是否处于无锁状态或者偏向锁状态
 
-<img src="C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/image-20220815185403275.png" alt="image-20220815185403275" style="zoom:67%;" />
+3. 若锁标志位是为 01，然后判断偏向锁的标识是否为 1：
 
-##### 4.1 偏向状态
+   - 如果不是，则进入轻量级锁逻辑（使用 CAS 竞争锁）（注意：此时不是使用 CAS 尝试获取偏向锁，而是直接升级为轻量级锁；原因是：当偏向锁的标识为 0 时，表明偏向锁在此对象上被禁用，禁用原因可能是 JVM 关闭了偏向锁模式，或该类刚经历过 bulk revocation，等等。所以应该入轻量级锁逻辑）
+
+   - 如果是 1，表明此对象是偏向锁状态，则进行下一步流程
+
+4. 判断是偏向锁时，检查对象头 Mark Word 中记录的 ThreadID 是否是当前线程 A 的 ID：
+   - 如果是，则表明当前线程 A 已经获得过该对象锁，以后线程 A 进入同步代码块时，不需要 CAS 进行加锁，只会往当前线程 A 的栈中添加一条 Displaced Mark Word 为空的 Lock Record，用来统计重入的次数
+   - 如果不是，则进行 CAS 操作，尝试将当前线程 A 的 ID 替换进 Mark Word：
+     - 如果当前对象锁的 ThreadID 为 0（匿名偏向锁状态），则会替换成功（将 Mark Word 中的 Thread id 由匿名 0 改成当前线程 A 的 ID，在当前线程 A 栈中找到内存地址最高的可用 Lock Record，将线程 A 的 ID 存入），获得到锁，执行同步代码块
+     - 如果当前对象锁的 ThreadID 不为 0，即该对象锁已经被其他线程 B 占用了，则会替换失败，开始进行偏向锁撤销。这也是偏向锁的特点，一旦出现线程竞争，就会**撤销偏向锁**
+
+**偏向锁的撤销**
+
+1. 偏向锁的撤销需要等待全局安全点（`safe point`，代表了一个状态，在该状态下所有线程都是暂停的，stop-the-world），到达全局安全点后，持有偏向锁的线程 B 也被暂停了
+
+2. 检查持有偏向锁的线程 B 的状态（会遍历当前 JVM 的所有线程，如果能找到线程 B，则说明偏向的线程 B 还存活着）：
+   - 如果线程还存活，则检查线程是否还在执行同步代码块中的代码：
+     - 如果是，则把该偏向锁升级为轻量级锁，且原持有偏向锁的线程 B 继续获得该轻量级锁
+   - 如果线程未存活，或线程未在执行同步代码块中的代码，则进行校验是否允许重偏向：
+     - 如果不允许重偏向，则将 Mark Word 设置为无锁状态（未锁定不可偏向状态），然后升级为轻量级锁，进行 CAS 竞争锁
+     - 如果允许重偏向，设置为匿名偏向锁状态（即线程 B 释放偏向锁）。当唤醒线程后，进行 CAS 将偏向锁重新指向线程 A（在对象头和线程栈帧的锁记录中存储当前线程 ID）
+3. 唤醒暂停的线程，从安全点继续执行代码
+
+补充： 每次进入同步块（即执行 monitorenter）的时候都会以从高往低的顺序在栈中找到第一个可用的 Lock Record，并设置偏向线程 ID；每次解锁（即执行 monitorexit）的时候都会从最低的一个 Lock Record 移除。所以如果能找到对应的 Lock Record 说明偏向的线程还在执行同步代码块中的代码。
+
+下图为当对象所处于偏向锁时，当前线程重入 3 次，线程栈帧中 Lock Record 记录：
+
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/2c798bb24d254bac86cc89c5f33db89d-5646cdf7202f9f19daab5e1023316721-c75469.png" alt="img" style="zoom: 67%;" />
+
+**偏向状态**
 
 回忆一下对象头格式
 
 <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220815143743621-263a68629c5b4277e1e4978e22aa9143-b89fb3.png" alt="image-20220815143743621" style="zoom: 80%;" />
-
-
 
 一个对象创建时：
 
@@ -739,7 +750,7 @@ public static void m3() {
 
 **测试延迟特性**
 
-java 进程启动的 4s 内，都会直接跳过偏向锁，有同步代码块时直接使用轻量级锁。原因是 JVM 初始化的代码有很多地方用到了 synchronized，如果直接开启偏向，产生竞争就要有锁升级，会带来额外的性能损耗。
+java 进程启动的 4s 内，都会直接跳过偏向	锁，有同步代码块时直接使用轻量级锁。原因是 JVM 初始化的代码有很多地方用到了 synchronized，如果直接开启偏向，产生竞争就要有锁升级，会带来额外的性能损耗。
 
 **测试偏向锁**
 
@@ -804,7 +815,9 @@ public static void main(String[] args) throws IOException {
 
 正常状态对象一开始是没有 hashCode 的，第一次调用才生成。
 
-##### 4.2 撤销-调用锁对象默认hashCode
+##### 4.2 撤销
+
+**调用锁对象默认hashCode**
 
 - 轻量级锁会在锁记录中记录 hashCode
 - 重量级锁会在 Monitor 中记录 hashCode
@@ -826,7 +839,7 @@ public static void main(String[] args) throws IOException {
 00000000 00000000 00000000 01101010 00000010 01001010 01100111 00000001 
 ```
 
-##### 4.3 撤销-其它线程使用过同一锁对象
+**其它线程使用过同一锁对象**
 
 当有其它线程使用过偏向锁对象时，会将偏向锁升级为轻量级锁（在前一线程访问之后另一线程再访问）。
 
@@ -879,7 +892,7 @@ private static void test2() throws InterruptedException {
 [t2] - 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000001 
 ```
 
-##### 4.4 撤销-调用锁对象的wait/notify
+**调用锁对象的wait/notify**
 
 升级为重量级锁。
 
@@ -925,7 +938,7 @@ public static void main(String[] args) throws InterruptedException {
 [t1] - 00000000 00000000 00000000 00000000 00011100 11010100 00001101 11001010 
 ```
 
-##### 4.5 批量重偏向
+**批量重偏向**
 
 如果对象虽然被多个线程访问，但没有竞争，这时偏向了线程 T1 的对象仍有机会重新偏向 T2，重偏向会重置对象的 Thread ID。
 
@@ -974,7 +987,7 @@ private static void test3() throws InterruptedException {
 
 可以发现，t1 线程首先给 d 对象加偏向锁偏向 t1 线程，t2 线程会给前 19 个 d 对象加轻量级锁，但是从 20 个后就会重新加偏向锁偏向至 t2 线程。
 
-##### 4.6 批量撤销
+**批量撤销**
 
 当撤销偏向锁阈值超过 40 次后，jvm 会这样觉得，自己确实偏向错了，根本就不该偏向。于是整个类的所有对象都会变为不可偏向的，新建的对象也是不可偏向的。
 
@@ -1091,170 +1104,6 @@ c.i.MyBenchmark.b    avgt        5  16.976        1.572  ns/op
 **锁粗化**
 
 在遇到一连串地对同一锁不断进行请求和释放的操作时，把所有的锁操作整合成锁的一次请求，从而减少对锁的请求同步次数，这个操作叫做锁的粗化。
-
-### 2.6 习题
-
-#### 1.卖票练习
-
-测试下面代码是否存在线程安全问题，并尝试改正
-
-```java
-public class ExerciseSell {
-    
-    public static void main(String[] args) {
-        TicketWindow ticketWindow = new TicketWindow(2000);
-        List<Thread> list = new ArrayList<>();
-        // 用来存储卖出去多少张票
-        // Vector：线程安全
-        List<Integer> sellCount = new Vector<>();
-        for (int i = 0; i < 2000; i++) {
-            Thread t = new Thread(() -> {
-                // 分析这里的竞态条件
-                int count = ticketWindow.sell(randomAmount());
-                sellCount.add(count);
-            });
-            list.add(t);
-            t.start();
-        }
-        list.forEach((t) -> {
-            try {
-                t.join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        });
-        // 买出去的票求和
-        log.debug("selled count:{}", sellCount.stream().mapToInt(c -> c).sum());
-        // 剩余票数
-        log.debug("remainder count:{}", ticketWindow.getCount());
-    }
-    
-    // Random 为线程安全
-    static Random random = new Random();
-    // 随机 1~5
-    public static int randomAmount() {
-        return random.nextInt(5) + 1;
-    }
-    
-}
-class TicketWindow {
-    private int count;
-
-    public TicketWindow(int count) {
-        this.count = count;
-
-    }
-    public int getCount() {
-        return count;
-    }
-
-    public int sell(int amount) {
-        if (this.count >= amount) {
-            this.count -= amount;
-            return amount;
-        } else {
-            return 0;
-        }
-    }
-}
-```
-
-测试脚本
-
-```bash
-for /L %n in (1,1,10) do java -cp ".;C:\Users\manyh\.m2\repository\ch\qos\logback\logback-classic\1.2.3\logback-classic-1.2.3.jar;C:\Users\manyh\.m2\repository\ch\qos\logback\logback-core\1.2.3\logback-core-1.2.3.jar;C:\Users\manyh\.m2\repository\org\slf4j\slf4j-api\1.7.25\slf4j-api-1.7.25.jar" cn.itcast.n4.exercise.ExerciseSell
-```
-
-**修改**
-
-临界区是 sell 方法，所以将 sell 方法设置同步即可。
-
-#### 2.转账练习
-
-测试下面代码是否存在线程安全问题，并尝试改正
-
-```java
-public class ExerciseTransfer {
-    public static void main(String[] args) throws InterruptedException {
-        Account a = new Account(1000);
-        Account b = new Account(1000);
-        Thread t1 = new Thread(() -> {
-            for (int i = 0; i < 1000; i++) {
-                a.transfer(b, randomAmount());
-            }
-        }, "t1");
-        Thread t2 = new Thread(() -> {
-            for (int i = 0; i < 1000; i++) {
-                b.transfer(a, randomAmount());
-            }
-        }, "t2");
-        t1.start();
-        t2.start();
-        t1.join();
-
-        t2.join();
-        // 查看转账2000次后的总金额
-        log.debug("total:{}",(a.getMoney() + b.getMoney()));
-    }
-    // Random 为线程安全
-    static Random random = new Random();
-    // 随机 1~100
-    public static int randomAmount() {
-        return random.nextInt(100) +1;
-    }
-}
-
-class Account {
-    private int money;
-
-    public Account(int money) {
-        this.money = money;
-    }
-
-    public int getMoney() {
-        return money;
-    }
-
-    public void setMoney(int money) {
-        this.money = money;
-    }
-
-    public void transfer(Account target, int amount) {
-        if (this.money > amount) {
-            this.setMoney(this.getMoney() - amount);
-            target.setMoney(target.getMoney() + amount);
-        }
-    }
-}
-```
-
-这样改正行不行，为什么？
-
--- 这里对 this 和 target 都进行了成员变量的修改，所以只锁 this 是不行的。
-
-```java
-public synchronized void transfer(Account target, int amount) {
-    if (this.money > amount) {
-        this.setMoney(this.getMoney() - amount);
-        target.setMoney(target.getMoney() + amount);
-    }
-}
-```
-
-**解决**
-
-可以锁 Account 类（效率差，同时只能两个间转账，后面会介绍效率高的方法）。
-
-```java
-public void transfer(Account target, int amount) {
-    synchronized (Account.class) {
-        if (this.money > amount) {
-            this.setMoney(this.getMoney() - amount);
-            target.setMoney(target.getMoney() + amount);
-        }
-    }
-}
-```
 
 ## 3.变量的线程安全分析
 
@@ -3947,28 +3796,3 @@ Thread t3 = new Thread(() -> {
 syncPark.setThreads(t1, t2, t3);
 syncPark.start();
 ```
-
-## 9.本章小结
-
-本章我们需要重点掌握的是：
-
-- 分析多线程访问共享资源时，哪些代码片段属于临界区
-- 使用`synchronized`互斥解决临界区的线程安全问题
-  - 掌握`synchronized`锁对象语法
-  - 掌握`synchronzied`加载成员方法和静态方法语法
-  - 掌握`wait/notify`同步方法
-- 使用`lock`互斥解决临界区的线程安全问题
-  - 掌握`lock`的使用细节：可打断、锁超时、公平锁、条件变量
-- 学会分析变量的线程安全性、掌握常见线程安全类的使用
-- 了解线程活跃性问题：死锁、活锁、饥饿
-- 应用方面
-  - 互斥：使用`synchronized`或`Lock`达到共享资源互斥效果
-  - 同步：使用`wait/notify`或`Lock`的条件变量来达到线程间通信效果
-- 原理方面
-  - monitor、synchronized 、wait/notify 原理
-  - synchronized 进阶原理
-  - park & unpark 原理
-- 模式方面
-  - 同步模式之保护性暂停
-  - 异步模式之生产者消费者
-  - 同步模式之顺序控制
