@@ -206,7 +206,7 @@ spring:
 - 循环遍历所有`messageConverters`查找支持相应类型转换的`Converters`
 - 调用对应转换器的`write()`方法完成写入
 
-### ==3.4 自定义MessageConverter==
+### 3.4 自定义MessageConverter
 
 方法1：直接向容器中注册一个`HttpMessageConverter`类型的组件
 
@@ -301,7 +301,7 @@ public class MyMapperConfiguration implements WebMvcConfigurer {
 }
 ```
 
-### ==3.5 ResponseBodyAdvice==
+### 3.5 ResponseBodyAdvice
 
 允许在执行`@ResponseBody`或`ResponseEntity`控制器方法之后但在使用`HttpMessageConverter`编写正文之前自定义响应。
 

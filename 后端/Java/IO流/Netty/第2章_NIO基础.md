@@ -1135,7 +1135,7 @@ System.out.println("waiting...");
 
 #### 2.非阻塞
 
-* 非阻塞模式下，相关方法都会不会让线程暂停
+* 非阻塞模式下，相关方法都不会让线程暂停
   * 在`ServerSocketChannel.accept()`在没有连接建立时，会返回 null，继续运行
   * `SocketChannel.read()`在没有数据可读时，会返回 0，但线程不必阻塞，可以去执行其它 SocketChannel 的`read()`或是去执行`ServerSocketChannel.accept()`
   * 写数据时，线程只是等待数据写入 Channel 即可，无需等 Channel 通过网络把数据发送出去
@@ -1398,16 +1398,18 @@ public class ChannelDemo6 {
 }
 ```
 
-#### 1.为何要iter.remove()
+#### 1.为何要iterator.remove()
 
 > 因为 select 在事件发生后，就会将相关的 key 放入`selectedKeys`集合（不同于注册时的 selectionKey 集合），但不会在处理完后从`selectedKeys`集合中移除，需要我们自己编码删除。例如：
 >
 > * 第一次触发了 ssckey 上的 accept 事件，没有移除 ssckey
 > * 第二次触发了 sckey 上的 read 事件，但这时 selectedKeys 中还有上次的 ssckey，在处理`SocketChannel sc = c.accept()`时因为没有真正的 serverSocket 连上了所以返回 null（非阻塞模式下没有连接建立时，`accept()`会返回 null），就会导致空指针异常
 
-#### 2.cancel的作用
+#### 2.cancel()的作用
 
-> cancel 会取消注册在 selector 上的 channel，并从注册的 keys 集合中删除 key 后续不会再监听事件
+> cancel 会取消注册在 selector 上的 channel，并从注册的 keys 集合中删除 key 后续不会再监听事件。
+>
+> `interator.remove()`是从`selectedKeys`“选择的键”集合中删除，而`cancel()`是从注册的`selectionKey`集合中删除。当不希望再被`select`时就调用`cancel()`，当每次处理过事件后，就调用`iterator.remove()`将这个选中的 key 移除。
 
 #### 3.不处理边界的问题
 
