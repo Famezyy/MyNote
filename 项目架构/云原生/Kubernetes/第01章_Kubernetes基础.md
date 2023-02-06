@@ -84,7 +84,7 @@ Kubernetes 的本质是**一组服务器集群**，它可以在集群的每个�
 
 Kubeadm 是一个K8s 部署工具，提供kubeadm init 和kubeadm join，用于快速部署Kubernetes 集群。
 
-官方地址：[https://kubernetes.io/docs/reference/setup-tools/kubeadm/kubeadm/](https://gitee.com/link?target=https%3A%2F%2Fkubernetes.io%2Fdocs%2Freference%2Fsetup-tools%2Fkubeadm%2Fkubeadm%2F)
+官方地址：https://kubernetes.io/docs/reference/setup-tools/kubeadm/kubeadm/
 
 **二进制包**
 
@@ -352,6 +352,11 @@ kubeadm init --apiserver-advertise-address=192.168.11.100 --kubernetes-version=1
 export KUBECONFIG=/etc/kubernetes/admin.conf
 ```
 
+> **提示**
+>
+> 当出现`E0205 12:44:31.717817    1505 memcache.go:238] couldn't get current server API group list: Get "http://localhost:8080/api?timeout=32s": dial tcp [::1]:8080: connect: connection refused
+> The connection to the server localhost:8080 was refused - did you specify the right host or port?`错误时，可尝试执行`export KUBECONFIG=/etc/kubernetes/admin.conf`。
+
 > **问题**
 >
 > 出现以下错误时`[ERROR CRI]: container runtime is not running`的解决方案：
@@ -533,7 +538,7 @@ address: [顺义,昌平]
 >
 > 3 下面是一个 yaml 转 json 的网站，可以通过它验证 yaml 是否书写正确
 >
-> [https://www.json2yaml.com/convert-yaml-to-json](https://gitee.com/link?target=https%3A%2F%2Fwww.json2yaml.com%2Fconvert-yaml-to-json)
+> https://www.json2yaml.com/convert-yaml-to-json
 
 ### 3.3 资源管理方式
 
@@ -800,6 +805,8 @@ export KUBECONFIG=/etc/kubernetes/admin.conf
 
 ## 4.资源的操作
 
+查看所有的资源：`kubectl get all -A`
+
 ### 4.1 Namespace
 
 namespace 是 kubernetes 系统中的一种非常重要资源，它的主要作用是用来实现**多套环境的资源隔离**或者**多租户的资源隔离**。
@@ -905,7 +912,7 @@ pod 是 kubernetes 集群进行管理的最小单元，程序要运行必须部�
 
 pod 可以认为是容器的封装，一个 pod 中可以存在一个或者多个容器。
 
-<img src="https://gitee.com/yooome/golang/raw/main/k8s详细教程-调整版/Kubenetes.assets/image-20200407121501907.png" alt="image-20200407121501907" style="zoom:67%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20200407121501907.png" alt="image-20200407121501907" style="zoom:67%;" />
 
 kubernetes 在集群启动之后，集群中的各个组件也都是以 pod 方式运行的。可以通过下面命令查看：
 
