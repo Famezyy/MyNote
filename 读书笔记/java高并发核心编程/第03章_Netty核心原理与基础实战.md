@@ -1848,11 +1848,11 @@ b.childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
 
 根据内存的管理方式不同，缓冲区分为**堆缓冲区**（Heap ByteBuf）和**直接缓冲区**（Direct ByteBuf），另外还提供了一种组合缓存区。
 
-|      类型       |                             说明                             |                             优点                             |                             不足                             |
-| :-------------: | :----------------------------------------------------------: | :----------------------------------------------------------: | :----------------------------------------------------------: |
-|  Heap ByteBuf   | 内部数据为一个 Java 数组，存储在 JVM 的对空间中，可以通过`hasArray`方法来判断是不是堆缓冲区 |          未使用池化的情况下，能提供快速的分配和释放          |          写入底层传输通道之前，都会复制到直接缓冲区          |
-| Direct ByteBuf  |              内部数据存储在操作系统的物理内存中              | 能获取超过 JVM 堆限制大小的内存空间；写入传输通道比堆缓冲区更快 | 释放和分配空间昂贵（使用了操作系统的方法）；在 Java 中读取数据时，需要复制一次到堆上 |
-| CompositeBuffer |                     多个缓冲区的组合表示                     |                  方便一次操作多个缓冲区实例                  |                                                              |
+|       类型        |                             说明                             |                             优点                             |                             不足                             |
+| :---------------: | :----------------------------------------------------------: | :----------------------------------------------------------: | :----------------------------------------------------------: |
+|  `Heap ByteBuf`   | 内部数据为一个 Java 数组，存储在 JVM 的对空间中，可以通过`hasArray`方法来判断是不是堆缓冲区 |          未使用池化的情况下，能提供快速的分配和释放          |          写入底层传输通道之前，都会复制到直接缓冲区          |
+| `Direct ByteBuf`  |              内部数据存储在操作系统的物理内存中              | 能获取超过 JVM 堆限制大小的内存空间；写入传输通道比堆缓冲区更快 | 释放和分配空间昂贵（使用了操作系统的方法）；在 Java 中读取数据时，需要复制一次到堆上 |
+| `CompositeBuffer` |                     多个缓冲区的组合表示                     |                  方便一次操作多个缓冲区实例                  |                                                              |
 
 上面三种缓冲区都可以通过池化、非池化两种分配器来创建和分配内存空间。
 
@@ -1868,4 +1868,72 @@ b.childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
 >       -   在 Java 应用程序中调用`System.gc()`函数来释放内存
 
 ### 7.8 案例：缓冲区的使用
+
+`Heap ByteBuf`和`Direct ByteBuf`两类缓冲区的使用区别：
+
+-   `Heap ByteBuf`通过调用分配器的`buffer()`方法来创建；`Direct ByteBuf`通过调用分配器的`directBuffer()`方法来创建
+-   `Heap ByteBuf`缓冲区可以直接通过`array()`方法读取内部数据；`Direct ByteBuf`缓冲区不能读取内部数据
+-   可以调用`hasArray()`来判断是否为`Heap ByteBuf`类型的缓冲区；如果`hasArray()`返回值为 true，则表示是堆缓冲，否则为直接内存缓冲区
+-   从`Direct ByteBuf`读取缓冲数据进行 Java 程序处理时相对比较麻烦，需要通过`getBytes/readBytes`等方法先将数据复制到 Java 的堆内存，然后进行其他计算
+
+**案例**
+
+```java
+public class BufferTypeTest {
+
+  final static Charset UTF8 = Charset.forName("UTF-8");
+
+  // 堆缓存测试
+  @Test
+  public void testHeapBuffer() {
+    ByteBuf heapBuffer = ByteBufAllocator.DEFAULT.heapBuffer();
+    heapBuffer.writeBytes("hello world!".getBytes());
+    if (heapBuffer.hasArray()) {
+      byte[] array = heapBuffer.array();
+      int offset = heapBuffer.readerIndex() + heapBuffer.arrayOffset();
+      int length = array.length;
+      Logger.info(new String(array, offset, length, UTF8));
+    }
+    heapBuffer.release();
+  }
+
+  // 直接缓存测试
+  @Test
+  public void testDirectBuffer() {
+    ByteBuf directBuffer = ByteBufAllocator.DEFAULT.directBuffer();
+    directBuffer.writeBytes("hello world!".getBytes());
+    if (!directBuffer.hasArray()) {
+      int length = directBuffer.readableBytes();
+      byte[] array = new byte[length];
+      // 把数据读取到 Java 堆内存再进行处理
+      directBuffer.getBytes(directBuffer.readerIndex(), array);
+      Logger.info(new String(array, UTF8));
+    }
+    directBuffer.release();
+  }
+
+}
+```
+
+```bash
+[main|BufferTypeTest.testHeapBuffer] |>  hello world! 
+[main|BufferTypeTest.testDirectBuffer] |>  hello world! 
+```
+
+`Direct ByteBuf`的`hasArray()`会返回 false；但是如果`hasArray()`返回 false，不一定代表缓冲区一定就是`Direct ByteBuf`，也有可能是`CompositeByteBuf`。
+
+Netty 还提供了一个非常方便的获取缓冲区的类：`Unpooled`，可以用来创建和使用非池化的缓冲区，`Unpooled`类可用于 Netty 应用之外的其他程序中独立使用创建 BYteBuf。
+
+|                       方法名称                       |      说明      |
+| :--------------------------------------------------: | :------------: |
+|                      `buffer()`                      |   返回堆缓冲   |
+|            `buffer(int initialCapacity)`             |   返回堆缓冲   |
+|    `buffer(int initialCapacity, int maxCapacity)`    |   返回堆缓冲   |
+|                   `directBuffer()`                   |  返回直接缓冲  |
+|         `directBuffer(int initialCapacity)`          |  返回直接缓冲  |
+| `directBuffer(int initialCapacity, int maxCapacity)` |  返回直接缓冲  |
+|                 `compositeBuffer()`                  |  返回混合缓冲  |
+|                   `copiedBuffer()`                   | 返回复制的缓冲 |
+
+在 Netty 的开发过程中，推荐使用`Context.alloc()`方法获取通道的缓冲区分配器来创建 ByteBuf。
 
