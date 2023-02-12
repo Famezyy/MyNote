@@ -52,6 +52,16 @@ hello-world   latest    feb5d9fea6a5   15 months ago   13.3kB
 - `-q`：只显示镜像 ID
 
   `-f`：过滤
+  
+  > `docker images -f KEY=VALUE [REPOSITORY[:TAG]]`
+  >
+  > KEY 的可选值如下
+  >
+  > - dangling boolean： 过滤悬挂的镜像，如：`dangling=true`表示只显示悬挂的镜像
+  > - label string: 根据标签过滤，如：`label=version`表示显示有`version`标签的镜像，`label=version=1.0`表示显示`version=1.0`的镜像
+  > - before image: 显示在某个镜像之前创建的镜像，如：`before=centos:5.8`表示显示在`centos:5.8`这个镜像之前创建的镜像
+  > - since image: 显示在某个存在之后创建的镜像，如：`since=centos:5.8`表示显示在`centos:5.8`这个镜像存在之后的镜像
+  > - reference string：模糊匹配，如：`reference=cent*:5*`，显示名称以 cent 开头版本号以 5 开头的镜像
 
 ### 2.2 查找镜像
 
@@ -84,6 +94,22 @@ redislabs/redisearch                Redis With the RedisSearch module pre-loaded
 - `docker pull imageName:TAG`
 
 - `docker pull imageName`，等同于`docker pull imageName:latest`
+
+> **修改仓库源**
+>
+> 修改`/etc/docker/daemon.json`，没有的话创建一个
+>
+> 写入
+>
+> ```bash
+> {
+> 	"registry-mirrors": [
+> 	"https://ustc-edu-cn.mirror.aliyuncs.com",
+> 	"http://hub-mirror.c.163.com",
+> 	"https://registry.aliyuncs.com"
+> 	]
+> }
+> ```
 
 ### 2.4 查看镜像、容器、数据卷所占用的空间
 

@@ -71,9 +71,9 @@ Dockerfile 面向开发，Docker 镜像成为交付标准，Docker 容器则涉�
 
   或者可以在`docker run`时指定`--expose=1234`，这两种方式作用相同。但是，`--expose`可以接受端口范围作为参数，比如`--expose=2000-3000`。`EXPOSE`和`--expose`都不依赖于宿主机器。默认状态下，这些规则并不会使这些端口可以通过宿主机来访问。
 
-  `EXPOSE` 指令是声明容器运行时提供服务的端口，这**只是一个声明**，在容器运行时并不会因为这个声明应用就会开启这个端口的服务。在 Dockerfile 中写入这样的声明有两个好处，一个是帮助镜像使用者理解这个镜像服务的守护端口，以方便配置映射；另一个用处则是在运行时使用随机端口映射时，也就是 `docker run -P` 时，会自动随机映射 `EXPOSE` 的端口。
+  `EXPOSE`指令是声明容器运行时提供服务的端口，这**只是一个声明**，在容器运行时并不会因为这个声明应用就会开启这个端口的服务。在 Dockerfile 中写入这样的声明有两个好处，一个是帮助镜像使用者理解这个镜像服务的守护端口，以方便配置映射；另一个用处则是在运行时使用随机端口映射时，也就是`docker run -P`时，会自动随机映射`EXPOSE`的端口。
 
-  要将 `EXPOSE` 和在运行时使用 `-p <宿主端口>:<容器端口>` 区分开来。`-p`，是映射宿主端口和容器端口，换句话说，就是将容器的对应端口服务公开给外界访问，而 `EXPOSE` 仅仅是声明容器打算使用什么端口而已，并不会自动在宿主进行端口映射。
+  要将`EXPOSE`和在运行时使用`-p <宿主端口>:<容器端口>`区分开来。`-p`，是映射宿主端口和容器端口，换句话说，就是将容器的对应端口服务公开给外界访问，而`EXPOSE`仅仅是声明容器打算使用什么端口而已，并不会自动在宿主进行端口映射。
   
 - `WORKDIR`：指定在创建容器后，终端默认登陆的进来工作目录，一个落脚点
 
@@ -229,7 +229,7 @@ MAINTAINER zzyy<zzyybs@126.com>
 ENV MYPATH /usr/local
 WORKDIR $MYPATH
 
-# 更换为 ali源
+# 更换为 ali 源
 RUN sed -i s/archive.ubuntu.com/mirrors.aliyun.com/g /etc/apt/sources.list \
   && sed -i s/security.ubuntu.com/mirrors.aliyun.com/g /etc/apt/sources.list \
   && apt-get update && apt-get upgrade
