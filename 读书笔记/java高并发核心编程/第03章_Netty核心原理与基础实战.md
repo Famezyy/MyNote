@@ -71,10 +71,6 @@ public class NettyDiscardServer {
           logger.info(" 服务器端口绑定 失败: " + channelFuture.channel().localAddress());
 
       });
-      // 通过调用 sync 同步方法阻塞直到绑定成功
-      channelFuture.sync();
-
-      logger.info(" 服务器启动成功，监听端口: " + channelFuture.channel().localAddress());
 
       // 7 等待通道关闭的异步任务结束
       // 服务监听通道会一直等待通道关闭的异步任务结束
@@ -547,6 +543,14 @@ protected AbstractChannel(Channel parent) {
 
     当通道缓冲区可读时，Netty 会调用`fireChannelRead()`触发通道可读事件，而在通道流水线注册过的入站处理器的`channelRead()`回调方法会被调用，以便完成入站数据的读取和处理。
 
+    > **注意**
+    >
+    > `channelRead()`方法的 msg 参数类型不是 ByteBuf 而是 Object。
+    >
+    > 一般情况下入站处理的流程是：Netty 读取底层的二进制数据包装成 ByteBuf 数据并填充到 msg 中，然后传入流水线的第一个入站处理器（HeadContext 没有对入站数据做任何处理），因此刚开始的 msg 类型绝对是 ByteBuf 类型的；每一个节点处理完成后将处理结果向后传递，但是因为处理结果不一定是 ByteBuf 类型，所以 msg 参数类型是 Object。
+    >
+    > 另外，由于从 Netty 4.1 开始，ByteBuf 的默认类型是 Direct ByteBuf。Java 不能直接访问 Direct ByteBuf 内部的数据，必须调用`getBytes()`、`readBytes()`等方法将数据读入 Java 数组中才能继续进行处理。
+
 -   `channelReadComplete()`
 
     当通道缓冲区读完时，Netty 会调用`fireChannelReadComplete()`触发通道缓冲区读完事件，而在通道流水线注册过的入站处理器的`channelReadComplete()`回调方法会被调用。
@@ -577,7 +581,7 @@ Netty 出站处理的方向是通过上层 Netty 通道去操作底层 Java IO �
 
 -   `write()`
 
-    写数据到底层：完成 Netty 通道向底层 Java IO 通道的数据写入操作。此方法仅仅是触发一下操作，并不是完成实际的数据写入操作。
+    写数据到底层：完成 Netty 通道向底层 Java IO 通道的数据写入操作。此方法仅仅是触发一下操作，并不是完成实际的数据写入操作。需要配合`flush()`来将数据写出。
 
 -   `flush()`
 
@@ -1005,10 +1009,10 @@ public void testPipelineInBound() {
 >
 >   在入站处理时，大致可通过两种方法将数据传递给下一站：
 >
->   -   `super.channelXxx(ChannelhandlerContext)`
->   -   `ctx.fireChannelXxx()`
+>   -   `super.channelXxx(...)`
+>   -   `ctx.fireChannelXxx(...)`
 >
->   父类`ChannelInboundHandlerAdapter`的`channelRead()`方法默认实现就是是通过调用`ctx.fireChannelRead(msg)`实现的。
+>   父类`ChannelInboundHandlerAdapter`的`channelRead(ctx, msg)`方法默认实现就是是通过调用`ctx.fireChannelRead(msg)`实现的。
 
 输出的结果如下：
 
@@ -1466,7 +1470,7 @@ HeadContext <-> inboundA <-> inboundB <-> inboundC <-> outboundA <-> outboundB <
     信息: inbound B invoked
     ```
 
--   `ctx.write(msg, promise)`作用是**传递给当前节点的上一个出站处理器知道 HeadContext**，如果注释掉`OutboundHandlerB`中的`super.write(ctx, msg, promise)`，则会在`OutboundHandlerB`处中断：
+-   `ctx.write(msg, promise)`作用是**传递给当前节点的上一个出站处理器直到 HeadContext**，如果注释掉`OutboundHandlerB`中的`super.write(ctx, msg, promise)`，则会在`OutboundHandlerB`处中断：
 
     ```bash
     信息: inbound A invocked
@@ -1477,6 +1481,12 @@ HeadContext <-> inboundA <-> inboundB <-> inboundC <-> outboundA <-> outboundB <
     ```
 
     相应的，数据也不会传递到头节点`HeadContext`并通过`unsafe`写入底层通道。
+
+    > **注意**
+    >
+    > 这里有与没有调用`flush()`方法，所以最终在外边无法读取到出站数据。
+    >
+    > 可以在`SimpleInboundHandler()`中调用`ctx.channel().writeAndFlush(msg);`
 
 -   `ctx.channel().write(msg)`和`ctx.channel().pipeline().write(msg)`的作用是跳过后续的入站处理器，直接**从尾部开始触发后续出站处理器的执行**
 
@@ -1615,7 +1625,7 @@ public abstract class ChannelInitializer extends ChannelInboundHandlerAdapter {
 
 Netty 提供了 ByteBuf 缓冲区组件来代替 Java NIO 的 ByteBuffer 缓冲区组件，以便更加快捷和高效地操作内存缓冲区。
 
-### 7.1 ByteBuf 的优势
+### 7.1 ByteBuf的优势
 
 与 Java NIO 的 ByteBuffer 相比，ByteBuf 的优势如下：
 
@@ -1698,7 +1708,7 @@ ByteBuf 引用计数的大致规则如下：
 -   在默认情况下，当创建完一个 ByteBuf 时引用计数为 1
 -   每次调用`retain()`方法，引用计数 +1
 -   每次调用`release()`方法，引用计数 -1
--   如果引用为 0，表示这个 ByteBuf 没有哪个进程引用，它占用的内存需要回收，再次访问这个 ByteBUf 对象将抛出异常
+-   如果引用为 0，表示这个 ByteBuf 没有哪个进程引用，它占用的内存需要回收，再次访问这个 ByteBuf 对象将抛出异常
 
 接下来多次调用 ByteBuf 的`retain()`和`release()`方法查看效果
 
@@ -1765,6 +1775,10 @@ public void handleMethodA(ByteBuf bytebuf) {
 -   `ReferenceCountUtil.retain(Object)`：增加一次缓冲区引用计数的静态方法，从而防止该缓冲区被释放
 -   `ReferenceCountUtil.release(Object)`：减少一次缓冲区引用计数的静态方法，如果引用计数为 0，缓冲区将被释放
 
+> **提示**
+>
+> ByteBuf 的`release()`方法定义在抽象基类`AbstractReferenceCountedByteBuf`中，具体的释放逻辑定义在子类的`deallocate()`方法中。例如`UnpooledDirectByteBuf`、`UnpooledHeapByteBuf`等。
+
 ### 7.6 ByteBuf分配器
 
 Netty 通过`ByteBufAllocator`分配器来创建缓冲区和分配内存空间。Netty 提供了两种分配器实现：`PoolByteBufAllocator`和`UnpooledByteBufAllocator`。
@@ -1826,7 +1840,7 @@ b.childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
         ByteBuf byteBuf = ByteBufAllocator.DEFAULT.buffer(9, 100);
         ```
 
-    -   不传入参数，默认初始容量 256，最到容量为 Integer.MAX_VALUE 的缓冲区
+    -   不传入参数，默认初始容量 256，最大容量为`Integer.MAX_VALUE`的缓冲区
 
         ```java
         ByteBuf byteBuf = ByteBufAllocator.DEFAULT.buffer();
@@ -1843,6 +1857,10 @@ b.childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
     ```java
     ByteBuf buteBuf = PooledByteBufAllocator.DEFAULT.directBuffer();
     ```
+
+>   **注意**
+>
+>   Netty 4.1 中`UnpooledByteBufAllocator.DEFAULT`和`PooledByteBufAllocator.DEFAULT`默认都是直接缓冲区。
 
 ### 7.7 ByteBuf缓冲区
 
@@ -1867,16 +1885,16 @@ b.childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
 >       -   垃圾回收仅在 Java 堆被填满，以至于无法为新的堆分配请求提供服务时发生
 >       -   在 Java 应用程序中调用`System.gc()`函数来释放内存
 
-### 7.8 案例：缓冲区的使用
+### 7.8 “堆”和“直接”缓冲区的使用
 
 `Heap ByteBuf`和`Direct ByteBuf`两类缓冲区的使用区别：
 
 -   `Heap ByteBuf`通过调用分配器的`buffer()`方法来创建；`Direct ByteBuf`通过调用分配器的`directBuffer()`方法来创建
 -   `Heap ByteBuf`缓冲区可以直接通过`array()`方法读取内部数据；`Direct ByteBuf`缓冲区不能读取内部数据
 -   可以调用`hasArray()`来判断是否为`Heap ByteBuf`类型的缓冲区；如果`hasArray()`返回值为 true，则表示是堆缓冲，否则为直接内存缓冲区
--   从`Direct ByteBuf`读取缓冲数据进行 Java 程序处理时相对比较麻烦，需要通过`getBytes/readBytes`等方法先将数据复制到 Java 的堆内存，然后进行其他计算
+-   从`Direct ByteBuf`读取缓冲数据时需要通过`getBytes/readBytes`等方法先将数据复制到 Java 的堆内存，然后进行其他计算
 
-**案例**
+**案例：堆缓存和直接缓存的方法**
 
 ```java
 public class BufferTypeTest {
@@ -1922,18 +1940,591 @@ public class BufferTypeTest {
 
 `Direct ByteBuf`的`hasArray()`会返回 false；但是如果`hasArray()`返回 false，不一定代表缓冲区一定就是`Direct ByteBuf`，也有可能是`CompositeByteBuf`。
 
-Netty 还提供了一个非常方便的获取缓冲区的类：`Unpooled`，可以用来创建和使用非池化的缓冲区，`Unpooled`类可用于 Netty 应用之外的其他程序中独立使用创建 BYteBuf。
+Netty 还提供了一个非常方便的获取缓冲区的类：`Unpooled`，可以用来创建和使用非池化的缓冲区，`Unpooled`类可用于 Netty 应用之外的其他程序中独立使用创建 ByteBuf。
 
-|                       方法名称                       |      说明      |
-| :--------------------------------------------------: | :------------: |
-|                      `buffer()`                      |   返回堆缓冲   |
-|            `buffer(int initialCapacity)`             |   返回堆缓冲   |
-|    `buffer(int initialCapacity, int maxCapacity)`    |   返回堆缓冲   |
-|                   `directBuffer()`                   |  返回直接缓冲  |
-|         `directBuffer(int initialCapacity)`          |  返回直接缓冲  |
-| `directBuffer(int initialCapacity, int maxCapacity)` |  返回直接缓冲  |
-|                 `compositeBuffer()`                  |  返回混合缓冲  |
-|                   `copiedBuffer()`                   | 返回复制的缓冲 |
+|                       方法名称                       |                   说明                   |
+| :--------------------------------------------------: | :--------------------------------------: |
+|                      `buffer()`                      |                返回堆缓冲                |
+|            `buffer(int initialCapacity)`             |                返回堆缓冲                |
+|    `buffer(int initialCapacity, int maxCapacity)`    |                返回堆缓冲                |
+|                   `directBuffer()`                   |               返回直接缓冲               |
+|         `directBuffer(int initialCapacity)`          |               返回直接缓冲               |
+| `directBuffer(int initialCapacity, int maxCapacity)` |               返回直接缓冲               |
+|                 `compositeBuffer()`                  |               返回混合缓冲               |
+|                   `copiedBuffer()`                   |   返回复制的缓冲（元素为源数组的复制）   |
+|                  `wrappedBuffer()`                   | 返回包装的缓冲（将源数组包装为 ByteBuf） |
 
 在 Netty 的开发过程中，推荐使用`Context.alloc()`方法获取通道的缓冲区分配器来创建 ByteBuf。
 
+**案例：通过 Context 上下文获取 ByteBuf**
+
+```java
+public class AllocatorTest {
+
+  // 辅助方法：输出 ByteBuf 是否是直接内存，以及内存分配器
+  public static void printByteBuf(String action, ByteBuf b) {
+    Logger.info("==========" + action + "==========");
+    Logger.info("b.hasArray: " + b.hasArray());
+    Logger.info("b.ByteBufAllocator: " + b.alloc());
+  }
+
+  static class AllocDemoHandler extends ChannelInboundHandlerAdapter {
+
+    @Override
+    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+      printByteBuf("入站的 ByteBuf: ", (ByteBuf) msg);
+      ByteBuf buf = ctx.alloc().buffer();
+      buf.writeInt(100);
+      ctx.channel().writeAndFlush(buf);
+    }
+
+  }
+
+  @Test
+  void testByteBufAlloc() {
+
+    ChannelInitializer<EmbeddedChannel> initializer = new ChannelInitializer<EmbeddedChannel>() {
+      @Override
+      protected void initChannel(EmbeddedChannel ch) throws Exception {
+        ch.pipeline().addLast(new AllocDemoHandler());
+      }
+    };
+
+    ByteBuf inBuf = Unpooled.buffer();
+    inBuf.writeInt(200);
+
+    EmbeddedChannel channel1 = new EmbeddedChannel(initializer);
+    // 配置通道的缓冲区分配器
+    channel1.config().setAllocator(PooledByteBufAllocator.DEFAULT);
+    // 向模拟通道写入一个入站包
+    channel1.writeInbound(inBuf);
+    // 获取通道的入站包
+    ByteBuf outBuf1 = (ByteBuf) channel1.readOutbound();
+    printByteBuf("出站的 PooledByteBufAllocator: ", outBuf1);
+
+    EmbeddedChannel channel2 = new EmbeddedChannel(initializer);
+    // 配置通道的缓冲区分配器
+    channel2.config().setAllocator(UnpooledByteBufAllocator.DEFAULT);
+    // 向模拟通道写入一个入站包
+    channel2.writeInbound(inBuf);
+    // 获取通道的入站包
+    ByteBuf outBuf2 = (ByteBuf) channel2.readOutbound();
+    printByteBuf("出站的 UnpooledByteBufAllocator: ", outBuf2);
+    
+  }
+
+}
+```
+
+测试结果
+
+```bash
+[main|AllocatorTest.printByteBuf] |>  ==========入站的 ByteBuf: ========== 
+[main|AllocatorTest.printByteBuf] |>  b.hasArray: true 
+[main|AllocatorTest.printByteBuf] |>  b.ByteBufAllocator: UnpooledByteBufAllocator(directByDefault: true) 
+[main|AllocatorTest.printByteBuf] |>  ==========出站的 PooledByteBufAllocator: ========== 
+[main|AllocatorTest.printByteBuf] |>  b.hasArray: false 
+[main|AllocatorTest.printByteBuf] |>  b.ByteBufAllocator: PooledByteBufAllocator(directByDefault: true) 
+[main|AllocatorTest.printByteBuf] |>  ==========入站的 ByteBuf: ========== 
+[main|AllocatorTest.printByteBuf] |>  b.hasArray: true 
+[main|AllocatorTest.printByteBuf] |>  b.ByteBufAllocator: UnpooledByteBufAllocator(directByDefault: true) 
+[main|AllocatorTest.printByteBuf] |>  ==========出站的 UnpooledByteBufAllocator: ========== 
+[main|AllocatorTest.printByteBuf] |>  b.hasArray: false 
+[main|AllocatorTest.printByteBuf] |>  b.ByteBufAllocator: UnpooledByteBufAllocator(directByDefault: true) 
+```
+
+`ctx.alloc()`源码
+
+```java
+abstract class AbstractChannelhandlerContext {
+  @Override
+  public ByteButeAllocator alloc() {
+    return channel().config().getAllocator();
+  }
+}
+```
+
+可以看出，`ctx.alloc()`获取的分配器是通道的缓冲区分配器。该分配器可通过 Bootstrap 引导类为通道进行配置（见本节开头），也可以直接通过`channel.config().setAllocator()`为通道设置。
+
+### 7.9 ByteBuf自动创建与释放
+
+#### 1.ByteBuf的自动创建
+
+Netty 的 Reactor 线程会通过底层的 Java NIO 通道读取数据。发生 NIO 读取的方法为`AbstractNioByteChannel.NioByteUnsafe.read()`。
+
+首先会换取通道的缓冲区分配器，计算缓冲区应该分配的大小，然后读取数据到缓冲区中，最后发送数据到流水线，进行入站处理。
+
+Netty 设计了一个`RecvByteBufAllocator`大小推测接口和一系列的大小推测实现类，以帮助进行缓冲区大小的计算和推测。默认的缓冲区大小推测实现类为`AdaptiveRecvByteBufAllocator`，特点是能根据上一次接收数据的大小动态调整下一次缓冲区创建时分配的空间大小。
+
+接下来看下入站的 ByteBuf 是如何自动释放的。
+
+#### 2.入站时自动释放
+
+##### 1.1 TailContext自动释放
+
+Netty 默认会在 ChannelPipeline 的最后添加一个`TailContext`，它实现了默认的入站处理方法，在`channelRead()`中调用`onUnhandledInboundMessage()`完成 ByteBuf 内存释放工作。
+
+为了将 ByteBuf 数据包通过流水线向后传递，需要调用父类的入站处理方法`super.channelRead(ctx, msg)`，或者调用`ctx.fireChannelRead(msg)`。
+
+如果没有调用父类的处理方法，则需要手动调用`byteBuf.release()`进行释放。
+
+如果 Handler 需要截断流水线的处理流程，不将 ByteBuf 数据包送入流水线末端的`TailContext`入站处理器，并且也不愿意手动释放 ByteBuf 缓冲区实例，则可以继承`SimpleChannelInboundHandler`自动释放资源。
+
+##### 1.2 SimpleChannelInboundHandler自动释放
+
+Handler 业务处理器可以继承`SimpleChannelInboundHandler`，将读操作写在`channelRead0(ctx, msg)`方法中，`SimpleChannelInboundHandler`的入站处理方法会在调用完实际的`channelRead0()`方法后调用`realease()`方法释放 ByteBuf 资源，当计数器为 0 时，就将彻底释放掉。
+
+#### 3.出站时自动释放
+
+出站缓冲区的自动释放是通过`HeadContext`。出站处理用到的 ByteBuf 缓冲区一般是要发送的消息，通常是由 Handler 业务处理器申请分配的。例如，通过`write()`方法写入流水线时，调用`ctx.writeAndFlush(msg)`就会让 ByteBuf 缓冲区进入流水线的出站处理流程。在每一个出站 Handler 业务处理器中的处理完成后，数据包最终会来到`HeadContext`，在完成数据输出到通道之后，ByteBUf 会被释放一次，如果计数器为 0，就将被彻底释放。
+
+在出站处理过程中，最终写入刷新的时候，`HeadContext`要通过通道实现类自身实现的`doWrite()`方法将 ByteBuf 缓冲区的字节数据发送出去（比如复制到内部的 Java NIO 通道），发送完成后，会减少 ByteBuf 缓冲区的引用计数。
+
+### 7.10 ByteBuf浅层复制的高级使用
+
+浅层复制可以很大程度的避免内存复制，ByteBuf 的浅层复制分为两种：切片（slice）浅层复制和整体（duplicate）浅层复制。
+
+#### 1.切片浅层复制
+
+ByteBuf 的`slice()`方法可以获取一个 ByteBuf 的切片。一个 ByteBuf 可以进行多次切片浅层复制，多次切片后的 ByteBuf 对象可以共享一个存储区域。
+
+两个重载版本：
+
+-   `public ByteBuf slice()`
+-   `public BYteBuf slice(int index, int length)`
+
+第一个无参的`slice()`在内部调用了有惨的重载版本：
+
+```java
+public ByteBuf slice() {
+  return slice(readerIndex, readableBytes());
+}
+```
+
+可以看出，无参的`slice()`方法返回的是 ByteBuf 实例中**可读部分的切片**。
+
+调用无参`slice()`方法后，返回的切片是一个新的 ByteBuf 对象，该对象的几个重要属性大致如下：
+
+-   `readerIndex`（读指针）为 0
+-   `writerIndex`（写指针）为源 ByteBuf 的`readableBytes()`可读字节数
+-   `maxCapacity`（最大容量）为源 ByteBuf 的`readableBytes()`可读字节数
+
+切片后的 ByteBuf 的特点：
+
+-   切片不可写入，因为写指针等于最大容量
+-   切片和源 ByteBuf 的可读字节数相同
+
+-   切片的底层数组和源 ByteBuf 的底层数组是同一个（浅层复制）
+-   调用切片不会改变源 ByteBuf 的引用计数
+-   切片和源 ByteBuf 共用一个计数器
+
+#### 2.整体浅层复制
+
+与`slice()`不同，`duplicate()`方法返回的是源 ByteBuf 的整个对象的一个浅层复制，包括如下内容：
+
+-   `duplicate()`的读写指针、最大容量与源 ByteBuf 相同
+-   `duplicate()`的底层数组和源 ByteBuf 的底层数组是同一个（浅层复制）
+-   调用`duplicate()`不会改变源 ByteBuf 的引用计数
+-   `duplicate()`得到的 ByteBuf 和源 ByteBuf 共用一个计数器
+
+#### 3.浅层复制的问题
+
+浅层复制不会复制底层数组，也不会改变 ByteBuf 的引用计数，这就导致了一个问题：在源 ByteBuf 调用`release()`方法后，一旦引用计数为 0 就不能访问了。此时源 ByteBuf 的所有浅层复制实例也不能进行读写，如果强行对浅层复制实例进行读写，则会报错。
+
+因此，在调用浅层复制实例时，可以调用`retain()`增加引用，在实例用完后，调用`release()`减少引用。
+
+## 8.Netty的零拷贝
+
+大部分场景下，在 Netty 接收和发送 ByteBuffer 会使用直接内存进行 Socket 通道读写，使用 JVM 的对内存进行业务处理会涉及直接内存、堆内存之间的数据复制，效率低下。
+
+Netty 提供了多种方法以帮助应用程序减少内存的复制。
+
+Netty 的零拷贝主要体现在以下几个方面：
+
+-   Netty 提供`CompositeByteBuf`组合缓冲区类，可以将多个 ByteBuf 合并为一个逻辑上的 ByteBuf，避免了各个 ByteBuf 之间的拷贝
+-   Netty 提供 ByteBuf 的浅层复制操作（slice、duplicate），可以讲多个 ByteBuf 合并为一个逻辑上的 ByteBuf，避免了各个 ByteBuf 之间的拷贝
+-   使用文件传输时，可以调用`FileRegion`包装的`transferTo()`方法直接讲文件缓冲区的数据发送到目标通道，避免普通的循环读取文件数据和写入通道所导致的内存拷贝问题
+-   在将一个 bute 数组转换为一个 ByteBuf 对象的场景下，Netty 提供了一系列的包装类，避免了转换过程中的内存拷贝
+-   如果通道接收和发送 ByteBuf 都使用直接内存进行 Socket 读写，就不需要进行缓冲区的二次拷贝。如果使用 JVM 的堆内存进行 Socket 读写，那么 JVM 会先将堆内存 Buffer 拷贝一份到直接内存再写入 Socket 中，相比于直接使用直接内存，这种情况会多出一次缓冲区的内存拷贝
+
+>   **说明**
+>
+>   Netty 中的零拷贝和操作系统层面上的零拷贝是有区别的，Netty 零拷贝完全是基于 Java 层面或者说用户空间的，更多的是偏向于应用中的数据操作优化，而不是系统层面的操作优化。
+
+### 8.1 通过CompositeByteBuf实现零拷贝
+
+`CompositeByteBuf`可以把需要合并的多个 ByteBuf 组合起来（可以同时放入堆缓冲区和直接缓冲区），对外提供统一的`readIndex`和`writeIndex`。`CompositeByteBuf`只是在逻辑上一个整体，在其内部合并的多个 ByteBuf 都是单独存在的。`CompositeByteBuf`里面有一个 Component 数组，聚合的 ByteBuf 都放在 Component 数组中，最小容量为 16。
+
+> **注意**
+>
+> 可多次添加同一个 ByteBuf 对象。
+
+在很多通信场景下都需要多个 ByteBuf 组成一个完整的消息。例如 HTTP 协议传输时消息由 Header 和 Body 组成。如果传输内容很长，就会分成多个消息包发送，每次发送都需要重用 Header，这时就可以使用`CompositeByteBuf`缓冲区进行 ByteBuf 组合，避免内存拷贝。
+
+```java
+ByteBuf headerBuf = ...;
+ByteBuf bodyBuf = ...;
+CompositeByteBuf cbuf = Unpooled.compositeBuffer();
+cbuf.addComponents(headerBuf, bodyBuf);
+```
+
+不使用`CompositeByteBuf`合并 Header 和 Body 的代码大致如下：
+
+```java
+ByteBuf headerBuf = ...;
+ByteBuf bodyBuf = ...;
+long length = headerBuf.readableBytes() + bodyBuf.readableBytes();
+ByteBuf allBuf = Unpooled.buffer(length);
+allBuf.writeBytes(headerBuf);
+allBuf.writeBytes(body);
+```
+
+上述过程将 Header 和 Body 都拷贝到了新的 allBuf 中，增加了两次额外的数据拷贝操作。
+
+下面是一段通过`CompositeByteBuf`复用 header 的完整演示：
+
+```java
+public class CompositeBufferTest {
+
+  static Charset UTF8 = Charset.forName("UTF-8");
+
+  @Test
+  void byteBufComposite() {
+    ByteBuf header = Unpooled.copiedBuffer("this is header", UTF8);
+
+    CompositeByteBuf cbuf = ByteBufAllocator.DEFAULT.compositeBuffer();
+    // 消息体1
+    ByteBuf body = Unpooled.copiedBuffer("this is body", UTF8);
+    cbuf.addComponents(header, body);
+    sendMsg(cbuf);
+    // 复用 header
+    header.retain();
+    cbuf.release();
+
+    cbuf = ByteBufAllocator.DEFAULT.compositeBuffer();
+    // 消息体2
+    body = Unpooled.copiedBuffer("this is another body", UTF8);
+    cbuf.addComponents(header, body);
+    sendMsg(cbuf);
+    cbuf.release();
+  }
+
+  private void sendMsg(CompositeByteBuf cbuf) {
+    for (ByteBuf buf : cbuf) {
+      int length = buf.readableBytes();
+      byte[] byteArr = new byte[length];
+      buf.getBytes(buf.readerIndex(), byteArr);
+      Logger.info(new String(byteArr, UTF8));
+    }
+  }
+
+}
+```
+
+如果`CompositeByteBuf`内部只存在一个 ByteBuf，则调用`cbuf.hasArray()`返回的是这个唯一实例的`hasArray()`方法的值；如果存在多个 ByteBuf，即使他们的类型一样，`cbuf.hasArray()`方法返回的都是 false。
+
+另外，调用`CompositeByteBuf`的`nioBuffer()`方法可以将`CompositeByteBuf`实例合并成一个新的 NIO ByteBuffer 缓冲区：
+
+```java
+@Test
+void nioBufferTest() {
+CompositeByteBuf cbuf = ByteBufAllocator.DEFAULT.compositeBuffer();
+cbuf.addComponent(Unpooled.wrappedBuffer(new byte[] { 1, 2, 3 }));
+cbuf.addComponent(Unpooled.wrappedBuffer(new byte[] { 4, 5 }));
+cbuf.addComponent(Unpooled.wrappedBuffer(new byte[] { 6 }));
+
+ByteBuffer nioBuffer = cbuf.nioBuffer(0, 6);
+byte[] array = nioBuffer.array();
+    Logger.info(Arrays.toString(array));
+}
+```
+
+### 8.2 通过wrap操作实现零拷贝
+
+`Unpooled`提供了多种 wrap 包装方法用来包装出`ByteBuf`和`CompositeByteBuf`实例，而不用进行内存拷贝。
+
+例如上节的 Header 和 body 的组合可以用 wrap 来包装成`CompositeByteBuf`：
+
+```java
+ByteBuf allByteBuf = Unpooled.wrappedBuffer(headerBuf, bodyBuf);
+```
+
+`wrappedBuffer()`重载方法如下：
+
+> public static ByteBuf wrappedBuffer(ByteBuffer buffer);
+>
+> public static ByteBuf wrappedBuffer(ByteBuf buffer);
+>
+> public static ByteBuf wrappedBuffer(ByteBuf... buffer);
+>
+> public static ByteBuf wrappedBuffer(ByteBuffer... buffer);
+>
+> public static ByteBuf wrappedBuffer(byte[] bytes);
+
+通过调用`Unpooled.wrappedBuffer()`方法将 bytes 包装为一个`UnpooledHeapByteBuf`对象（bytes 本来就分配在堆内存中），在包装过程中不会有拷贝操作，所得到的 ByteBuf 对象和 bytes 数组共用同一个存储空间，对 bytes 的修改也是对 ByteBuf 对象的修改。
+
+如果不使用`Unpooled.wrappedBuffer()`方法：
+
+```java
+byte[] bytes = ...;
+ByteBuf byteBuf = Unpooled.buffer();
+byteBuf.writeBytes(bytes);
+```
+
+显然这种方式是有额外的内存申请和拷贝操作的。
+
+`Unpooled`提供了多个包装字节数组的重载方法：
+
+```java
+public static ByteBuf wrappedBuffer(byte[] array);
+public static ByteBuf wrappedBuffer(byte[] array, int offset, int length);
+public static ByteBuf wrappedBuffer(byte[]... arrays);
+```
+
+## 9.案例：EchoServer
+
+下面实现一个 Netty 版本的 EchoServer。
+
+### 9.1 NettyEchoServer
+
+服务端读取客户端输入的数据，然后将数据直接回显到 Console 控制台。
+
+首先是服务端的 ServerBootstrap 装配和启动过程：
+
+```java
+public class NettyEchoServer {
+
+    private final int serverPort;
+    ServerBootstrap b = new ServerBootstrap();
+
+    public NettyEchoServer(int serverPort) {
+	this.serverPort = serverPort;
+    }
+
+    public void runServer() {
+
+	NioEventLoopGroup bossLoopGroup = new NioEventLoopGroup(1);
+	// 默认线程数量为最大可用的 CPU 处理器核心数量的 2 倍
+	NioEventLoopGroup workLoopGroup = new NioEventLoopGroup();
+
+	try {
+	    b.group(bossLoopGroup, workLoopGroup);
+	    b.channel(NioServerSocketChannel.class);
+	    b.localAddress(serverPort);
+	    b.option(ChannelOption.ALLOCATOR, UnpooledByteBufAllocator.DEFAULT);
+	    b.childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
+	    b.childOption(ChannelOption.SO_KEEPALIVE, true);
+
+	    b.childHandler(new ChannelInitializer<SocketChannel>() {
+		@Override
+		protected void initChannel(SocketChannel ch) throws Exception {
+		    ch.pipeline().addLast(NettyEchoServerHandler.INSTANCE);
+		}
+	    });
+
+	    // 绑定 server
+	    ChannelFuture channelFuture = b.bind();
+	    channelFuture.addListener(l -> {
+		if (l.isSuccess())
+		    Logger.info("服务器启动成功，监听端口：" + channelFuture.channel().localAddress());
+	    });
+	    // 服务监听通道会一直等待通道关闭的异步任务结束
+	    channelFuture.channel().closeFuture().sync();
+	} catch (Exception e) {
+	    e.printStackTrace();
+	} finally {
+	    workLoopGroup.shutdownGracefully();
+	    bossLoopGroup.shutdownGracefully();
+	}
+
+    }
+
+    public static void main(String[] args) {
+	new NettyEchoServer(18899).runServer();
+    }
+}
+```
+
+### 9.2 NettyEchoServerHandler
+
+```java
+@ChannelHandler.Sharable
+public class NettyEchoServerHandler extends ChannelInboundHandlerAdapter {
+
+    private NettyEchoServerHandler() {
+    }
+
+    public static final NettyEchoServerHandler INSTANCE = new NettyEchoServerHandler();
+
+    @Override
+    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+	ByteBuf in = (ByteBuf) msg;
+	Logger.info("msg type: " + (in.hasArray() ? "堆内存" : "直接内存"));
+	int len = in.readableBytes();
+	byte[] arr = new byte[len];
+	in.getBytes(0, arr);
+	Logger.info("server received: " + new String(arr, "UTF-8"));
+
+	Logger.info("写回前，msg.refcnt: " + in.refCnt());
+	// 读取时调用的是 getBytes，不影响数据指针，因此可以直接使用
+	// 即使不刷新只调用 write() 最终也通过 TailContext 刷新，这里为了确保回调函数是在刷新后执行所以调用 writeAndFlush()
+	ChannelFuture f = ctx.writeAndFlush(msg);
+    // ChannelFuture f = ctx.write(msg);
+	// 以下两种方法也可，因为没有 OutboundHandler
+	// ChannelFuture f = ctx.channel().writeAndFlush(msg);
+	// ChannelFuture f = ctx.channel().pipeline().writeAndFlush(msg);
+	f.addListener(l -> {
+	    if (l.isSuccess())
+		Logger.info("写回后，msg.refcnt: " + in.refCnt());
+	});
+
+    }
+
+}
+```
+
+### 9.3 NettyEchoClient
+
+客户端 Bootstrap 的装配和使用如下：
+
+```java
+public class NettyEchoClient {
+
+    private int serverPort;
+    private String serverIp;
+    Bootstrap b = new Bootstrap();
+
+    public NettyEchoClient(String serverIp, int serverPort) {
+	this.serverIp = serverIp;
+	this.serverPort = serverPort;
+    }
+
+    public void runClient() {
+	NioEventLoopGroup eventLoopGroup = new NioEventLoopGroup();
+
+	try {
+	    b.group(eventLoopGroup);
+	    b.remoteAddress(serverIp, serverPort);
+	    b.channel(NioSocketChannel.class);
+	    b.option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
+	    b.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 1000);
+
+	    b.handler(new ChannelInitializer<SocketChannel>() {
+		@Override
+		protected void initChannel(SocketChannel ch) throws Exception {
+		    ch.pipeline().addLast(NettyEchoClientHandler.INSTANCE);
+		}
+	    });
+
+	    boolean isConnected = false;
+	    while (!isConnected) {
+		Logger.info("尝试连接至服务端......");
+		ChannelFuture future = b.connect();
+		future.addListener(l -> {
+		    if (l.isSuccess())
+			Logger.info("客户端连接成功");
+		    else
+			Logger.info("客户端连接失败");
+		});
+		// future.sycn() 会抛出 InterrupedException
+		// 而 future.awaitUninterruptibly() 会捕获 InterrupedException 并安静的退出
+		// 安静退出后就会出发外部 while 循环，继续尝试连接
+		future.awaitUninterruptibly();
+		if (future.isCancelled()) {
+		    Logger.info("用户取消连接");
+		    // 退出函数
+		    return;
+		} else if (future.isSuccess()) {
+		    isConnected = true;
+		}
+
+		Channel channel = future.channel();
+		Logger.tcfo("请输入发送内容：");
+		Scanner sc = new Scanner(System.in);
+		while (sc.hasNext()) {
+		    String next = sc.nextLine();
+		    ByteBuf buffer = channel.alloc().buffer();
+		    buffer.writeBytes(next.getBytes("UTF-8"));
+		    ChannelFuture writeFuture = channel.writeAndFlush(buffer);
+		    writeFuture.addListener(l -> {
+			if (l.isSuccess())
+			    Logger.info("发送成功");
+			else
+			    Logger.info("发送失败");
+		    });
+		    Logger.tcfo("请输入发送内容：");
+		}
+
+	    }
+
+	} catch (Exception e) {
+	    e.printStackTrace();
+	} finally {
+	    eventLoopGroup.shutdownGracefully();
+	}
+    }
+
+    public static void main(String[] args) {
+	new NettyEchoClient("localhost", 18899).runClient();
+    }
+}
+```
+
+客户端需要显示回显消息，因此需要一个回显处理器：
+
+```java
+@ChannelHandler.Sharable
+public class NettyEchoClientHandler extends ChannelInboundHandlerAdapter {
+
+    private NettyEchoClientHandler() {
+    }
+
+    public static final NettyEchoClientHandler INSTANCE = new NettyEchoClientHandler();
+
+    @Override
+    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+	ByteBuf in = (ByteBuf) msg;
+	int len = in.readableBytes();
+	byte[] arr = new byte[len];
+	in.getBytes(0, arr);
+	Logger.info("client received: " + new String(arr, "UTF-8"));
+	// 手动释放 ByteBuf
+	in.release();
+	// 也可以传递给 TailContext 来进行释放
+	// ctx.fireChannelRead(msg);
+    }
+
+}
+```
+
+**执行结果**
+
+服务端
+
+```java
+[nioEventLoopGroup-2-1|NettyEchoServer.lambda$0] |>  服务器启动成功，监听端口：/0:0:0:0:0:0:0:0:18899 
+[nioEventLoopGroup-3-1|NettyEchoServerHandler.channelRead] |>  msg type: 直接内存 
+[nioEventLoopGroup-3-1|NettyEchoServerHandler.channelRead] |>  server received: hello 
+[nioEventLoopGroup-3-1|NettyEchoServerHandler.channelRead] |>  写回前，msg.refcnt: 1 
+[nioEventLoopGroup-3-1|NettyEchoServerHandler.lambda$0] |>  写回后，msg.refcnt: 0 
+```
+
+客户端
+
+```java
+[main|NettyEchoClient.runClient] |>  尝试连接至服务端...... 
+[nioEventLoopGroup-2-1|NettyEchoClient.lambda$0] |>  客户端连接成功 
+[main|NettyEchoClient.runClient] |>  请输入发送内容： 
+hello
+[main|NettyEchoClient.runClient] |>  请输入发送内容： 
+[nioEventLoopGroup-2-1|NettyEchoClient.lambda$1] |>  发送成功 
+[nioEventLoopGroup-2-1|NettyEchoClientHandler.channelRead] |>  client received: hello 
+```
+
+### 扩展：@Channelhandler.Sharable
+
+这个注解的作用是标注可以让多个通道的流水线加入同一个 Handler 实例。这种共享操作 Netty 默认是不允许的，如果没有加此注解，试图将同一个 Handler 实例添加到多个 ChannelPipeline 时 Netty 会抛出异常。
+
+很多场景都需要 Handker 实例可以共享。如一个服务器处理十万以上的通道，如果每一个通道都新建很多重复的 Handler 实例就会浪费资源。如果在 Handler 实例中没有与特定通道强相关的数据或状态，最好设计成共享模式。
+
+可通过`ChannelHandlerAdapter`的`isSharable()`方法判断一个 Handler 是否添加了此注解。
