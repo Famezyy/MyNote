@@ -36,3 +36,14 @@ RestTemplate restTemplate = new RestTemplate(requestFactory);
 ```
 
 > 观察实现方法对比`HttpCpmponentsClientHttpRequestFactory`和`SimpleClientHttpRequestFactory`，前者是用连接池管理数据库的链接，后者是每次调用`restTemplate`时都要打开一个链接，然后关闭，性能稍差一些。
+
+在 Springboot 中，可以使用`RestTemplateBuilder`去创建 RestTemplate：
+
+```java
+@Bean
+public RestTemplate restTemplate(RestTemplateBuilder builder) {
+    // 可通过构造者模式设置属性
+    return builder.build();
+}
+```
+
