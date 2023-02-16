@@ -495,6 +495,10 @@ Nacos Discovery Starter 可以将服务自动注册到 Nacos 服务端并且能�
 
 ##### 2.1 安装
 
+> **注意**
+>
+> 首先要安装 Java 环境。
+
 参考：https://nacos.io/zh-cn/docs/quick-start.html
 
 你可以通过源码和发行包两种方式来获取 Nacos。
@@ -513,7 +517,7 @@ Nacos Discovery Starter 可以将服务自动注册到 Nacos 服务端并且能�
 
 - 下载编译后压缩包方式
 
-  从[最新稳定版本](https://github.com/alibaba/nacos/releases)下载`nacos-server-$version.zip`包。
+  从[最新稳定版本](https://github.com/alibaba/nacos/releases)下载`nacos-server-$version.tar.gz`包。
 
   ```bash
   unzip nacos-server-$version.zip
@@ -549,9 +553,50 @@ Nacos Discovery Starter 可以将服务自动注册到 Nacos 服务端并且能�
   startup.cmd -m standalone
   ```
 
+> **创建执行脚本**
+>
+> 在`/etc/init.d`下创建`nacos`文件
+>
+> ```bash
+> #! /bin/bash
+> #chkconfig:2345 80 90
+> #description:nacos
+> #processname:nacos
+> 
+> NACOS=/srv/nacos
+> case $1 in
+>   start) sh $NACOS/bin/startup.sh -m standalone;;
+>   stop) sh $NACOS/bin/shutdown.sh;;
+>   *) echo "require start|stop";;
+> esac
+> ```
+>
+> 把脚本注册为 Service
+>
+> ```bash
+> chkconfig --add nacos
+> chkconfig --list
+> ```
+>
+> 增加权限
+>
+> ```bash
+> chmod +x /etc/init.d/nacos
+> ```
+>
+> 启动
+>
+> ```bash
+> service nacos start
+> ```
+
 ##### 2.3 登陆
 
-等服务器启动成功后，访问指定地址，用户名和密码默认是`nacos`。
+等服务器启动成功后，查看输出日志，访问指定地址，用户名和密码默认是`nacos`。
+
+> **注意**
+>
+> 需要打开防火墙指定端口或关闭防火墙。
 
 ##### 2.4 关闭
 
