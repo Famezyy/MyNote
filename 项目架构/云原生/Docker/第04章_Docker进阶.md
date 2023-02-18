@@ -774,6 +774,20 @@ PING alpine1 (172.18.0.2): 56 data bytes
 
 可以发现，自定义网络维护了主机名和 ip 的对应关系（ip 和域名都能通）。
 
+**指定静态 IP**
+
+要想给容器指定静态 IP，需要在创建自定义网络时指定`subnet`
+
+```bash
+docker network create --subnet 177.18.20.0/24 mynet
+```
+
+为容器分配内部静态 IP
+
+```bash
+docker run -d --network mynet --ip 177.18.20.10 centos
+```
+
 ## 4.Docker-Compose容器编排
 
 Compose 是 Docker 公司推出的一个工具软件，可以管理多个 Docker 容器组成一个应用。你需要定义一个 YAML 格式的配置文件 docker-compose.yml，写好多个容器之间的调用关系。然后，只要一个命令，就能同时启动/关闭这些容器。
