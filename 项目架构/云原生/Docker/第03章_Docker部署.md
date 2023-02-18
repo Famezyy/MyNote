@@ -110,7 +110,16 @@ redis 容器中默认保存了 RDB 快照文件，放在容器的 data 目录，
 ### 2.1 新建主服务器容器
 
 ```bash
-$ docker run -d -p 3306:3306 --privileged=true -v /youyi/mysql_master/log:/var/log/mysql -v /youyi/mysql_master/data:/var/lib/mysql -v /youyi/mysql_master/conf:/etc/mysql/conf.d -e MYSQL_ROOT_PASSWORD=123456  --name mysql_master mysql:5.7
+$ docker run -d \
+-p 3306:3306 \
+--privileged=true \
+-v /youyi/mysql_master/log:/var/log/mysql \
+-v /youyi/mysql_master/data:/var/lib/mysql \
+-v /youyi/mysql_master/conf:/etc/mysql/conf.d \
+-e MYSQL_ROOT_PASSWORD=123456  \
+--name mysql_master \
+--restart=always \
+mysql:5.7
 ```
 
 - 进入`/youyi/mysql-master/conf`目录下新建`my.cnf`
