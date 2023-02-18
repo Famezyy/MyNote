@@ -923,3 +923,21 @@ $ docker run -d -p 8000:8000 -p 9443:9443 --name portainer --restart=always -v /
 ## 6.容器监控
 
 CAdvisor + influxDB + Granfana
+
+## 7.配置日志
+
+有时当 Docker 容器日志大量记录时，使用`df -h`会发现`/var/lib/docker/overlay2`空间占用很大，可使用`docker system prune -a`清除无用的数据，也可以在容器启动时限制容器日志的大小：
+
+```bash
+docker run ...... --log-opt max-size=10m --log-opt max-file=1
+```
+
+或者在配置文件`/etc/docker/daemon.json`中配置：
+
+```json
+{
+   "log-driver":"json-file",
+   "log-opts": {"max-size":"10m", "max-file":"1"}
+}
+```
+
