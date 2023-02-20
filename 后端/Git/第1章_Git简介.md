@@ -101,6 +101,10 @@ $ sudo apt install git-all
 
 要了解更多选择，[Git 官方网站](https://git-scm.com/download/linux)上有在各种 Unix 发行版的系统上安装步骤。
 
+```bash
+$ $ sudo yum install git-all
+```
+
 ### 3.2 在macOS上安装
 
 在 Mac 上安装 Git 有多种方式。 最简单的方法是安装`Xcode Command Line Tools`。Mavericks （10.9）或更高版本的系统中，在 Terminal 里尝试首次运行 git 命令即可。

@@ -110,7 +110,16 @@ redis 容器中默认保存了 RDB 快照文件，放在容器的 data 目录，
 ### 2.1 新建主服务器容器
 
 ```bash
-$ docker run -d -p 3306:3306 --privileged=true -v /youyi/mysql_master/log:/var/log/mysql -v /youyi/mysql_master/data:/var/lib/mysql -v /youyi/mysql_master/conf:/etc/mysql/conf.d -e MYSQL_ROOT_PASSWORD=123456  --name mysql_master mysql:5.7
+$ docker run -d \
+-p 3306:3306 \
+--privileged=true \
+-v /youyi/mysql_master/log:/var/log/mysql \
+-v /youyi/mysql_master/data:/var/lib/mysql \
+-v /youyi/mysql_master/conf:/etc/mysql/conf.d \
+-e MYSQL_ROOT_PASSWORD=123456  \
+--name mysql_master \
+--restart=always \
+mysql:5.7
 ```
 
 - 进入`/youyi/mysql-master/conf`目录下新建`my.cnf`
@@ -118,7 +127,10 @@ $ docker run -d -p 3306:3306 --privileged=true -v /youyi/mysql_master/log:/var/l
   ```bash
   [mysqld]
   #[必须] 设置server_id，同一局域网中需要唯一
-  server_id=1
+  server-id=1
+  #服务端口号 默认3306
+  port=3306
+  
   #[必须] 开启二进制日志功能，指定路径
   log-bin=mall-mysql-bin
   
@@ -131,8 +143,8 @@ $ docker run -d -p 3306:3306 --privileged=true -v /youyi/mysql_master/log:/var/l
   binlog-ignore-db=mysql  
   
   #[可选] 二进制日志过期清理时间，默认值为 0，表示不自动清理
-  expire_logs_days=7  
-  #[可选] 设置日志文件保留的时长，单位是秒
+  expire_logs_days=7
+  #[可选] 设置日志文件保留的时长，单位是秒，适用于 Mysql 8.0
   binlog_expire_logs_seconds=6000
   
   #[可选] 设置二进制日志使用内存大小（事务）

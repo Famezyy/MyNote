@@ -774,6 +774,20 @@ PING alpine1 (172.18.0.2): 56 data bytes
 
 可以发现，自定义网络维护了主机名和 ip 的对应关系（ip 和域名都能通）。
 
+**指定静态 IP**
+
+要想给容器指定静态 IP，需要在创建自定义网络时指定`subnet`
+
+```bash
+docker network create --subnet 177.18.20.0/24 mynet
+```
+
+为容器分配内部静态 IP
+
+```bash
+docker run -d --network mynet --ip 177.18.20.10 centos
+```
+
 ## 4.Docker-Compose容器编排
 
 Compose 是 Docker 公司推出的一个工具软件，可以管理多个 Docker 容器组成一个应用。你需要定义一个 YAML 格式的配置文件 docker-compose.yml，写好多个容器之间的调用关系。然后，只要一个命令，就能同时启动/关闭这些容器。
@@ -892,6 +906,54 @@ spring.redis.host=redis
 
 执行`docker compose up`或者`docker compose up -d`即可同时启动三个容器，执行`docker-compose stop`即可同时停止三个容器。
 
+### 4.6 常用属性
+
+- `build`
+
+  ```yaml
+  services:
+    mysql:
+      build:
+        context: ./
+        dockerfile: mysql/Dockerfile
+      image: my_mysql
+      ...
+  ```
+
+  `context`指定上下文环境，如果同时指定了`build`和`image`，会先尝试拉取 my_mysql，如果不存在则用 build 创建一个 my_mysql 镜像。
+
+- `depends_on`
+
+  有三个可取的值：
+
+  - `service_started`：依存的服务启动后开始启动（不会等到启动完成）
+  - ``service_healthy`：依存的服务启动后，并且健康检查完毕后开始启动
+  - `service_completed_successfully`：依存的服务结束后启动
+
+  有一个值时：
+
+  ```dockerfile
+  depends_on: db
+  ```
+
+  两个值时需要放到列表中：
+
+  ```dockerfile
+  depends_on:
+    - db
+    - redis
+  ```
+
+  有两个值且使用条件时，需要放到字典中：
+
+  ```dockerfile
+  dpends_on:
+    db:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+  ```
+
 ## 5.可视化工具Portainer
 
 Portainer 是一款轻量级的应用，它提供了图形化界面，用于方便地管理 Docker 环境，包括单机环境和集群环境。
@@ -910,20 +972,6 @@ $ docker run -d -p 8000:8000 -p 9443:9443 --name portainer --restart=always -v /
 
 CAdvisor + influxDB + Granfana
 
-## 7.配置日志
+## 7.清理
 
-有时当 Docker 容器日志大量记录时，使用`df -h`会发现`/var/lib/docker/overlay2`空间占用很大，可使用`docker system prune -a`清除无用的数据，也可以在容器启动时限制容器日志的大小：
-
-```bash
-docker run ...... --log-opt max-size=10m --log-opt max-file=1
-```
-
-或者在配置文件`/etc/docker/daemon.json`中配置：
-
-```json
-{
-   "log-driver":"json-file",
-   "log-opts": {"max-size":"10m", "max-file":"1"}
-}
-```
-
+可使用`docker system prune -a`清除无用的数据
