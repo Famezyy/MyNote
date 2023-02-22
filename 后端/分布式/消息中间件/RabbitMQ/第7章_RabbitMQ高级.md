@@ -619,7 +619,17 @@ rabbitmq-plugins enable rabbitmq_delayed_message_exchange
 
 ### 4.1 RibbitMQ持久化
 
-持久化就把信息写入到磁盘的过程。
+持久化实际包含两个部分：队列索引（rabbit_queue_index）和消息存储（rabbit_msg_store）。
+
+**队列索引**负责维护队列中落盘消息的信息，包括消息的存储地点、是否已被交付给消费者、是否已被消费者 ack 等。每个队列都有一个对应的队列索引。而**消息存储**是以键值对的形式存储消息，他被所有队列共享，在每个节点中有且只有一个。
+
+消息（包括消息体、属性和 headers）可以直接存储在队列索引中，也可以被保存在消息存储中。消息大小的界定通过`queue_index_embed_msgs_below`配置，默认大小 4096B。当一个消息小于设定的大小时就可以存储在队列索引中。
+
+队列索引是以顺序（文件名从 0 开始累加）的段文件来进行存储，后缀为".idx"。每个段文件中包含固定的`SEGMENT_ENTRY_COUNT`条记录，`SEGMENT_ENTRY_COUNT`默认值是 16384。每个队列索引从磁盘中读取消息的时候至少要在内存中维护一个段文件，所以设置`queue_index_embed_msgs_below`的时候要格外谨慎。
+
+经过消息存储处理的所有消息都会以追加的方式写入到文件中，当一个文件的大小超过指定的限制（`file_size_limit`）后，关闭这个文件再创建一个新的文件以供新的消息写入。文件名（后缀：".rdq"）从 0 开始累加。在进行消息的存储时，RabbitMQ 会在 EST（Erlang Term Storage）表中记录消息在文件中的位置映射和文件的相关信息。
+
+消息的删除只是从 ETS 表删除指定消息的相关信息，同时更新消息对应的存储文件的相关信息。执行消息删除操作时，并不立即删除文件中的消息。也就是消息依然在文件中，仅仅是标记为垃圾数据。当一个文件中都是垃圾数据时可以将这个文件删除。当检测到前后两个文件中的有效数据可以合并在一个文件中，并且所有的垃圾数据的大小和所有文件（至少有 3 个文件存在）的数据大小的比值超过设置的阈值（`garbage_fraction`，默认 0.5）时才会触发垃圾回收将两个文件合并。
 
 **RabbitMQ持久化消息**
 
@@ -645,14 +655,21 @@ RabbitMQ 的持久化队列分为：
 
 队列的持久化是定义队列时的 durable 参数来实现的，durable 为 true 时，队列才会持久化。
 
-```java
-// 参数1：名字  
-// 参数2：是否持久化
-// 参数3：独占的queue
-// 参数4：不使用时是否自动删除
-// 参数5：其他参数
-return new Queue("ttl.direct.queue", true, false, false, args);
+**原生方式**
 
+```java
+Queue.DeclareOk queueDeclare(
+    // 队列名称
+	String queue,
+    // 是否持久化
+    boolean durable,
+    // 是否排他，如果设置 true，则这个队列只属于创建并首次连接它的程序，当这个程序跟这个 queue 断开连接，则自动删除
+    boolean exclusive,
+    // 孤立的时候自动删除
+    boolean autoDelete,
+    // 可以配置死信队列
+    Map<String, Object> arguments
+) throws IOException;
 ```
 
 当参数 2 设置为 true，就代表的是持久化的含义。即 durable=true。持久化的队列在 web 控制台中有一个`D`的标记。
@@ -675,7 +692,26 @@ return new Queue("ttl.direct.queue", true, false, false, args);
 
 #### 2.RabbitMQ消息持久化
 
-消息持久化是通过消息的属性 deliveryMode 来设置是否持久化。
+**原生方式**
+
+```java
+channel.basicPublish(
+    // 交换机名称
+	exchangeName,
+    // routing key
+    routingKey,
+    // 设置为 true 时，如果交换机没有根据 routingkey 找到对应的 queue，那么交换机可以把这条消息返回给生产者，需要添加 returnCallback
+    mandatory,
+    MessageProperties.PERSISTENT_TEXT_PLAIN,
+    messageBodyBytes
+);
+```
+
+
+
+**SpringBoot**
+
+消息持久化是通过消息的属性 deliveryMode 来设置是否持久化。持久化的是队列的元数据以及数据相关存储位置指针。
 
 ```java
 public void makeOrder(Long userId, Long productId, int num) {
@@ -694,7 +730,28 @@ public void makeOrder(Long userId, Long productId, int num) {
 
 #### 3.RabbitMQ交换机持久化
 
-和队列一样，交换机也需要在定义的时候设置持久化的标识，否则在 rabbit-server 服务重启以后将丢失。
+和队列一样，交换机也需要在定义的时候设置持久化的标识，否则在 rabbit-server 服务重启以后将丢失。此时持久化的是`bindingkey`。
+
+**原生方式**
+
+```java
+Exchange.DeclareOk exchangeDeclare(
+    // 交换机名称
+    String exchange,
+    // 交换机的 4 种 type
+    String type,
+    // 持久化
+    boolean durable,
+    // 当交换机"完全孤立"的时候会被删除
+    boolean autoDelete,
+    // 如果设置为 true，则只能接受其他交换机发来的消息，不能接受生产者的消息
+    boolean internal,
+    // 里面可以存放一些东西：AE（备份交换机）
+    Map<String, Object> arguments
+) throws IOException;
+```
+
+**SpringBoot**
 
 ```java
 /**
