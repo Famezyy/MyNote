@@ -267,7 +267,7 @@ FROM employees;
 这里有两点需要注意：
 
 1. DISTINCT 需要放到所有列名的前面，如果写成`SELECT salary, DISTINCT department_id FROM employees`会报错。
-2. DISTINCT 其实是对后面**所有列名的组合进行去重**，你能看到最后的结果是 74 条，因为这 74 个部门id不同，都有 salary 这个属性值。如果你想要看都有哪些不同的部门（department_id），只需要写`DISTINCT department_id`即可，后面不需要再加其他的列名了。
+2. DISTINCT 其实是对后面**所有列名的组合进行去重**，你能看到最后的结果是 74 条，因为这 74 个部门 id 不同，都有 salary 这个属性值。如果你想要看都有哪些不同的部门（department_id），只需要写`DISTINCT department_id`即可，后面不需要再加其他的列名了。
 
 ### 3.4 空值参与运算
 

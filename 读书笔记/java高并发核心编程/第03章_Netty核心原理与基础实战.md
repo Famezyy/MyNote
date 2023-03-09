@@ -403,7 +403,9 @@ ServerBootstrap b = new ServerBootstrap();
 
 #### 3.SO_KEEPALIVE
 
-此为 TCP 传输选项，表示是否开启 TCP 的心跳机制。true 为连接保持心跳，默认为 false。启用时，TCP 会主动探测空闲连接的有效性。默认的心跳间隔是 7200 秒，即 2 小时，Netty 默认关闭该功能。
+此为 TCP 传输选项，表示是否开启 TCP 的心跳机制。true 为连接保持心跳，默认为 false。启用时，TCP 会主动探测空闲连接的有效性。默认的心跳间隔是 7200 秒，即 2 小时，可通过`ChannelOption.TCP_KEEPIDLE`选项更改。
+
+Netty 默认关闭该功能。
 
 #### 4.SO_REUSEADDR
 

@@ -1,4 +1,4 @@
-# 第02章_SpringCloud组件
+# 第02章_Nacos与OpenFeign
 
 ## 1.案例：升级旧微服务架构
 
@@ -1724,7 +1724,7 @@ spring:
 
 > **注意**
 >
-> ${spring.profiles.active} 当通过配置文件来指定时必须放在 bootstrap.properties 文件中。
+> `${spring.profiles.active}`当通过配置文件来指定时必须放在 bootstrap.properties 文件中。
 
 Nacos 上新增一个 dataId 为：nacos-config-develop.yaml 的基础配置，如下所示：
 
@@ -1762,7 +1762,7 @@ Group  :        DEFAULT_GROUP
 >
 > 此案例中我们通过`spring.profiles.active=<profilename>`的方式写死在配置文件中，而在真正的项目实施过程中这个变量的值是需要不同环境而有不同的值。这个时候通常的做法是通过`-Dspring.profiles.active=<profile>`参数指定其配置来达到环境间灵活的切换。
 
-### 5.5 按命名空间获取配置
+### 5.5 按namespace获取配置
 
 实际更多使用的是**命名空间**来区分。
 
@@ -1780,7 +1780,9 @@ spring:
         namespace: 40ae7c47-648d-4082-b7d1-eb85ddc0222f
 ```
 
-配置`spring.cloud.nacos.config.namespace`必须放在 bootstrap.properties 文件中。此外`spring.cloud.nacos.config.namespace`的值是 namespace 对应的 id，id 值可以在 Nacos 的控制台获取。并且在添加配置时注意不要选择其他的 namespace，否则将会导致读取不到正确的配置。
+> **注意**
+>
+> 配置`spring.cloud.nacos.config.namespace`必须放在 bootstrap.properties 文件中。此外`spring.cloud.nacos.config.namespace`的值是 namespace 对应的 id，id 值可以在 Nacos 的控制台获取。并且在添加配置时注意不要选择其他的 namespace，否则将会导致读取不到正确的配置。
 
 ### 5.6 按Group获取配置
 
@@ -1898,7 +1900,7 @@ spring:
   cloud:
     nacos:
       server-addr: 192.168.11.100:8848
-      username: nacos
+      username: nacos # 开启了权限验证就需要用户名密码
       password: nacos
       config:
         namespace: 40ae7c47-648d-4082-b7d1-eb85ddc0222f
@@ -1923,3 +1925,23 @@ spring:
 - `dataId=order-service.properties`
 - `dataId=order-service`
 - `dataId=customized-id.yaml`
+
+### 5.11 @RefreshScope
+
+`@value`无法动态感知变更，需要在类上标注`@RefreshScope`
+
+```java
+@RestController
+@RequestMapping("/order")
+@RefreshScope
+public class OrderController {
+
+    @Value("${user.id}")
+    String id;
+
+    @GetMapping("/add")
+    public String add() {
+	return id;
+    }
+}
+```

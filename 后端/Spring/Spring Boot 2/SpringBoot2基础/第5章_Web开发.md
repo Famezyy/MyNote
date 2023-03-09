@@ -106,7 +106,7 @@ final class WelcomePageHandlerMapping extends AbstractUrlHandlerMapping {
 
 ## 3.数据响应与内容协商
 
-### 3.1 数据相应
+### 3.1 数据响应
 
 #### 1.SpringMVC支持的返回值类型
 
@@ -332,6 +332,54 @@ public class MyResponseBodyAdvice implements ResponseBodyAdvice<Object> {
     }
 }
 ```
+
+### 3.6 内容定位
+
+底层就是通过 Bean 名称从容器中获取相应的 Bean。
+
+```java
+public class client {
+    
+    @Autowired
+    ParserFactory partserFactory;
+    
+    public String getAll(ContentType type) {
+        switch (type) {
+            case CSV:
+                return csvParser.parse(type);
+                break;
+            case JSON:
+                return jsonParser.parse(type);
+                break;
+        }
+        return parserFactory.getParser(type).parse(reader);
+    }
+}
+
+@Configuration
+public class ParserConfig {
+    
+    @Bean("parserFactory")
+    public FactoryBean serviceLocatorFactoryBean() {
+        ServiceLocatorFactoryBean factoryBean = new ServiceLocatorFactoryBean();
+        // 传入服务定位接口，底层会创建动态代理，根据方法的第一个参数值（调用了 toString，所以使用 enum 也可以）获取 Bean 并返回
+        factoryBean.setServiceLocatorInterface(ParserFactory.class);
+        return factotyBean;
+    }
+    
+}
+
+public interface ParserFactory {
+    Parser getParser(ContentType type);
+}
+
+@Component("CSV")
+public class CSVParser implements Parser {
+    public String parse(Reader r) {...}
+}
+```
+
+
 
 ## 4.视图解析与模板引擎
 
