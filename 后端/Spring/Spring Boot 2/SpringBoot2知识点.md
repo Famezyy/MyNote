@@ -815,5 +815,92 @@ public static void printFileContent(Object obj) throws IOException {
   }
   ```
 
-  
 
+## 异步执行
+
+- 在配置类上开启异步
+
+  ```java
+  @EnableAsync
+  public class Configuration(){}
+  ```
+
+- 配置线程池
+
+  - 通过配置文件
+
+    ```properties
+    spring.task.execution.pool.core-size=5
+    spring.task.execution.pool.max-size=50
+    spring.task.execution.pool.queue-capacity=200
+    spring.task.execution.thread-name-prefix=asyncTask
+    ```
+
+  - 通过配置类
+
+    ```java
+    @EnableAsync
+    @Configuration
+    public class AsyncConfiguration() implements AsyncConfigurer {
+        @Bean(name="defaultTaskExecutor")
+        public ThreadPoolTaskExecutor defaultExecutor() {
+            ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+            executor.setCorePoolSize(5);
+            executor.setMaxPoolSize(50);
+            executor.setQueueCapacity(200);
+            executor.setKeepAliveSeconds(200);
+            executor.setThreadNamePrefix("asyncTask");
+            executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
+            executor.initialize();
+            return executor;
+        }
+        
+        @Bean(name="ptherTaskExecutor")
+        public ThreadPoolTaskExecutor otherExecutor() {
+            ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+            ...
+            return executor;
+        }
+        
+        // 指定默认线程池
+        @Override
+        public Executor defaultExecutor() {
+            return defaultExecutor();
+        }
+        
+        
+    }
+    ```
+
+- 在方法上使用`@Async`
+
+  ```java
+  @Async
+  public CompletableFuture<POJO> handle() {
+      return CompletableFuture.completedFuture(pOJO);
+  }
+  ```
+
+  可以指定使用的线程池
+
+  ```java
+  @Async("defaultTaskExecutor")
+  public CompletableFuture<POJO> handle1() {
+      return CompletableFuture.completedFuture(pOJO);
+  }
+  
+  @Async("otherTaskExecutor")
+  public CompletableFuture<POJO> handle2() {
+      return CompletableFuture.completedFuture(pOJO);
+  }
+  ```
+
+- 同步阻塞等待结果
+
+  ```java
+  CompletableFuture.allof(completableFuture1, completableFuture2);
+  pOJO1 = completableFuture1.get();
+  pOJO2 = completableFuture2.get();
+  ```
+
+  

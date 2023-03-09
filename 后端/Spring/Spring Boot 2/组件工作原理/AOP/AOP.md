@@ -147,7 +147,7 @@ public @interface EnableAspectJAutoProxy {
 
 `AspectJAutoProxyRegistrar`实现了`ImportBeanDefinitionRegistrar`接口，在【注册剩余`configClass`的`BeanDefinitions`】时被加载。
 
-向容器中加入了`org.springframework.aop.config.internalAutoProxyCreator`：`AnnotationAwareAspectJAutoProxyCreator`。
+向容器中加入了 BeanDefinition:`org.springframework.aop.config.internalAutoProxyCreator`：`AnnotationAwareAspectJAutoProxyCreator`。
 
 ```java
 class AspectJAutoProxyRegistrar implements ImportBeanDefinitionRegistrar {
@@ -199,13 +199,13 @@ class AspectJAutoProxyRegistrar implements ImportBeanDefinitionRegistrar {
 
 - `@EnableAspectJAutoProxy`：开启 AOP 功能
 
-- `@EnableAspectJAutoProxy`：会给容器注册一个组件`AnnotationAwareAspectJAutoProxyCreator`， 是一个后置处理器，在【`Bean`初始化阶段】的【执行`BeanPostProcessor`的`postProcessAfterInitialization()`】创建 AOP 代理对象。
+- `@EnableAspectJAutoProxy`：会给容器注册一个 BeanDefinition：`AnnotationAwareAspectJAutoProxyCreator`，是一个后置处理器，在【`Bean`初始化阶段】的【执行`BeanPostProcessor`的`postProcessAfterInitialization()`】创建 AOP 代理对象。
 
 - 代理对象创建流程
 
-  1. `registerBeanPostProcessors()` 注册后置处理器，创建`AnnotationAwareAspectJAutoProxyCreator`
+  1. 在`registerBeanPostProcessors()`方法中注册后置处理器阶段，创建`AnnotationAwareAspectJAutoProxyCreator`
 
-  2. `finishBeanFactoryInitialization()` 初始化剩下的单实例 Bean
+  2. 在`finishBeanFactoryInitialization()`方法中初始化剩下的单实例 Bean
   3. `AnnotationAwareAspectJAutoProxyCreator`拦截组建的创建过程判断组件是否需要增强——遍历所有 bean 查找是否有对应的通知方法
      - 有，则将切面的通知方法包装成增强器（Advisor），将业务逻辑组件封装为一个代理对象
 
@@ -243,7 +243,6 @@ public class TransferInterceptor implements MethodBeforeAdvice {
     @Override
     public void before(Method arg0, Object[] arg1, Object arg2) throws Throwable {
         LOGGER.info("transfer intercepted");
-
     }
 }
 ```

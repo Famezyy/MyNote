@@ -135,7 +135,9 @@ public class Producer {
             connection = connectionFactory.newConnection("生产者");
             // 4: 从连接中获取通道channel
             channel = connection.createChannel();
-            // 5: 申明队列queue存储消息
+            // 5: 创建交换机 exchange，设置持久化
+            channel.exchangeDeclare("myExchange", "direct", true);
+            // 6: 申明队列queue存储消息
             /*
      		 * 如果队列不存在，则会创建
        		 * rabbitmq 不允许创建两个相同的队列名称，否则会报错。
@@ -145,15 +147,24 @@ public class Producer {
              * @params4：autoDelete 是否自动删除，当最后一个消费者断开连接之后是否自动删除消息。
 			 * @params5：arguments 可以设置队列附加参数，设置队列的有效期，消息的最大长度，队列的消息生命周期等等。
 			 */
-            channel.queueDeclare("queue1", false, false, false, null);
-            // 6： 准备发送消息的内容
+            channel.queueDeclare("queue1", true, false, false, null);
+            channel.queueBind("queue1", "myExchange", "myRoutingKey");
+            // 7： 准备发送消息的内容
             String message = "你好，llp！！！";
-            // 7: 发送消息给中间件 rabbitmq-server
+            // 8: 发送消息给中间件 rabbitmq-server
             // @params1: 交换机 exchange，不指定则使用默认的
             // @params2: 队列名称 / routing key
-            // @params3: 属性配置
-            // @params4: 发送消息的内容
-            channel.basicPublish("", "queue1", null, message.getBytes());
+            // @params3: 
+            // @params4: basicProperties属性配置，可进行持久化设置：deliveryMode=2
+            // @params5: 发送消息的内容
+            channel.basicPublish("myExchange",
+                                 "myRoutingKey",
+                                 false,
+                                 new AMQP.BasicProperties().builder()
+                                 	.deliveryMode(2)
+                                 	.contentType("text/plain")
+                                 	.build(),
+                                 message.getBytes());
             System.out.println("消息发送成功!");
         } catch (Exception ex) {
             ex.printStackTrace();
