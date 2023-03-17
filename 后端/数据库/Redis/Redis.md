@@ -693,20 +693,11 @@ redis-server
   > - 永久设置，需要再配置文件中进行设置
   >
   > ````text
-  > # IMPORTANT NOTE: starting with Redis 6 "requirepass" is just a compatibility
-  > # layer on top of the new ACL system. The option effect will be just setting
-  > # the password for the default user. Clients will still authenticate using
-  > # AUTH <password> as usually, or more explicitly with AUTH default <password>
-  > # if they follow the new protocol: both will work.
-  > #
-  > # The requirepass is not compatable with aclfile option and the ACL LOAD
-  > # command, these will cause requirepass to be ignored.
-  > #
   > requirepass zhaoyouyi1993919
   > ````
-  >
+  > 
   > <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,t_702-4c0720650e2c246c146215bf97691293-3cf900" alt="img" style="zoom:80%;" />
-
+  
 - **LIMITS限制**
 
   > 1. maxclients
@@ -718,61 +709,26 @@ redis-server
   >    - 如果达到了此限制，redismax number of clients reached
   >
   > ```text
-  > # Set the max number of connected clients at the same time. By default
-  > # this limit is set to 10000 clients, however if the Redis server is not
-  > # able to configure the process file limit to allow for the specified limit
-  > # the max number of allowed clients is set to the current file limit
-  > # minus 32 (as Redis reserves a few file descriptors for internal uses).
-  > #
-  > # Once the limit is reached Redis will close all the new connections sending
-  > # an error 'max number of clients reached'.
-  > #
-  > # IMPORTANT: When Redis Cluster is used, the max number of connections is also
-  > # shared with the cluster bus: every node in the cluster will use two
-  > # connections, one incoming and another outgoing. It is important to size the
-  > # limit accordingly in case of very large clusters.
-  > #
-  > # maxclients 10000
+  > maxclients 10000
   > ```
-  >
+  > 
   > 2. maxmemory
-  >
+  > 
   >    - 建议必须设置，否则，将内存占满，造成服务器宕机
-  >
+  > 
   >    - 设置 redis 可以使用的内存量。一旦到达内存使用上限，redis 将会试图移除内部数据，移除规则可以通过 maxmemory-policy 来指定
-  >
+  > 
   >    - 如果 redis 无法根据移除规则来移除内存中的数据，或者设置了“不允许移除”，那么 redis 则会针对那些需要申请内存的指令返回错误信息，比如 SET、LPUSH 等
-  >
+  > 
   >    - 但是对于无内存申请的指令，仍然会正常响应，比如 GET 等。如果你的 redis 是主 reds（说明你的redis有从redis），那么在设置内存使用上限时，需要在系统中留出一些内存空间给同步队列缓存，只有在你设置的是“不移除”的情况下，才不用考虑这个因素
-  >
+  > 
   > ```text
-  > # Set a memory usage limit to the specified amount of bytes.
-  > # When the memory limit is reached Redis will try to remove keys
-  > # according to the eviction policy selected (see maxmemory-policy).
-  > #
-  > # If Redis can't remove keys according to the policy, or if the policy is
-  > # set to 'noeviction', Redis will start to reply with errors to commands
-  > # that would use more memory, like SET, LPUSH, and so on, and will continue
-  > # to reply to read-only commands like GET.
-  > #
-  > # This option is usually useful when using Redis as an LRU or LFU cache, or to
-  > # set a hard memory limit for an instance (using the 'noeviction' policy).
-  > #
-  > # WARNING: If you have replicas attached to an instance with maxmemory on,
-  > # the size of the output buffers needed to feed the replicas are subtracted
-  > # from the used memory count, so that network problems / resyncs will
-  > # not trigger a loop where keys are evicted, and in turn the output
-  > # buffer of replicas is full with DELs of keys evicted triggering the deletion
-  > # of more keys, and so forth until the database is completely emptied.
-  > #
-  > # In short... if you have replicas attached it is suggested that you set a lower
-  > # limit for maxmemory so that there is some free RAM on the system for replica
-  > # output buffers (but this is not needed if the policy is 'noeviction').
-  > #
   > # maxmemory <bytes>
   > ```
   >
   > 3. maxmemory-policy
+  >
+  >    - noeviction：默认策略，不淘汰数据；大部分写命令都将返回错误（DEL 等少数除外）
   >
   >    - volatile-lru：使用 LRU 算法移除 key，只对设置了过期时间的键（最近最少使用）
   >
@@ -781,61 +737,38 @@ redis-server
   >    - volatile-random：在过期集合中移除随机的 key，只对设置了过期时间的键
   >
   >    - allkeys-random：在所有集合 key 中，移除随机的 key
-  >
+  > 
   >    - volatile-ttl：移除那些 TTL 值最小的 key，即那些最近要过期的 key
-  >
+  > 
   >    - noeviction：不进行移除，针对写操作，只是返回错误信息
-  >
+  > 
+  >    - allkeys-lfu：从所有数据中根据 LFU 算法挑选数据淘汰（4.0 及以上版本可用）
+  > 
+  >    - volatile-lfu：从设置了过期时间的数据中根据 LFU 算法挑选数据淘汰（4.0 及以上版本可用）
+  > 
   > ```text
-  > # MAXMEMORY POLICY: how Redis will select what to remove when maxmemory
-  > # is reached. You can select one from the following behaviors:
-  > #
-  > # volatile-lru -> Evict using approximated LRU, only keys with an expire set.
-  > # allkeys-lru -> Evict any key using approximated LRU.
-  > # volatile-lfu -> Evict using approximated LFU, only keys with an expire set.
-  > # allkeys-lfu -> Evict any key using approximated LFU.
-  > # volatile-random -> Remove a random key having an expire set.
-  > # allkeys-random -> Remove a random key, any key.
-  > # volatile-ttl -> Remove the key with the nearest expire time (minor TTL)
-  > # noeviction -> Don't evict anything, just return an error on write operations.
-  > #
-  > # LRU means Least Recently Used
-  > # LFU means Least Frequently Used
-  > #
-  > # Both LRU, LFU and volatile-ttl are implemented using approximated
-  > # randomized algorithms.
-  > #
-  > # Note: with any of the above policies, when there are no suitable keys for
-  > # eviction, Redis will return an error on write operations that require
-  > # more memory. These are usually commands that create new keys, add data or
-  > # modify existing keys. A few examples are: SET, INCR, HSET, LPUSH, SUNIONSTORE,
-  > # SORT (due to the STORE argument), and EXEC (if the transaction includes any
-  > # command that requires memory).
-  > #
-  > # The default is:
-  > #
   > # maxmemory-policy noeviction
   > ```
-  >
+  > 
   > 4. maxmemory-samples
-  >
+  > 
   >    - 设置样本数量，LRU 算法和最小 TTL 算法都并非是精确的算法，而是估算值，所以你可以设置样本的大小，redis 默认会检查这么多个 key 并选择其中 LRU 的那个
-  >
+  > 
   >    - 一般设置 3 到 7 的数字，数值越小样本越不准确，但性能消耗越小
-  >
+  > 
   > ```text
   > # LRU, LFU and minimal TTL algorithms are not precise algorithms but approximated
   > # algorithms (in order to save memory), so you can tune it for speed or
   > # accuracy. By default Redis will check five keys and pick the one that was
   > # used least recently, you can change the sample size using the following
   > # configuration directive.
-  > #
+  >#
   > # The default of 5 produces good enough results. 10 Approximates very closely
-  > # true LRU but costs more CPU. 3 is faster but not very accurate.
+  ># true LRU but costs more CPU. 3 is faster but not very accurate.
   > #
-  > # maxmemory-samples 5
+  ># maxmemory-samples 5
   > 
-  > ```
+  >```
 
 ---
 
