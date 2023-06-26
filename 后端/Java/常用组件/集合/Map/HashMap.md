@@ -49,7 +49,7 @@ HashMap 是对 Map 接口的实现，HashTable 实现了 Map 接口和 Dictionar
 
 HashMap 的初始容量为 16，Hashtable 初始容量为 11，两者的填充因子默认都是 0.75。即当当前容量大于`16 * 0.75`时就会发生扩容。
 
-HashMap 扩容时是当前容量翻倍即：capacity\*2，Hashtable 扩容时是容量翻倍 +1 即：capacity\*2+1。
+HashMap 扩容时是当前容量翻倍即：capacity\*2，Hashtable 扩容时是容量翻倍 +1 即：capacity\*2 + 1。
 
 > 给出的扩容因子过高，虽然提升了空间占用，但 hash 冲突比较严重，影响查找效率。过低查找效率高，但空间占用低，0.75 是进行多次试验后的最佳均衡点。
 

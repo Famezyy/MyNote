@@ -553,7 +553,7 @@ Deployment 控制器支持控制更新过程中的控制，如“暂停（pause�
 
 比如有一批新的 Pod 资源创建完成后立即暂停更新过程，此时，仅存在一部分新版本的应用，主体部分还是旧的版本。然后，再筛选一小部分的用户请求路由到新版本的 Pod 应用，继续观察能否稳定地按期望的方式运行。确定没问题之后再继续完成余下的 Pod 资源滚动更新，否则立即回滚更新操作。这就是所谓的金丝雀发布。
 
-```
+```bash
 # 更新 deployment 的版本，并配置暂停 deployment
 [root@k8s-master01 ~]# kubectl set image deploy pc-deployment nginx=nginx:1.17.4 -n dev && kubectl rollout pause deployment pc-deployment -n dev
 deployment.apps/pc-deployment image updated
@@ -601,7 +601,7 @@ pc-deployment-6c9f56fcfb-rf84v   1/1     Running   0          37s
 
 **删除Deployment**
 
-```
+```bash
 # 删除 deployment，其下的 rs 和 pod 也将被删除
 [root@k8s-master01 ~]# kubectl delete -f pc-deployment.yaml
 deployment.apps "pc-deployment" deleted

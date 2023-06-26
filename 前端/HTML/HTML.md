@@ -405,7 +405,7 @@ HTML 使用**标签**的形式来标识网页中的不同组成部分。
 
 #### 8.引入视频
 
-**video**标签：引入一个视频文件，使用方式和 audio 相同
+`video`标签：引入一个视频文件，使用方式和 audio 相同
 
 ```html
 <video controls>
@@ -414,3 +414,136 @@ HTML 使用**标签**的形式来标识网页中的不同组成部分。
 </video>
 ```
 
+#### 9.表格
+
+##### 9.1 基本使用
+
+```html
+<table border="1">
+    <!-- tr 表示一行 -->
+    <tr>
+        <!-- th 表示一个标题单元格 -->
+        <th>1</th>
+        <th>2</th>
+    </tr>
+    <tr>
+        <!-- tb 表示一个内容单元格 -->
+        <td>A1</td>
+        <td>A2</td>
+    </tr>
+    <tr>
+        <td colspan="2" style="text-align:center">B1</td>
+    </tr>
+</table>
+```
+
+##### 9.2 长表格
+
+可以将表格分成`thead`、`tbody`、`tfoot`三部分
+
+##### 9.3 样式
+
+```css
+table {
+    width: 50%;
+    border: 1px solid black;
+    /* 
+        指定边框距离
+        border-spacing: 0px;
+    */
+    /* 指定合并边框 */
+    border-collapse: collapse;
+}
+
+td {
+    border: 1px solid black;
+    /* 默认td中的内容垂直居中 */
+    vertical-align: center;
+    text-align: center;
+}
+
+/* 指定奇数行颜色 */
+tr:nth-child(odd) {
+    background-color: red;
+}
+```
+
+> **注意**
+>
+> 如果表格中没有使用`tbody`而是直接使用`tr`，则浏览器会自动创建一个`tbody`将`tr`放入，所以`tr`不是`table`的子元素，而是`tbody`的子元素，因此要通过`tbody > tr`选择。
+
+> **扩展**
+>
+> 可通过将标签指定为`display: table-cell`来使用单元格的一些属性，例如让 box1 中的 box2 位于 box1 的正中心：
+>
+> ```html
+> <style>
+>     .box1 {
+>         display: table-cell;
+>         /* 此时就可以使用 vertical-align 来指定内容的垂直居中，尽管他是用来指定文本的垂直居中 */
+>         vertical-align: middle;
+>         background-color: blue;
+>     }
+>     .box2 {
+>         background-color: red;
+>         margin: 0 auto;
+>     }
+> </style>
+> <body>
+>     <div class="box1">
+>         <div class="box2">
+>         </div>
+>     </div>
+> </body>
+> ```
+
+#### 10.表单
+
+网页中的表单用于将数据提交给远端的服务器。
+
+```html
+<!-- action: 服务器地址 -->
+<form action="#">
+    <!-- 
+        文本框，必须指定 name 用于发送数据
+        autocomplete 用于指定是否开启历史记录，默认开启，也可在 form 标签中声明
+        readonly 将内容设置为只读，可以被提交；disable 将内容设置为禁用，不会被提交
+     -->
+    文本框<input type="text" name="param"  value="text" autocomplete="off" readonly>
+    <br><br>
+    <!-- 
+        密码框
+        autofocus 指定自动获取焦点
+     -->
+    密码框<input type="password" name="password" id="password" autofocus>
+    <br><br>
+    <!-- 单选按钮 -->
+    <input type="radio" name="gender" id="gender" value="0" checked>男
+    <input type="radio" name="gender" id="gender" value="1">女
+    <br><br>
+    <!-- 多选框 -->
+    兴趣
+    <input type="checkbox" name="hoby" id="hoby" value="0">
+    <input type="checkbox" name="hoby" id="hoby" value="1">
+    <br><br>
+    <!-- 下拉列表 -->
+    <select name="address" id="address">
+        <option value="beijing">beijing</option>
+        <option value="nanjing" selected>nanjing</option>
+    </select>
+    <br><br>
+    <!-- 重置按钮 -->
+    <input type="reset">
+    <br><br>
+    <!-- 普通的按钮，和 js 配合 -->
+    <input type="button" value="button">
+    <br><br>
+    <!-- 提交按钮 -->
+    <input type="submit" value="submit">   
+
+    <!-- button标签可以实现同样的效果，且灵活度更高 -->
+    <button type="reset">提交</button>
+    <button type="button">提交</button>
+    <button type="submit">提交</button>
+</form>
+```

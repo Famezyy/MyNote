@@ -903,4 +903,18 @@ public static void printFileContent(Object obj) throws IOException {
   pOJO2 = completableFuture2.get();
   ```
 
-  
+
+## 跨域问题
+
+```java
+@Configuration
+public class CorsConfig implements WebMvcConfigurer {
+    @Override
+    public void addCorsMappings(CoreRegistry registry) {
+        registry.addMapping("/**")
+            .allowedOrigins("http://localhost:9090")
+            .allowedMethods("*");
+    }
+}
+```
+

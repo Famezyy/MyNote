@@ -129,7 +129,7 @@ Dockerfile 面向开发，Docker 镜像成为交付标准，Docker 容器则涉�
 
 - `ENTRYPOINT`：用来指定一个容器启动时要运行的命令
 
-  类似于`CMD`指令，但是一般`ENTRYPOINT`不会被`docker run`后面的命令覆盖， 而且这些命令行参数会被当作参数送给`ENTRYPOINT`指令指定的程序。
+  类似于`CMD`指令，但是一般`ENTRYPOINT`不会被`docker run`后面的命令覆盖，而且这些命令行参数会被当作参数送给`ENTRYPOINT`指令指定的程序。
 
   命令格式：`ENTRYPOINT ["可执行文件", "参数1", "参数2"]`。
 
@@ -877,7 +877,7 @@ services:
     image: mysql:5.7
     environment:
       MYSQL_ROOT_PASSWORD: '123456'
-			MYSQL_ALLOW_EMPTY_PASSWORD: 'no'
+      MYSQL_ALLOW_EMPTY_PASSWORD: 'no'
       MYSQL_DATABASE: 'db2021'
       MYSQL_USER: 'zzyy'
       MYSQL_PASSWORD: 'zzyy123'

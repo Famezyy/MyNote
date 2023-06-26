@@ -301,7 +301,7 @@ Nacos Discovery Starter 可以将服务自动注册到 Nacos 服务端并且能�
 
 根据版本依赖关系，这里使用`2.0.4`版本。
 
-#### 1. 安装
+#### 1.安装
 
 > **注意**
 >
@@ -824,6 +824,7 @@ services:
     build:
       context: ./
       dockerfile: mysql/Dockerfile
+    # 注意 image 不能存在
     image: my_mysql
     container_name: mysql
     ports:

@@ -3959,3 +3959,19 @@ class MyCache{
 }
 ```
 
+## 11.伪共享与缓存行
+
+如果 CPU 访问的内存数据不在 Cache 中（一级、二级、三级），这就产生了 Cache Line miss 问题，此时 CPU 不得不发出新的加载指令，从内存中获取数据，程序性能显著降低。在多线程下就会出现缓存的不一致问题。
+
+例如：数据 X、Y、Z 被加载到同一 Cache Line 中，线程 A 在 Core1 修改 X，线程 B 在 Core2 上修改 Y。根据`MESI`大法，假设是 Core1 是第一个发起操作的 CPU 核，Core1 上的 L1 Cache Line 由`S`（共享）状态变成`M`（修改，脏数据）状态，然后告知其他的 CPU 核，图例则是 Core2，引用同一地址的 Cache Line 已经无效了；当 Core2 发起写操作时，首先导致 Core1 将 X 写回主存，Cache Line 状态由`M`变为`I`（无效），而后才是 Core2 从主存重新读取该地址内容，Cache Line 状态由`I`变成`E`（独占），最后进行修改 Y 操作， Cache Line 从`E`变成`M`。可见多个线程操作在同一 Cache Line 上的不同数据，相互竞争同一 Cache Line，导致线程彼此牵制影响，变成了串行程序，降低了并发性。此时我们则需要将共享在多线程间的数据进行隔离，使他们不在同一个 Cache Line 上，从而提升多线程的性能。
+
+<img src="https://img-blog.csdn.net/20161111081903485" alt="img" style="zoom:67%;" />
+
+### Padding方式
+
+正确的方式应该将该对象属性分组，将一起变化的放在一组，与其他属性无关的属性放到一组，将不变的属性放到一组。这样当每次对象变化时，不会带动所有的属性重新加载缓存，提升了读取效率。在 JDK1.8 以前，我们一般是在属性间增加长整型变量来分隔每一组属性。被操作的每一组属性占的字节数加上前后填充属性所占的字节数，不小于一个 cache line 的字节数就可以达到要求。
+
+### Contended注解方式
+
+在 JDK1.8 中，新增了一种注解`@sun.misc.Contended`，来使各个变量在 Cache line 中分隔开。注意，jvm 需要添加参数`-XX:-RestrictContended`才能开启此功能。例如ConcurrentHashMap`的保存 long 型的数据结构`CounterCell`上就有这个注释。
+

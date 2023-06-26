@@ -320,7 +320,17 @@ LocalDateTime parse = LocalDateTime.parse("2012-12-32 25:61:61", dateTimeFormatt
 System.out.println(parse); // 2013-01-02T02:02:01
 ```
 
+### 7.4 自定义解析模式
 
+默认解析两位数年份时会自动解析为 2000 年后的年份，如果需要自定义解析，则可以使用`DateTimeFormatterBuilder`。
+
+```java
+ DateTimeFormatter fmt = new DateTimeFormatterBuilder()
+                .appendPattern("d/M/")
+                .appendValueReduced(ChronoField.YEAR_OF_ERA, 2, 2, LocalDate.now().minusYears(80))
+                .toFormatter();
+        System.out.println(LocalDate.parse("13/12/93", fmt)); // 1993-12-13
+```
 
 ## 8.ZonedDateTime的使用
 

@@ -82,7 +82,7 @@ p {
 
 ### 2.1 选择器
 
-#### 1）常用选择器
+#### 1.常用选择器
 
 **元素选择器**：根据标签名选中指定元素
 
@@ -112,7 +112,7 @@ p {
 
 - 语法：`*{}`
 
-#### 2）复合选择器
+#### 2.复合选择器
 
 **交集选择器**：选中同时符合多个条件的元素
 
@@ -123,13 +123,13 @@ p {
 ```html
 <head>
     <style>
-    div.red{
-        font-size: 30px;
-    }
-    .a.a.c{
-        color: blue;
-    }
-</style>
+        div.red{
+            font-size: 30px;
+        }
+        .a.a.c{
+            color: blue;
+        }
+    </style>
 </head>
 <body>
     <div class="red">it is a div</div>
@@ -158,7 +158,7 @@ p {
 </body>
 ```
 
-#### 3）关系选择器
+#### 3.关系选择器
 
 **元素关系种类**
 
@@ -180,7 +180,7 @@ p {
    - 语法：`前一个+下一个`（选中紧挨着的下一个元素） or `兄~弟`（选中后面所有的元素）
    - 例：p+span{} or p~span{}
 
-#### 4）属性选择器
+#### 4.属性选择器
 
 1. 选择含有指定属性的所有类型的元素
    - 语法：`元素[属性名]`
@@ -201,7 +201,7 @@ p {
    - 语法：`元素[属性名*=属性值]`
    - 例：p[title*=abc]{}
 
-#### 5）伪类选择器
+#### 5.伪类选择器
 
 不存在的类，用来描述一个元素的特殊状态，比如：第一个子元素，被点击的元素，鼠标移入的元素等，一般情况下使用 ":" 开头。
 
@@ -267,6 +267,10 @@ p {
      }
      ```
 
+     > **注意**
+     >
+     > 在 CSS 中设置 hover 时，可通过`>`和`+`来实现对子集元素、下一元素、下一元素的子集元素的 CSS 样式控制，对父元素或者上一元素无法控制
+
    - 鼠标点击的状态——`active`**（可以绑定给其他标签）**
 
      ```css
@@ -275,7 +279,261 @@ p {
      }
      ```
 
-#### 6）伪元素选择器
+   > **扩展**
+   >
+   > **1.鼠标移入显示菜单**
+   >
+   > ```html
+   > <head>
+   >  <style>
+   >      .location {
+   >          background-color: yellow;
+   >          float: left;
+   >      }
+   >      .location .city-list {
+   >          /* 正常状态下隐藏菜单 */
+   >          display: none;
+   >          width: 320px;
+   >          height: 430px;
+   >          background-color: pink;
+   >          /* 设置绝对定位，不占页面位置 */
+   >          position: absolute;
+   >      }
+   >      /* 鼠标移入时显示 city-list */
+   >      .location:hover .city-list {
+   >          display: block;
+   >      }
+   >  </style>
+   > </head>
+   > <body>
+   >  <div class="location">
+   >      <div class="current-city">
+   >          <a href="javascript:;">北京</a>
+   >      </div>
+   >      <div class="city-list">
+   >          ...
+   >      </div>
+   >  </div>
+   > </body>
+   > ```
+   >
+   > **2.弹出框显示倒三角**
+   >
+   > ```html
+   > <head>
+   >     <meta charset="UTF-8">
+   >     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   >     <title>Document</title>
+   >     <link rel="stylesheet" href="CSS/reset.css">
+   >     <link rel="stylesheet" href="fa/css/all.css">
+   >     <style>
+   >         body {
+   >             min-width: 1266px;
+   >             font: 14px/1.5 Helvetica Neue,Helvetica,Arial,Microsoft Yahei,Hiragino Sans GB,Heiti SC,WenQuanYi Micro Hei,sans-serif;
+   >         }
+   >         .header {
+   >             width: 100%;
+   >             line-height: 40px;
+   >             background-color: rgb(51, 51, 51);
+   >         }
+   > 
+   >         .clearfix::before,
+   >         .clearfix::after {
+   >             content: "";
+   >             display: table;
+   >             clear:both
+   >         }
+   > 
+   >         .w {
+   >             width: 1240px;
+   >             margin: 0 auto;
+   >         }
+   > 
+   >         .header-content .menu, .menu li, .customer-bar ul, .customer-bar ul li {
+   >             float: left;
+   >         }
+   > 
+   >         .header-content .customer-bar {
+   >             float: right;
+   >         }
+   > 
+   >         a {
+   >             text-decoration: none;
+   >             color: rgb(176,176,176);
+   >             font-size: 12px;
+   >             display: block
+   >         }
+   >         li a:hover {
+   >             color: rgb(255, 255, 255)
+   >         }
+   > 
+   >         .line {
+   >             display: block;
+   >             color: rgb(66, 60, 55);
+   >             margin: 0 7px;
+   >             font-size: 12px;
+   >             margin-top: -1px;
+   >         }
+   > 
+   >         .info {
+   >             margin-right: 27px;
+   >         }
+   > 
+   >         .shop-cart {
+   >             text-align: center;
+   >             width: 120px;
+   >             margin-right: 15px;
+   >             background-color: rgb(66, 66, 66);
+   >             position: relative;
+   >         }
+   >         
+   >         .shop-cart:hover {
+   >             background-color: rgb(255, 255, 255);
+   >         }
+   > 
+   >         .shop-cart a {
+   >             display: block;
+   >         }
+   > 
+   >         .shop-cart:hover a {
+   >             color: rgb(255, 103, 0);
+   >         }
+   > 
+   >         .shop-cart:hover .cart-content {
+   >             display: block;
+   >             height: 100px;
+   >             /* 设置渐隐 */
+   >             transition: height 0.5s;
+   >         }
+   > 
+   >         .shop-cart:hover::after {
+   >             display: block;
+   >         }
+   > 
+   >         /* 设置下拉菜单 */
+   >         .cart-content {
+   >             left: -197px;
+   >             width: 317px;
+   >             height: 0px;
+   >             overflow: hidden;
+   >             background-color: white;
+   >             box-shadow: 1px 1px 1px rgba(0, 0, 0, .3);
+   >             position: absolute;
+   >         }
+   > 
+   >         /* 设置倒三角 */
+   >         .shop-cart::after {
+   >             display: none;
+   >             content: "";
+   >             position: absolute;
+   >             border:10px solid transparent;
+   >             border-top: none;
+   >             border-bottom-color: black;
+   >             width: 0;
+   >             height: 0;
+   >             left: 0;
+   >             right: 0;
+   >             bottom: 0;
+   >             margin: auto;
+   >         }
+   >     </style>
+   > </head>
+   > <body>
+   >     <div class="header clearfix">
+   >         <div class="header-content w">
+   >             <ul class="menu">
+   >                 <li>
+   >                     <a href="javascript:;">小米官网</a>
+   >                 </li>
+   >                 <li><i class="line">|</i></li>
+   >                 <li>
+   >                     <a href="javascript:;">小米商城</a>
+   >                 </li>
+   >                 <li><i class="line">|</i></li>
+   >                 <li>
+   >                     <a href="javascript:;">MIUI</a>
+   >                 </li>
+   >                 <li><i class="line">|</i></li>
+   >                 <li>
+   >                     <a href="javascript:;">IoT</a>
+   >                 </li>
+   >                 <li><i class="line">|</i></li>
+   >                 <li>
+   >                     <a href="javascript:;">云服务</a>
+   >                 </li>
+   >                 <li><i class="line">|</i></li>
+   >                 <li>
+   >                     <a href="javascript:;">天星数科</a>
+   >                 </li>
+   >                 <li><i class="line">|</i></li>
+   >                 <li>
+   >                     <a href="javascript:;">有品</a>
+   >                 </li>
+   >                 <li><i class="line">|</i></li>
+   >                 <li>
+   >                     <a href="javascript:;">小爱开放平台</a>
+   >                 </li>
+   >                 <li><i class="line">|</i></li>
+   >                 <li>
+   >                     <a href="javascript:;">企业团购</a>
+   >                 </li>
+   >                 <li><i class="line">|</i></li>
+   >                 <li>
+   >                     <a href="javascript:;">资质证照</a>
+   >                 </li>
+   >                 <li><i class="line">|</i></li>
+   >                 <li>
+   >                     <a href="javascript:;">协议规则</a>
+   >                 </li>
+   >                 <li><i class="line">|</i></li>
+   >                 <li>
+   >                     <a href="javascript:;">下载app</a>
+   >                 </li>
+   >                 <li><i class="line">|</i></li>
+   >                 <li>
+   >                     <a href="javascript:;">Select Location</a>
+   >                 </li>
+   >             </ul>
+   >             <ul class="customer-bar">
+   >                 <ul class="info">
+   >                     <li>
+   >                         <a href="javascript:;">登录</a>
+   >                     </li>
+   >                     <li><i class="line">|</i></li>
+   >                     <li>
+   >                         <a href="javascript:;">注册</a>
+   >                     </li>
+   >                     <li><i class="line">|</i></li>
+   >                     <li>
+   >                         <a href="javascript:;">消息通知</a>
+   >                     </li>
+   >                 </ul>
+   >                 <ul class="shop-cart">
+   >                     <a href="javascript:;">购物车</a>
+   >                     <div class="cart-content"></div>
+   >                 </ul>
+   >             </ul>
+   >         </div>
+   >         
+   >     </div>
+   > </body>
+   > ```
+
+9. 输入框的伪类
+
+   - 获取焦点-`focus`
+
+     ```css
+     /* 获取焦点后改变边框的颜色 */
+     .inpuit {
+         outline: none;
+     }
+     .input:focus {
+         border-color: red;
+     }
+     ```
+
+#### 6.伪元素选择器
 
 表示页面中一些特殊的并不真实存在的元素（特殊的位置），使用`::`开头。
 
@@ -392,6 +650,10 @@ div::before{
       width:50%;
       height:50%;
       background-color:aqua;
+  }
+  body {
+      /* 设置 body 伸缩时的最小宽度 */
+      min-width: 200px;
   }
   ```
 
@@ -555,7 +817,7 @@ CSS 将页面中的所有元素都设置为了一个矩形的盒子，只需将�
 
     ```css
     width:200px;
-    margin 0 auto;
+    margin: 0 auto;
     ```
 
 #### 5）垂直方向布局
@@ -676,7 +938,9 @@ ul{
 
         .left_menu a {
             color: #333;
-            /* 去除超链接下划线 */
+            /* 
+              去除超链接下划线 
+            */
             text-decoration: none;
         }
 
@@ -821,7 +1085,7 @@ border-radius: 50%;
   3. 将元素<a href="#overflow">overflow</a>设置为非 visible
      - 常设置为 hidden 开启 BFC
 
-#### 1）clear 属性
+#### 1.clear属性
 
 作用：用于清除浮动元素对当前元素产生的影响
 
@@ -845,7 +1109,7 @@ border-radius: 50%;
 }
 ```
 
-#### 2）使用 after 伪类解决高度塌陷
+#### 2.使用after伪类解决高度塌陷
 
 解决想法
 
@@ -884,7 +1148,7 @@ border-radius: 50%;
 </div>
 ```
 
-#### 3）扩展：利用 before 解决[父子元素外边距折叠](#垂直外边距的折叠)
+#### 3.扩展：利用 before 解决[父子元素外边距折叠](#垂直外边距的折叠)
 
 ```html
 <style>
@@ -902,7 +1166,7 @@ border-radius: 50%;
 </div>
 ```
 
-#### 4）终极版本
+#### 4.终极版本
 
 ```html
 <style>
@@ -973,6 +1237,8 @@ postion:relative;
 
 1. 水平布局：开启绝对定位后，水平方向的[布局等式](#水平方向布局)就需要添加 left 和 right
 
+   left(auto) + margin-left(0) + width + margin-right(0) + right(auto) = 视口宽度
+
    - 发生过度约束时，如果 9 个值中没有 auto，则自动调整 right 值以使等式满足
 
    - 如果有 auto，则自动调整 auto 以使等式满足，可以调整的属性为：margin、width、left、right
@@ -986,6 +1252,10 @@ postion:relative;
      left: 0px;
      right: 0px;
      ```
+
+   > **扩展：保持元素随窗口移动**
+   >
+   > 设置等式值分别为：auto + 0 + width + -500px + 50%
 
 2. 垂直布局
 
@@ -1026,7 +1296,9 @@ top:10px;
 - 如果元素的层级一样，则优先显示靠下的元素
 - 祖先元素的层级再高，也不会盖住后代元素
 
-## 6.字体
+## 6.字体与文本
+
+### 6.1 基本设置
 
 - `color`：用来设置前景色：主要是字体颜色
 
@@ -1073,6 +1345,1436 @@ p {
   }
   ```
 
-p77
+### 6.2 图标字体
+
+使图标可以按照字体来设置格式。
+
+- font awesome
+
+  1. 下载包
+
+  2. 将 css 和 webfonts 移动到项目中
+
+  3. 引入 all.min.css 到网页中
+
+  4. 使用
+
+     - 通过类名来使用
+
+       ```html
+       <head>
+       	...
+           <link rel="stylesheet" href="fa/css/all.min.css">
+       </head>
+       <body>
+           <!-- 使用 fas 或者 fab 类 -->
+           <i class="fas fa-bed" style="font-size: 20px; color: red;"></i>
+           <i class="fab fa-accessible-icon"></i>
+       </body>
+       ```
+
+     - 通过伪元素使用
+
+       ```html
+       <head>
+       	<style>
+               li {
+                   list-style: none;
+               }
+               li::before {
+                   /*
+                   	content 中设置对应图标的编码
+                       设置字体的样式：
+                           fab
+                           'Font Awesome 6 Brands';
+                           fas
+                           font-family: 'Font Awesome 6 Free';
+                   		font-weight: 900;
+                   */
+                   content: '\f1b0';
+                   font-family: 'Font Awesome 6 Free';
+                   font-weight: 900;
+               }
+           </style>
+       </head>
+       <body>
+           <ul>
+               <li>123</li>
+               <li>234</li>
+           </ul>
+       </body>
+       ```
+
+     - 使用实体方式：`$#x图标编码;`
+
+       ```html
+       <span class="fas">&#xf0f3;</span>
+       ```
+
+- [iconfont-阿里巴巴矢量图标库](https://www.iconfont.cn/)
+
+  1. 选择下载的图标添加到项目
+  2. 下载项目
+  3. 引入`iconfont.css`
+
+### 6.3 行高
+
+行高（line-height）指的是内容占有的实际高度，不指定则默认被内容撑开。可以设置 px，em；如果为整数，则表示字体大小的倍数。其中的单行文字会**默认上下居中**。
+
+`font-size`设置的是字体框的大小，每个字体都是存在于一个字体框中，默认比实际设置的字体框大小小一点。
+
+```html
+<style>
+    div {
+        font-size: 50px;
+        line-height: 100px;
+    }
+</style>
+```
+
+通常可以将`line-height`设置为与`height`一样，就可以让单行文字在元素中垂直居中（height也可以不写，默认被内容撑开）。对于多行文字，`line-height`减去`font-size`等于行间距。
+
+### 6.4 其他属性
+
+- `font-weight`
+
+  - `normal`：正常
+  - `bold`：加粗
+
+  - `100~900`：九个级别，一般不用
+
+- `font-style`
+
+  - `normal`：正常
+  - `italic`：斜体
+
+- `text-decoration`
+
+  - `none`
+  - `underline`
+  - `line-through`：删除线
+  - `overline`
+
+  可同时指定线条的样式：`text-decoration: line-through red dotted;`
+
+- `white-space`：如何处理空白
+
+  - `normal`（默认）：会进行换行和整合空白
+  - `nowrap`：不换行
+  - `pre`：不整合空白
+
+  > **实用：实现长文本的省略号显示**
+  >
+  > ```html
+  > div {
+  >     /* 指定元素宽度 */
+  >     width:200px;
+  >     /* 空白不换行 */
+  >     white-space: nowrap;
+  >     /* 超出范围不显示 */
+  >     overflow: hidden;
+  >     /* 文本超出范围显示省略号 */
+  >     text-overflow: ellipsis;
+  > }
+  > ```
+
+### 6.5 简写属性
+
+`font`可用来设置字体相关的所有属性。格式：
+
+`font: [bold italic] 字体大小[/行高] 字体族`
+
+如果不指定加粗、斜体、行高则使用默认值，会覆盖前面定义的加粗，斜体和行高（如果有）。
+
+### 6.6 文本对齐
+
+- `text-align`
+
+  可选值：`center`、`left`（默认）、`right`、`justify`（两端对齐）；只适用于块元素
+
+- `vertical-align`
+
+  可选值：`baseline`（默认）、`top`、`bottom`、`middle`（和字母x中线对齐）
+
+  > **注意**
+  >
+  > 在元素中引入图片时由于默认基线对齐，会导致图片底部与元素边框间有一条缝隙，可指定垂直对齐为`top`或者`bottom`。
 
 ## 7.背景
+
+### 7.1 常用属性
+
+- `background-color`：设置背景颜色
+
+- `background-image: url("img/1.png")`：设置背景图片，如果背景图片小于元素大小，则背景图片自动平铺；如果大于元素大小，则只会显示部分图片。可以同时设置背景颜色和图片
+
+- `background-repeat`：设置背景的重复方式
+  - `repeat`：默认，沿着横纵坐标重复平铺
+  - `repeat-x`：沿横坐标重复
+  - `repeat-y`：沿纵坐标重复
+  - `no-repeat`：背景图片不重复
+- `background-position`：设置背景图片位置
+  - 通过 top、left、right、bottom、center 来设置各个方位的位置，必须同时指定两个值，只写一个则第二个默认 center，`background-position: top right`
+  - 通过像素指定偏移位置，`background-position: 10px(水平) 10px(垂直)`
+
+- `background-clip`：设置背景颜色范围
+  - `border-box`（默认）：背景会出现在边框下边
+  - `padding-box`：背景不会出现在边框下，只出现在内边距和内容区
+  - `content-box`：背景只出现在内容区
+- `background-origin`：设置**背景图片**偏移计算的原点
+  - `padding-box`（默认）：背景图片从内边距处开始
+  - `content-box`：背景图片从内容区处开始
+  - `border-box`：背景图片从边框处开始
+- `background-size`：设置背景图片大小
+  - 通过像素指定，第一个值表示宽度，第二个值表示高度，只写一个则第二个值默认 auto；可设置 100% 表示撑满
+  - `cover`：图片比例不变，将元素铺满
+  - `contain`：图片比例不变，将图片在元素中完整显示
+- `background-attachment`：设置背景图片是否跟随元素移动
+  - `scroll`：背景图片会跟随移动
+  - `fixed`：背景图片不会跟随移动
+
+### 7.2 简写属性
+
+`background`可用来设置所有背景相关的属性，无顺序要求。例如：`background: #bfa url('img/1.png') center center/contain border-box content-box no-repeat;`
+
+> **注意**
+>
+> - `background-size`必须写在`background-position`后，使用`/`隔开
+> - `background-origin`必须写在`background-clip`前面
+
+### 7.3 雪碧图
+
+当为某个按钮设置 3 种背景分别在默认情况、移入、点击时触发的场景下，由于网络加载的原因，会导致在第一次进行图片切换时出现闪烁。为了解决这种情况可以将三种状态放在同一个大图片中，每次状态改变时仅改变显示图片的偏移。
+
+```css
+a:link {
+	display: block;
+    width: 100px;
+    height: 10px;
+	background-image: url('img/01.png')    
+}
+a:hover {
+    background-position: -50px 0;
+}
+a:active {
+    background-position: -100px 0;
+}
+```
+
+### 7.4 渐变
+
+渐变是图片，需要通过`background-image`来设置。
+
+- `linear-gradient(to right, red, yellow[, green...])`
+
+  颜色沿着一个方向渐变，`to left`，`to right`，`to top`，`to bottom`-默认，`to top left`，`xxxdeg`-度数，`xxxturn`-圈，也可以在颜色后指定像素，表示偏移：`linear-gradient(red 60px, yellow)`。
+
+- `repeating-linear-gradient()`
+
+  重复渐变，不受`background-repeat: no-repeat`影响。
+
+- `radial-gradient(100px 100px at top left, red, yellow)`
+
+  放射性渐变，第一个值指定渐变的大小和位置，也可使用`circle`指定正圆，`ellipse`指定椭圆，`closet-side`指定与近边相切，`farthest-side`指定与远边相切。
+
+## 8.图标
+
+```html
+<head>
+    <link rel="icon" href="favicon.ico">
+</head>
+```
+
+## 9.VSCODE插件
+
+- JS & CSS Minifier
+
+  用来压缩 CSS 和 JS，使用时打开需要压缩的文件，按 F1，然后选择 Minify:Document 就会在同文件夹下生成 min 压缩文件。
+
+## 10.效果
+
+### 10.1 过渡-transition
+
+过渡时必须是从一个有效值向另一个有效值转换，如果是`auto`则没有过渡效果。
+
+- `transition-property`
+
+  指定要执行过渡的属性，多个属性间使用逗号隔开；`all`表示所有属性。例：`transition-property:width, height;`
+
+- `transition-duration`：指定过渡效果持续时间，单位 s 或者 ms，多个时间用逗号隔开。例：`transition-duration:2s, 3s;`
+
+- `transition-timing-function`：过渡的时序函数
+
+  - `ease`（默认）：先加速再减速
+  - `linear`：匀速运动
+  - `ease-in`：加速运动
+  - `ease-out`：减速运动
+  - `ease-in-out`：先加速后减速，比 ease 更强烈
+  - `cubic-bezier()`：手动指定贝塞尔曲线参数，参考：https://cubic-bezier.com/
+
+  - `steps(n, start/end)`：分步执行，n 为数字，第二个参数指定读秒前或者读秒后执行，默认 end
+
+- `transition-deplay`：过渡效果的延迟时间，单位 s 或者 ms
+
+- `transition`：简写属性，可同时指定所有过渡相关的属性；如果同时声明延迟时间，则第一个时间为持续时间，第二个时间为延迟时间，其他属性无顺序要求
+
+```html
+<style>
+    .box1 {
+        width: 800px;
+        height: 800px;
+        background-color: silver;
+        overflow: hidden;
+    }
+
+    .box1 div {
+        margin-top: 20px;
+        background-color: red;
+        width: 100px;
+        height: 100px;
+    }
+
+    .box2 {
+        /** 过渡，指定一个属性发生变化时的切换方式 */
+        transition-duration: 2s;
+        transition-timing-function: cubic-bezier(0,1.89,.88,-0.83);
+    }
+
+    .box1:hover .box2 {
+        margin-left: 700px;
+    }
+</style>
+<body>
+    <div class="box1">
+        <div class="box2"></div>
+    </div>
+</body>
+```
+
+### 10.2 动画-animation
+
+过渡需要在某个属性发生变化时才触发，动画可以自动触发。需要先设置一个关键帧`@keyframes`，指定动画执行的每一个步骤，然后在元素中指定动画名称和时间。
+
+```css
+.box2 {
+    /* 动画名称 */
+    animation-name: test;
+    /* 动画执行时间 */
+    animation-duration: 2s;
+    /* 动画延迟 */
+    animation-delay: 2s;
+    /* 动画执行次数，默认 1 次 */
+    animation-iteration-count: infinite;
+    /* 
+    动画运行方向
+    - normal（默认）：表示从 from 到 to
+    - reverse：反过来
+    - alternate：from 到 to 间交替执行
+    */
+    animation-direction: alternate;
+    /* 动画执行步次 */
+    animation-timing-function: steps(3);
+    /* 
+    动画执行状态
+    - running：动画执行
+    - paused：停止
+     */
+    animation-play-state: running;
+    /* 
+    动画填充模式
+    - none（默认）：动画执行完毕后元素回到原来位置
+    - forwards：动画执行完毕后留在最后的位置
+    - backwards：设置了延迟后，等待时元素默认保持自己原来的属性，设置后等待时元素就已经按照关键帧相关的属性设置走
+    - both：结合了 forwards 和 backwards
+     */
+    animation-fill-mode: forwards;
+}
+
+@keyframes test {
+
+    /* 动画开始 */
+    from {
+        margin-left: 0px;
+    }
+
+    /* 动画结束 */
+    to {
+        margin-left: 700px;
+    }
+}
+```
+
+还有一个`animation`简写属性。
+
+**案例：小球下落**
+
+```html
+<head>
+    <style>
+        .outer {
+            height: 500px;
+            background-color: silver;
+            border-bottom: 10px solid black;
+            /* 开启 BFC 解决外边距折叠 */
+            overflow: hidden;
+        }
+
+        .ball {
+            border-radius: 50%;
+            height: 50px;
+            width: 50px;
+            background-color: red;
+            margin: 0 auto;
+            margin-top: 50px;
+            animation: fall 2s ease-in forwards;
+        }
+
+        @keyframes fall {
+            from {
+                margin-top: 50px;
+            }
+
+            /* 指定当进程达到 33% 时的状态 */
+            33% {
+                margin-top: 450px;
+                animation-timing-function: ease-out;
+            }
+
+            66% {
+                margin-top: 250px;
+                animation-timing-function: ease-in;
+            }
+
+            to {
+                margin-top: 450px;
+                background-color: orange;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="outer">
+        <div class="ball"></div>
+    </div>
+</body>
+```
+
+### 10.3 变形-transform
+
+变形不会影响页面的布局，可配合`transition`进行设置，例如设置其生效时间。
+
+- `translateX(n)`：元素沿着 X 轴方向平移，n 可以为像素或者百分比 %，百分比是相对于自身计算
+
+- `translateY(n)`：元素沿着 Y 轴方向平移
+
+- `translateZ(n)`：元素沿着 Z 轴方向平移，默认情况下网页不支持透视（进大远小），需要设置网页的视距
+
+  ```html
+  <style>
+      body {
+          /** 人眼距离网页 800 像素 */
+          perspective: 800px;
+      }
+      body:hover .box1 {
+          transform: translateZ(-200px);
+      }
+  </style>
+  
+  <body>
+      <div class="box1"></div>
+  </body>
+  ```
+
+- `rotateX()`：元素沿着 X 轴方向旋转，单位 deg 或者 turn
+
+- `rotateY()`：元素沿着 Y 轴方向旋转
+
+- `rotateZ()`：元素沿着 Z 轴方向旋转
+
+- `scaleX()`：元素沿着 X 轴缩放，单位为倍数
+- `scaleY()`：元素沿着 Y 轴缩放
+- `scale()`：元素沿着 X 和 Y 轴缩放
+
+`transform-origin`表示缩放的原点，默认 center，可指定两个值，例：`transform-origin: 20px 20px`。
+
+### 10.4 实战
+
+#### 1.保持可变元素居中
+
+由于 box3 没有设置 width 和 height，大小被内容撑开，因此不能通过设置`left:0 right:0 top:0 bottom:0 margin:auto`使其居中，因为此时会作用于 width 和 height 的大小。
+
+```html
+<style>
+    .box3 {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translateX(-50%) translateY(-50%);
+    }
+</style>
+<body>
+    <div class="box3">
+        aaa
+    </div>
+</body>
+```
+
+#### 2.表
+
+```html
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="CSS/reset.css">
+    <link rel="stylesheet" href="fa/css/all.css">
+    <style>
+
+        .clock {
+            height: 300px;
+            width: 300px;
+            border-radius: 50%;
+            background-color: #bfa;
+            margin: 50px auto;
+            position: relative;
+        }
+
+        /* 设置子元素居中 */
+        .clock > div {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            margin: auto;
+        }
+
+        /* 时针 */
+        .hour-wrapper {
+            height: 50%;
+            width: 50%;
+            animation: run 43200s infinite;
+        }
+
+        .hour {
+            width: 4px;
+            height: 50%;
+            background-color: black;
+            margin: 0 auto;
+        }
+
+         /* 分针 */
+        .min-wrapper {
+            height: 70%;
+            width: 70%;
+            animation: run 3600s infinite;
+        }
+
+        .min {
+            width: 2px;
+            height: 50%;
+            background-color: black;
+            margin: 0 auto;
+        }
+
+         /* 秒针 */
+        .second-wrapper {
+            height: 80%;
+            width: 80%;
+            animation: run 60s steps(60) infinite;
+        }
+
+        .second {
+            width: 1px;
+            height: 50%;
+            background-color: black;
+            margin: 0 auto;
+        }
+
+        /* 旋转 */
+        @keyframes run {
+            from {
+                transform: rotateZ(0);
+            }
+
+            to {
+                transform: rotateZ(360deg);
+            }
+        }
+
+    </style>
+</head>
+
+<body>
+    <div class="clock">
+        <div class="hour-wrapper">
+            <div class="hour"></div>
+        </div>
+
+        <div class="min-wrapper">
+            <div class="min"></div>
+        </div>
+
+        <div class="second-wrapper">
+            <div class="second"></div>
+        </div>
+    </div>
+</body>
+```
+
+#### 3.立方体
+
+```html
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="CSS/reset.css">
+    <link rel="stylesheet" href="fa/css/all.css">
+    <style>
+        body {
+            perspective: 800px;
+        }
+
+        .cube {
+            width: 200px;
+            height: 200px;
+            margin: 100px auto;
+            /* 显示 3D 效果，不开则旋转时只显示 2D 的效果 */
+            transform-style: preserve-3d;
+            animation: rotate 30s infinite linear;
+        }
+
+        .cube > div {
+            width: 200px;
+            height: 200px;
+            /* 透明效果 */
+            opacity: 0.8;
+            position: absolute;
+        }
+
+        .box1 {
+            width: 200px;
+            height: 200px;
+            background-color: red;
+            transform: rotateY(90deg) translateZ(100px);
+        }
+
+        .box2 {
+            width: 200px;
+            height: 200px;
+            background-color: green;
+            transform: rotateY(-90deg) translateZ(100px);
+        }
+
+        .box3 {
+            width: 200px;
+            height: 200px;
+            background-color: blue;
+            transform: rotateX(90deg) translateZ(100px);
+        }
+
+        .box4 {
+            width: 200px;
+            height: 200px;
+            background-color: yellow;
+            transform: rotateX(-90deg) translateZ(100px);
+        }
+
+        .box5 {
+            width: 200px;
+            height: 200px;
+            background-color: orange;
+            transform: rotateY(180deg) translateZ(100px)
+        }
+
+        .box6 {
+            width: 200px;
+            height: 200px;
+            background-color: turquoise;
+            transform: translateZ(100px);
+        }
+
+        @keyframes rotate {
+            from {
+                transform: rotateX(0) rotateZ(0);
+            }
+
+            to {
+                transform: rotateX(360deg) rotateZ(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="cube">
+        <div class="box1"></div>
+        <div class="box2"></div>
+        <div class="box3"></div>
+        <div class="box4"></div>
+        <div class="box5"></div>
+        <div class="box6"></div>
+    </div>
+</body>
+```
+
+## 11.less
+
+一些兼容性较低的特性：
+
+```html
+html {
+    /* 声明变量 */
+    --color: #bfa;
+    --height: 200px;
+}
+
+div {
+    /* calc()：计算函数 */
+    width: calc(100px*2);
+    height: var(--height);
+}
+
+.box1 {
+    background-color: var(--color);
+}
+```
+
+less 是 CSS 的预处理语言，是 CSS 的增强版，以更少的代码实现更多的功能。其语法与 CSS 基本一致，但是增添了许多扩展。所以浏览器无法直接执行 less 代码，需要先转换为 CSS。
+
+安装 VSCODE 插件：easy LESS，创建 .less 文件：
+
+```less
+.box1 {
+    background-color: #bfa;
+
+    .box2 {
+        background-color: #ff0;
+
+        .box3 {
+            background-color: red;
+        }
+    }
+}
+```
+
+当保存时，它会自动转换为相应的 CSS：
+
+```css
+.box1 {
+  background-color: #bfa;
+}
+.box1 .box2 {
+  background-color: #ff0;
+}
+.box1 .box2 .box3 {
+  background-color: red;
+}
+```
+
+**常用场景**
+
+```less
+// 这是个注释，不会被解析
+.box1 {
+    /*
+        这是个 CSS 注释，会被解析到 CSS 文件中
+    */
+    background-color: #bfa;
+
+    .box2 {
+        background-color: #ff0;
+
+        .box3 {
+            background-color: red;
+        }
+    }
+}
+
+// 变量
+@a: 100px;
+@b: #bfa;
+@c: box5;
+
+.box4 {
+    // 使用变量时使用 @变量名
+    width: @a;
+    color: @b;
+}
+
+// 作为类名或一部分值使用时必须使用 @{变量名} 的形式
+.@{c} {
+    width: @a;
+    background-image: url("@{c}/1.png");
+}
+
+// 后面的变量会覆盖前面的
+@d: 200px;
+
+.box6 {
+    width: @d;
+}
+
+@d: 300px;
+
+// 引用其他属性的值
+div {
+    // 可以直接使用运算 + - * /
+    width: 300px + 100px;
+    height: $width;
+}
+
+.box1 {
+
+    // 子类选择器
+    >.box2 {
+        color: red;
+    }
+
+    // & 表示外层的父元素，这里是 .box1，不会使用嵌套
+    &:hover {
+        color: red;
+    }
+}
+
+// p2 复用 box1 的子类 box2 的样式
+.p2:extend(.box1 > .box2) {
+    color: red;
+}
+// 另一种写法，但不常用于此场景，见下一例
+.p3 {
+    .box1();
+}
+
+// () 表示创建一个 mixins（混合函数），该样式不会被解析，但是当其他样式引用时就会被复用
+.p4() {
+    width: 100px;
+    height: 100px;
+}
+
+.p5 {
+    .p4;
+}
+
+// mixins 可以传递参数
+// 指定默认值后使用时可以不传递参数
+.test(@w:100px, @h:100px) {
+    width: @w;
+    height: @h;
+    border: 1px solid red;
+}
+
+div {
+    .test(300px, 300px);
+    // 也可以直接指定参数名乱序传递：.test(@h:300px, @w:200px);
+}
+
+// less 提供了一些内置函数
+div {
+    width: 100px;
+    height: 100px;
+    background-color: #bfa;
+    &:hover {
+        // 加深颜色
+        background-color: darken(#bfa, 50%);
+    }
+}
+
+// 引入其他的 less
+// @import "syntax2.less";
+```
+
+**开启 css 文件和 less 文件的映射关系**
+
+设置 - 扩展 - 在 settings.json 中编辑
+
+## 12.弹性盒-flex
+
+### 12.1 基本使用
+
+flex 是 CSS 中的一种布局手段，用来代替浮动完成页面布局。浮动在一些老项目中仍然需要掌握。flex 可以让元素具有弹性，让元素随页面大小的改变而改变。
+
+**弹性容器**
+
+要使用弹性盒，必须先将一个元素设置为弹性容器，使用`display:flex`（块状）或者`display:inline-flex`（行内）设置。
+
+```css
+ul {
+    width: 800px;
+    border: 1px solid red;
+    /* 开启弹性容器 */
+    display:flex;
+    flex-direction: row;
+}
+```
+
+- `flex-direction`：指定容器中弹性元素的排列方式
+  - `row`（默认值）：主轴从左到右水平排列
+  - `row-reverse`：主轴从右到左水平排列
+  - `column`：主轴从上到下纵向排列（**改变后主轴方向为纵向**）
+  - `column-reverse`：主轴从下到上纵向排列
+- 两个概念
+  - 主轴：弹性元素排列方向，如果是 row 则表示自左向右
+  - 侧轴：主轴的垂直方向
+
+**弹性元素**
+
+弹性容器的直接子元素（不是后代元素）是弹性元素。
+
+```html
+<!-- ul 是弹性容器，因此 li 是弹性元素 -->
+<ul>
+    <li>1</li>
+    <li>2</li>
+    <li>3</li>
+</ul>
+```
+
+- `flex-grow`：指定弹性元素的伸展系数
+  - 当父元素有多余空间时，子元素如何伸展，0 表示不伸展
+  - 父元素的剩余空间会按照比例进行分配
+- `flex-shrink`：指定弹性元素的收缩系数
+  - 当父元素中空间不足以容纳所有元素时，如何对子元素进行收缩，0 表示不会收缩
+  - 子元素会按照比例进行缩小
+
+```css
+* {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+ul {
+    width: 800px;
+    border: 1px solid red;
+    display:flex;
+}
+
+li {
+    width: 100px;
+    height: 100px;
+    text-align: center;
+    line-height: 100px;
+}
+
+li:nth-child(1) {
+    background-color: #bfa;
+    /* flex-grow: 1; */
+    flex-shrink: 1;
+}
+
+li:nth-child(2) {
+    background-color: silver;
+    /* flex-grow: 2; */
+    flex-shrink: 2;
+}
+
+li:nth-child(3) {
+    background-color: gold;
+    /* flex-grow: 3; */
+    flex-shrink: 3;
+}
+```
+
+### 12.2 常用样式
+
+#### 1.弹性容器
+
+- `flex-wrap`：弹性元素是否换行
+  - `nowrap`（默认）：不会自动换行
+  - `wrap`：沿侧轴方向自动换行
+  - `wrap-reverse`：沿着侧轴反方向换行
+
+- `flex-flow`：`flex-wrap`和`flex-direction`的简写属性，例如：`flex-flow: row wrap`
+- `justify-content`：如何分配主轴上的空白空间
+  - `flex-start`（默认）：元素沿着主轴的起边排列
+  - `flex-end`：元素沿着主轴的终边排列
+  - `center`（常用）：元素居中排列
+  - `space-around`：空白分配在每个元素的两侧，元素间的空白长度会叠加
+  - `space-evenly`：空白分配在元素的单侧，每个空白长度一致
+  - `space-between`：空白分配在元素间
+- `align-items`：控制单个 flex 容器内的 flex 项目如何在侧轴上对齐。如果 flex 容器只有一行，则该属性会将所有项目对齐到该行的基线上，如果有多行，则每一行的项目都会根据其自身的`align-self`属性对齐
+  - `stretch`（默认）：将每行的各个元素长度设置为相同
+  - `flex-start`：元素不会拉伸，沿着侧轴起边对齐
+  - `flex-end`：沿着侧轴终边对齐
+  - `center`：居中对齐
+  - `baseline`：基线对齐
+- `align-content`：控制整个 flex 容器内的所有行如何对齐
+  - `center`：让最上和最下的空白相等，元素居中显示
+  - `flex-start`：元素沿起边显示
+  - `flex-end`：元素沿终边显示
+  - `space-aroung`：空白分配在元素中间
+  - `justify-content`有的它也有
+
+#### 2.弹性元素
+
+- `flex-basis`：元素基础长度，指定的是元素在主轴上的基础长度
+  - 如果主轴横向，则指定 width；如果主轴纵向，则指定 height
+  - 默认 auto，表示参考元素自身的 width 和 height
+  - 如果传递了值则以该值为准
+- `flex`：设置`flex-grow`、`flex-shrink`、`flex-basis`的简写属性，例如`flex: 1 1 auto`
+  - `initial`：相当于`0 1 auto`
+  - `auto`：相当于`1 1 auto`
+  - `none`：相当于`0 0 auto`
+- `align-self`：弹性元素上设置的用来覆盖`align-items`的属性
+- `order`：指定弹性元素的排列顺序
+
+## 13.像素与视口
+
+浏览器解析时，会将 CSS 像素转换为物理像素再呈现。一个 CSS 像素最终呈现多少物理像素由浏览器决定，默认情况下在 PC 端是 1：1 的关系。
+
+默认情况下移动端的网页会把视口设置为 980px（CSS 像素），以确保 PC 端网页可以正常显示在移动端；如果网页大于 980px，则浏览器会自动进行缩放以显示整个网页。最终显示效果是 980px:手机物理像素。因此在编写移动端界面时，必须确保一个比较合理的像素比。
+
+视口是屏幕中用来显示网页的区域，可以通过改变视口的大小改变 CSS 像素与物理像素的比值。
+
+```html
+<!-- 改变视口大小 -->
+<meta name="vieport" content="width=100px">
+```
+
+移动端上最佳显示往往为 1px CSS:2px 物理，因此视口可以设置为：实际物理像素 / 2，CSS 中提供了 device-width 变量来设置完美视口。
+
+```html
+<meta name="vieport" content="width=device-width">
+```
+
+同时还会追加一个属性设置：
+
+```html
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+```
+
+这个设置就是移动端开发需要的设置。
+
+同时由于不同设备的完美视口不同，因此不能再使用 px 布局了，可以设置单位为 vw，表示视口宽度，`100vm=1视口宽度`
+
+```css
+.box1 {
+    /* 表示占满一行 */
+    width: 100vw;
+}
+```
+
+**VW 适配**
+
+可以使用`rem`来自动适配（自动适用 html 的`font-size`），假设设计图的像素为 750px，则 1px CSS 的 vw 应该为`1 / 750 * 100`约等于 0.133333333vw。
+
+例如一个 48px * 35px 的图标在设计时应该设计为：
+
+```css
+html {
+    font-size: 0.133333333vw;
+}
+
+.box1 {
+    width: 48rem;
+    height: 35rem;
+}
+```
+
+但是由于网页中最小的字体为 12px，小于 12px 时自动调整为 12px，因此可以扩大 100 倍：
+
+```html
+html {
+    font-size: 13.3333333vw;
+}
+
+.box1 {
+    width: 0.48rem;
+    height: 0.35rem;
+}
+```
+
+在 less 中可以直接使用运算：
+
+```less
+window-px: 750;
+
+html {
+    /* 设计图的像素需要除以 100 得到 css 中的 rem */
+    font-size: (100vw / @window-px * 100);
+}
+
+.w {
+    width: 7rem;
+    margin: 0 auto;
+}
+
+header:extend(.w) {
+    margin-top: 1rem;
+    height: 1rem;
+    background-color: #bfa;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .search {
+        width: 0.5rem;
+        height: 0.5rem;
+        background-color: red;
+    }
+
+    .logo {
+        width: 0.8rem;
+        height: 0.8rem;
+        background-color: yellow;
+    }
+
+    .menu {
+        width: 0.3rem;
+        height: 0.3rem;
+        background-color: blue;
+    }
+}
+
+.menu-list:extend(.w) {
+    margin-top: 1rem;
+    height: 3rem;
+    background-color: silver;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    align-content: space-around;
+
+    .menu1 {
+        width: 3rem;
+        height: 0.7rem;
+        background-color: red;
+    }
+
+    .menu2 {
+        width: 3rem;
+        height: 0.7rem;
+        background-color: yellow;
+    }
+
+    .menu3 {
+        width: 3rem;
+        height: 0.7rem;
+        background-color: blue;
+    }
+
+    .menu4 {
+        width: 3rem;
+        height: 0.7rem;
+        background-color: orange;
+    }
+}
+```
+
+## 14.响应式布局
+
+网页可以根据不同的设备或窗口大小呈现不同的效果，使一个网页适用于所有设备。
+
+响应式布局的关键在于媒体查询，通过媒体查询获取设备信息和状态。
+
+### 14.1 媒体查询
+
+#### 1.基本语法
+
+- `@media` 查询规则1[,查询规则2...] {}
+
+  - `all`：适用于所有设备
+
+    ```css
+    @media all {
+        body {
+            background-color: #bfa;
+        }
+    }
+    ```
+
+  - `print`：适用于打印设备
+
+  - `screen`：带屏幕的设备
+
+  - `speech`：屏幕阅读器
+
+#### 2.媒体特性
+
+- `width`：视口宽度（一般都是设置 width）
+
+- `height`：视口高度
+
+- `min-width`：视口最小宽度，视口大于该宽度时生效
+
+- `max-width`：视口最大宽度
+
+  ```css
+  <style>
+  	/* 当宽度大于等于 500px 或者小于等于 300px 时调整 */
+      @media (min-width: 500px), (max-width: 300px) {
+          body {
+              background-color: #bfa;
+          }
+      }
+  	/* 当宽度大于等于 500px 并且小于等于 700px 时调整 */
+      @media (min-width: 500px) and (max-width: 700px) {
+          body {
+              background-color: #bfa;
+          }
+      }
+  </style>
+  ```
+
+常用的断点：
+
+- 小于 768，超小屏幕：`@media (max-width: 768px)`
+- 大于 768，小屏幕：`@media (min-width: 768px)`
+- 大于 992，中性屏幕：`@media (max-width: 992px)`
+- 大于 1200，大屏幕：`@media (max-width: 1200px)`
+
+完整写法
+
+```css
+@media only screen and (min-width: 500px) and (max-width: 700px) {
+    body {
+        background-color: #bfa;
+    }
+}
+```
+
+### 14.2 练习
+
+设计响应式布局时移动端优先，渐进式添加功能。
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="CSS/reset.css">
+    <link rel="stylesheet" href="CSS/new.css">
+    <link rel="stylesheet" href="fa/css/all.min.css">
+    <style>
+    </style>
+</head>
+
+<body>
+    <!-- 导航条 -->
+    <div class="top-bar-wrapper">
+        <div class="top-bar">
+            <!-- 左侧菜单 -->
+            <div class="left-menu">
+                <!-- 菜单图标 -->
+                <ul class="menu-icon">
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                </ul>
+
+                <!-- 菜单内容 -->
+                <ul class="nav">
+                    <li><a href="#">手机</a></li>
+                    <li><a href="#">仪器</a></li>
+                    <li><a href="#">配件</a></li>
+                    <li><a href="#">支持</a></li>
+                    <li><a href="#">企业</a></li>
+                    <li>
+                        <a href="#"><i class="fas fa-search"></i></a>
+                        <span>搜索</span>
+                    </li>
+                </ul>
+            </div>
+            <!-- 中间的 logo -->
+            <h1 class="logo">
+                <a href="/">美图手机</a>
+            </h1>
+            <!-- 右侧用户信息 -->
+            <div class="user-info">
+                <a href="#"><i class="fas fa-user"></i></a>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
+```
+
+**less 样式**
+
+```less
+a {
+    text-decoration: none;
+    color: #fff;
+
+    &:hover {
+        color: darken(#fff, 50%);
+    }
+}
+
+.top-bar-wrapper {
+    background-color: #000;
+}
+
+// 导航条
+.top-bar {
+    // 最大宽度
+    max-width: 1200px;
+    height: 48px;
+    padding: 0 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+// 左侧菜单
+.left-menu {
+    transition-duration: 0.5s;
+
+    // 图标
+    .menu-icon {
+        width: 18px;
+        height: 48px;
+        position: relative;
+
+        // 图标的线 
+        li {
+            width: 18px;
+            height: 1px;
+            background-color: #fff;
+            position: absolute;
+
+            // 修改变形的时间
+            transition-duration: 0.5s;
+            // 修改变形的原点
+            transform-origin: left center;
+
+            &:nth-child(1) {
+                top: 18px;
+            }
+
+            &:nth-child(2) {
+                top: 24px;
+            }
+
+            &:nth-child(3) {
+                top: 30px;
+            }
+        }
+
+        // 鼠标移入效果
+        &:hover {
+            // 显示隐藏菜单
+            & + .nav {
+                display: block;
+            }
+    
+            // 图标动画
+            li:nth-child(1) {
+                transform: rotateZ(41deg);
+            }
+    
+            li:nth-child(2) {
+                opacity: 0;
+            }
+    
+            li:nth-child(3) {
+                transform: rotateZ(-41deg);
+            }
+    
+        }
+    }
+
+    // 弹出菜单样式
+    .nav {
+        display: none;
+        position: absolute;
+        top: 48px;
+        background-color: #000;
+        // 设置 left、right、bottom 为 0，则会自动调整 widht 和 height 达到撑满父元素的效果，此处父元素是 html，因为开启了绝对定位
+        left: 0;
+        right: 0;
+        bottom: 0;
+        padding-top: 40px;
+
+        li {
+            width: 80%;
+            margin: 0 auto;
+            border-bottom: 1px solid darken(#fff, 80%);
+
+            a {
+                display: block;
+                line-height: 44px;
+                font-size: 14px;
+            }
+
+            // 最后一个 a 元素设置为行内块，防止将 span 挤到下一行
+            &:last-child a {
+                display: inline-block;
+                margin-right: 6px;
+            }
+
+            span {
+                color: #fff;
+                font-size: 14px;
+            }
+        }
+    }
+}
+
+// 中间 logo
+.logo {
+    a {
+        text-indent: -9999px;
+        display: block;
+        width: 122px;
+        height: 32px;
+        background-color: red;
+    }
+}
+
+// 设置媒体查询
+@media only screen {
+
+    // 断点 768px
+    @media (min-width: 768px) {
+        body {
+            .left-menu {
+                order: 2;
+                flex: auto;
+
+                // 隐藏菜单图标
+                .menu-icon {
+                    display: none;
+                }
+
+                // 显示菜单
+                .nav {
+                    display: flex;
+                    // 取消 top 等位置的设定
+                    position: static;
+                    padding: 0px;
+                    justify-content: space-around;
+                    li {
+                        width: auto;
+                        border-bottom: none;
+                        margin: 0;
+                        a {
+                            line-height: 48px;
+                        }
+    
+                        span {
+                            display: none;
+                        }
+                    }
+                }
+            }
+
+            .logo {
+                order: 1;
+            }
+
+            .user-info {
+                order: 3;
+            }
+        }
+    }
+}
+```
+

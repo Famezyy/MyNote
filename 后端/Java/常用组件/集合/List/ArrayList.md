@@ -73,3 +73,6 @@ public static void main(String[] args) {
 list.removeIf(item -> item.equals("invalid"));
 ```
 
+## 4.扩容
+
+底层是数组结构，默认长度 10，扩容时先创建新的数组，长度为原来的 1.5 倍，然后调用`Arrys.copyOf()`复制元素，将变量指向新数组。
