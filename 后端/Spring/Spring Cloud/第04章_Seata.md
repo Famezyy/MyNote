@@ -320,7 +320,7 @@ docker run -d -p 8091:8091 -p 7091:7091 --name seata-serve seataio/seata-server:
 docker cp seata-serve:/seata-server/resources /youyi/seata/config
 ```
 
-拷出后可以，可以选择修改 application.yml 再 cp 进容器，或者 rm 临时容器，如下重新创建，并做好映射路径设置。
+拷出后可以，可以选择修改 application.yml 再 cp 进容器，或者 rm 临时容器，然后重新创建，并做好映射路径设置。
 
 修改配置文件
 
@@ -395,7 +395,7 @@ seata-server 支持以下环境变量：
 version: "3"
 services:
   seata-server:
-    image: seataio/seata-server:1.5.0
+    image: seataio/seata-server
     container_name: seata-server
     ports:
       - "8091:8091"
@@ -405,6 +405,7 @@ services:
     environment:
       - SEATA_PORT=8091
       - STORE_MODE=db
+    restart: always
     depends_on:
       mysql:
         condition: service_healthy
@@ -450,9 +451,9 @@ MYSQL_USER=seata
 MYSQL_PASSWORD=seata
 ```
 
-**`/youyi/seata/conf/resources`**
+**`/youyi/seata/config/resources`**
 
-将修改好的配置文件放在这个文件夹下。
+将修改好的自定义配置文件（2.4）放在这个文件夹下。
 
 启动
 
@@ -462,15 +463,44 @@ docker compose up -d
 
 #### 3.配置Nacos
 
-- 修改 Nacos 注册中心和配置中心地址
-
-- 配置事务分组名称：异地机房停电容错机制
+- 在 application.yml 中修改 Nacos 注册中心和配置中心地址
 
   ```yaml
   seata:
-    tx-service-group: default # 必须要与 cluster 值相同
+    config:
+      type: nacos
+      nacos:
+        server-addr: 192.168.11.100:8848
+        group : SEATA_GROUP
+        namespace: public
+        username: nacos
+        password: nacos
+        data-id: seataServer.properties
+    registry:
+      type: nacos
+      nacos:
+        application: seata-server
+        server-addr: 192.168.11.100:8848
+        group : SEATA_GROUP
+        namespace: public
+        username: nacos
+        password: nacos
   ```
 
+- 上传配置到 Nacos，参考：http://seata.io/zh-cn/docs/user/configuration/nacos.html
+
+  在 Nacos 新建配置，此处 dataId 为 seataServer.properties，配置内容参考 https://github.com/seata/seata/tree/develop/script/config-center 的 config.txt 并按需修改保存
+
+  ```properties
+  store.mode=db
   
+  #删除store.file相关配置
+  
+  store.db.url=jdbc:mysql://192.168.11.100:3307/seata?rewriteBatchedStatements=true
+  store.db.user=seata
+  store.db.password=seata
+  ```
+
+- 启动 seata
 
   

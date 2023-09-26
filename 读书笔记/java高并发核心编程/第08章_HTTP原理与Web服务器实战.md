@@ -6,7 +6,7 @@
 
 QPS 在十万每秒的 Web 应用架构大致如下：
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302242222097.png" alt="image-20230224222248617" style="zoom: 50%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302242222097.png" alt="image-20230224222248617" style="zoom: 33%;" />
 
 主要包括客户端层、接入层、服务层，重点是**接入层**和**服务层**。
 
@@ -40,7 +40,7 @@ Nginx 的原理与 Netty 很像，也应用了 Reactor 模式。Nginx 执行过�
 
 QPS 在百万级甚至千万级的 Web 应用架构大致如下：
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302242242902.png" alt="image-20230224224257885" style="zoom:50%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302242242902.png" alt="image-20230224224257885" style="zoom: 33%;" />
 
 主要包括客户端层、负载均衡层、接入层、服务层，重点是客户端层和负载均衡层。
 
@@ -148,7 +148,7 @@ HTTP 的主要特点如下：
 
 HTTP 请求由三部分组成，分别是请求行、请求头、请求体，一般也会将 HTTP 的请求行和请求头统一称为请求首部。如下图所示：
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302250049841.png" alt="image-20230225004958828" style="zoom:50%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302250049841.png" alt="image-20230225004958828" style="zoom: 33%;" />
 
 #### 3.1 请求行
 
@@ -217,7 +217,7 @@ HTTP 请求的请求行包含请求方法、URL 地址、协议名称和版本�
 
 HTTP 的响应报文也由 3 部分组成：响应行 + 响应头 + 响应体，具体如下：
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302250052233.png" alt="image-20230225005245214" style="zoom:50%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302250052233.png" alt="image-20230225005245214" style="zoom: 33%;" />
 
 #### 4.1 响应行
 
@@ -318,7 +318,7 @@ HTTP 在 1.1 版本之前具有无状态的特点，每次请求都需要通过 
 
 常见的`Content-Type`如下所示：
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302250147307.png" alt="image-20230225014727290" style="zoom:50%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302250147307.png" alt="image-20230225014727290" style="zoom: 25%;" />
 
 MIME 类型的每个值包括一级类型和二级类型，用`/`分隔。也可以自定义类型，例如`application/vnd.debian.binary-package`，表明发送的是 Debian 系统的二进制数据包。
 

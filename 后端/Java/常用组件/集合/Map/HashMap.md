@@ -39,7 +39,11 @@ Hashtable 的实现方法里面都添加了`synchronized`关键字来确保线�
 
 HashMap 可以使用 null 作为 key，而 Hashtable 则不允许 null 作为 key，会直接抛出`NullPointerException`异常。
 
-> HashMap 以 null 作为 key 时，总是存储在 table 数组的第一个节点上（index=0）。
+> 扩展：对比`concurrentHashMap`
+>
+> - 两者在`get()`时如果 key 不存在则返回 null
+> - HashMap 的 key 和 value 都可为 null；以 null 作为 key 时，总是存储在 table 数组的第一个节点上（index=0）
+> - ConcurrentHashMap 的 key 和 value 都不能为 null，如果允许为值 null，则则调用`get(key)`返回 null 的时间点上，并不能判断是 value 本身为 null，还是 key 不存在才返回 null，此时如果调用`containsKey()`方法则因为并发场景下可能有其他线程的插入而导致无法证明
 
 **3、继承结构**
 

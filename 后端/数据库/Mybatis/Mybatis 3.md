@@ -653,7 +653,7 @@ jdbc.password=root
 >
 > ==区别==
 >
-> - #{}：是以预编译的形式（? 占位符），将参数设置到 sql 语句中，利用 PreparedStatument，可防止 sql 注入
+> - #{}：是以预编译的形式（? 占位符），将参数设置到 sql 语句中，利用 PreparedStatument，可防止 sql 注入，会自动加上单引号
 > - ${}：取出的值直接拼装在 sql 语句中，会有安全问题
 > - 大多情况下都应该使用 #{}，当想动态替换 sql 语句中的字段（参数以外）时，可以使用 ${}
 >   - 按照年份分表：`select * from ${year}_salary where xxx`
@@ -776,7 +776,7 @@ jdbc.password=root
 >        <result column="last_name" property="lastName"></result>
 >        <!-- 其他不指定的列会自动封装，推荐写 resultMap 的话就把全部的映射规则都写上 -->
 >    </resultMap>
->                                                 
+>                                                    
 >    <!-- resultMap：自定义结果集映射规则 -->
 >    <select id="getEmpById" resultMap="myEmp">
 >        select * from tbl_employee where id = #{id}
@@ -977,7 +977,7 @@ jdbc.password=root
 >       <result column="last_name" property="lastName"></result>
 >       <result column="email" property="email"></result>
 >       <result column="gender" property="gender"></result>
->                                 
+>                                   
 >       <!--
 >           - column：指定判定的列名
 >           - javaType：列值对应的 java 类型
@@ -990,12 +990,12 @@ jdbc.password=root
 >                            column="d_id"
 >                            />
 >           </case>
->                                 
+>                                   
 >           <case value="1" resultType="com.mybatis.bean.Employee">
 >               <result column="last_name" property="email"></result>
 >           </case>
 >       </discriminator>
->                                 
+>                                   
 >   </resultMap>
 >   <select id="getEmpDis" resultMap="MyEmpDis">
 >       select * from tbl_employee where id=#{id}
@@ -2167,23 +2167,23 @@ class IntegrateMybatisApplicationTests {
 >        public void setParameter(PreparedStatement ps, int i, EmpStatus parameter, JdbcType jdbcType) throws SQLException {
 >            ps.setString(i, parameter.getCode().toString());
 >        }
->                                     
+>                                        
 >        @Override
 >        public EmpStatus getResult(ResultSet rs, String columnName) throws SQLException {
 >            // 需要根据从数据库中拿到的枚举的状态码返回一个枚举对象
 >            int code = rs.getInt(columnName);
 >            EmpStatus empStatus = Employee.getEmpStatus(code);
 >            return empStatus;
->                                     
+>                                        
 >        }
->                                     
+>                                        
 >        @Override
 >        public EmpStatus getResult(ResultSet rs, int columnIndex) throws SQLException {
 >            int code = rs.getInt(columnIndex);
 >            EmpStatus empStatus = Employee.getEmpStatus(code);
 >            return empStatus;
 >        }
->                                     
+>                                        
 >        @Override
 >        public EmpStatus getResult(CallableStatement cs, int columnIndex) throws SQLException {
 >            int code = cs.getInt(columnIndex);
@@ -2198,28 +2198,28 @@ class IntegrateMybatisApplicationTests {
 >     * 希望数据库保存的是100， 200状态码
 >     */
 >    public enum EmpStatus {
->                                     
+>                                        
 >        LOGIN(100,"用户登录"),LOGOUT(200, "用户登出"),REMOVE(300, "用户移除");
->                                     
+>                                        
 >        private Integer code;
 >        private String message;
 >        private EmpStatus(Integer code, String message) {
 >            this.code = code;
 >            this.message = message;
 >        }
->                                     
+>                                        
 >        public Integer getCode() {
 >            return code;
 >        }
->                                     
+>                                        
 >        public void setCode(Integer code) {
 >            this.code = code;
 >        }
->                                     
+>                                        
 >        public String getMessage() {
 >            return message;
 >        }
->                                     
+>                                        
 >        public void setMessage(String message) {
 >            this.message = message;
 >        }
@@ -2228,17 +2228,17 @@ class IntegrateMybatisApplicationTests {
 >
 >    ```java
 >    Employee.class
->                                     
+>                                        
 >    public EmpStatus empStatus;
->                                     
+>                                        
 >    public EmpStatus getEmpStatus() {
 >        return empStatus;
 >    }
->                                     
+>                                        
 >    public void setEmpStatus(EmpStatus empStatus) {
 >        this.empStatus = empStatus;
 >    }
->                                     
+>                                        
 >    /**
 >         * 根据状态码返回枚举对象
 >         */

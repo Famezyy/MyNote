@@ -460,6 +460,12 @@ public class ParameterValidationUtilsTest {
     void setUp() {
         when(mockInternationalMilesPostRegistrationProperties.getProperty(CoreConstants.JMBCMNE001)).thenReturn("The request parameter is invalid. ");
         when(mockInternationalMilesPostRegistrationProperties.getProperty(InternationalMilesPostRegistrationConstant.DATE_FORMAT)).thenReturn("uuuuMMdd");
+        when(client.getResponse()).thenAnswer(
+        	invo -> {
+                Thread.sleep(1000);
+                return new Response();
+            }
+        );
     }
     
     @ParameterizedTest

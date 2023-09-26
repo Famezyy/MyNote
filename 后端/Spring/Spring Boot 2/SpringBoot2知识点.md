@@ -822,10 +822,13 @@ public static void printFileContent(Object obj) throws IOException {
 
   ```java
   @EnableAsync
+  @Configuration
   public class Configuration(){}
   ```
 
 - 配置线程池
+
+  默认异步任务使用的一个线程池的 corePoolSize = 8, 阻塞队列采用了无界队列 LinkedBlockingQueue，会造成内存溢出。
 
   - 通过配置文件
 
@@ -855,7 +858,7 @@ public static void printFileContent(Object obj) throws IOException {
             return executor;
         }
         
-        @Bean(name="ptherTaskExecutor")
+        @Bean(name="otherTaskExecutor")
         public ThreadPoolTaskExecutor otherExecutor() {
             ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
             ...
@@ -864,7 +867,7 @@ public static void printFileContent(Object obj) throws IOException {
         
         // 指定默认线程池
         @Override
-        public Executor defaultExecutor() {
+        public Executor getAsyncExecutor() {
             return defaultExecutor();
         }
         
@@ -913,7 +916,10 @@ public class CorsConfig implements WebMvcConfigurer {
     public void addCorsMappings(CoreRegistry registry) {
         registry.addMapping("/**")
             .allowedOrigins("http://localhost:9090")
-            .allowedMethods("*");
+            .allowedMethods("*")
+            .allowedHeaders("header1", "header2", "header3")
+            .exposedHeaders("header1", "header2")
+            .allowCredentials(false).maxAge(3600);
     }
 }
 ```

@@ -202,7 +202,7 @@ ERROR StatusLogger No Log4j2 configuration file found. Using default configurati
             <PatternLayout pattern="${pattern}"/>
         </Console>
         <!-- 文件输出器 -->
-        <File name="file" fileName="${logDir}/file.log">
+        <File name="file" fileName="${logDir}/file.log" filePattern="${logDir/file-%d{yyyyMMdd-hhmmss}_%i/log}">
             <PatternLayout pattern="${pattern}"/>
         </File>
     </Appenders>

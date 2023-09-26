@@ -195,7 +195,7 @@ redis-server
 
 - `set k1 a`：key:k1；value:a
 
-- `keys*`：查看当前库所有key
+- `keys *`：查看当前库所有key
 - `exists key`：判断某个 key 是否存在，例：exists k1
 - `type key`：查看你的 key 是什么类型，例：type k1 
 - `del key`：删除指定的 key 数据，例：del k1 

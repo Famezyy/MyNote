@@ -162,7 +162,7 @@ Innodb_flush_log_at_trx_commit = 2;
 
 > 只要事务提交成功，`redo log buffer`中的内容只会写入文件系统缓存`page cache`。但是 flush（刷到磁盘）操作并不会同时进行。
 >
-> 如果仅仅只是 MySQL 挂了不会有任何数据丢失，但是操作系统宕机可能会有 1s 数据的丢失，这种情况下无法满足 ACID 中的 D。但是数值 2 效率最高。
+> 如果仅仅只是 MySQL 挂了不会有任何数据丢失，但是操作系统宕机可能会有 1s 数据的丢失，这种情况下无法满足 ACID 中的 D。但是效率最高。
 
 ```sql
 Innodb_flush_log_at_trx_commit = 0;

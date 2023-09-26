@@ -756,9 +756,9 @@ Nacos Discovery Starter 可以将服务自动注册到 Nacos 服务端并且能�
   	}
       
       upstream nacoscluster-9849 {
-      	server nacos01:9848;
-      	server nacos02:9848;
-      	server nacos03:9848;
+      	server nacos01:9849;
+      	server nacos02:9849;
+      	server nacos03:9849;
       }
       	server {
   		listen 9849;
@@ -1068,9 +1068,9 @@ stream {
         }
     
         upstream nacoscluster-9849 {
-        server nacos1:9848;
-        server nacos2:9848;
-        server nacos3:9848;
+        server nacos1:9849;
+        server nacos2:9849;
+        server nacos3:9849;
         }
         server {
                 listen 9849;
@@ -1743,7 +1743,7 @@ Group  :        DEFAULT_GROUP
 如果需要切换到生产环境，只需要更改`${spring.profiles.active}`参数配置即可。如下所示：
 
 ```
-spring.profiles.active=product
+spring.profiles.active=pro
 ```
 
 同时生产环境上 Nacos 需要添加对应 dataId 的基础配置。例如，在生成环境下的 Nacos 添加了 dataId 为：nacos-config-pro.yaml 的配置：

@@ -8,7 +8,7 @@
 - 浏览器看到有`Set-Cookie`字段以后就知道这是服务器给的身份标识，于是就保存起来，下次请求时会自动将此`key=value`值放入到`Cookie`字段中发给服务端
 - 服务端收到请求报文后，发现`Cookie`字段中有值，就能根据此值识别用户的身份然后提供个性化的服务
 
-<img src="img/Session & Cookie/image-20220515171754148.png" alt="image-20220515171754148" style="zoom: 50%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202309261454565.png" alt="image-20220515171754148" style="zoom: 50%;" />
 
 接下来我们用代码演示一下服务器是如何生成，我们自己搭建一个后台服务器，这里我用的是 SpringBoot 搭建的，并且写入SpringMVC 的代码如下。
 
@@ -22,15 +22,15 @@ public String cookies(HttpServletResponse response){
 
 项目启动以后我们输入路径`http://localhost:8005/testCookies`，然后查看发的请求。可以看到下面那张图使我们首次访问服务器时发送的请求，可以看到服务器返回的响应中有`Set-Cookie`字段。而里面的`key=value`值正是我们服务器中设置的值。
 
-<img src="img/Session & Cookie/image-20220515171906231.png" alt="image-20220515171906231" style="zoom: 80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202309261454567.png" alt="image-20220515171906231" style="zoom: 80%;" />
 
 接下来我们再次刷新这个页面可以看到在请求体中已经设置了`Cookie`字段，并且将我们的值也带过去了。这样服务器就能够根据`Cookie`中的值记住我们的信息了。
 
-<img src="img/Session & Cookie/image-20220515171928069.png" alt="image-20220515171928069" style="zoom: 80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202309261454568.png" alt="image-20220515171928069" style="zoom: 80%;" />
 
 接下来我们换一个请求呢？是不是`Cookie`也会带过去呢？接下来我们输入路径`http://localhost:8005`请求。我们可以看到`Cookie`字段还是被带过去了。
 
-<img src="img/image-20220515171947568.png" alt="image-20220515171947568" style="zoom: 50%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202309261454569.png" alt="image-20220515171947568" style="zoom: 50%;" />
 
 那么浏览器的`Cookie`是存放在哪呢？如果是使用的是`Chrome`浏览器的话，那么可以按照下面步骤。
 
@@ -42,7 +42,7 @@ public String cookies(HttpServletResponse response){
 
 然后可以根据域名进行搜索所管理的`Cookie`数据。所以是浏览器替你管理了`Cookie`的数据，如果此时你换成了`Firefox`等其他的浏览器，因为`Cookie`刚才是存储在`Chrome`里面的，所以服务器又蒙圈了，不知道你是谁，就会给`Firefox`再次贴上小纸条。
 
-<img src="img/image-20220515172033012.png" alt="image-20220515172033012" style="zoom:67%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202309261454570.png" alt="image-20220515172033012" style="zoom:67%;" />
 
 ### Cookie中的参数设置 
 
@@ -62,13 +62,13 @@ public String cookies(HttpServletResponse response){
 
 设置为`cookie.setPath("/testCookies")`，接下来我们访问`http://localhost:8005/testCookies`，我们可以看到在左边和我们指定的路径是一样的，所以`Cookie`才在请求头中出现，接下来我们访问`http://localhost:8005`，我们发现没有`Cookie`字段了，这就是`Path`控制的路径。
 
-<img src="img/image-20220515172210345.png" alt="image-20220515172210345" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202309261454571.png" alt="image-20220515172210345" style="zoom:80%;" />
 
 #### Domain
 
 设置为`cookie.setDomain("localhost")`，接下来我们访问`http://localhost:8005/testCookies`我们发现下图中左边的是有`Cookie`的字段的，但是我们访问`http://172.16.42.81:8005/testCookies`，看下图的右边可以看到没有`Cookie`的字段了。这就是`Domain`控制的域名发送`Cookie`。
 
-<img src="img/image-20220515172239443.png" alt="image-20220515172239443" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202309261454572.png" alt="image-20220515172239443" style="zoom:80%;" />
 
 ## Session
 
@@ -76,7 +76,7 @@ public String cookies(HttpServletResponse response){
 
 在上面我们了解了什么是`Cookie`，既然浏览器已经通过`Cookie`实现了有状态这一需求，那么为什么又来了一个`Session`呢？这里我们想象一下，如果将账户的一些信息都存入`Cookie`中的话，一旦信息被拦截，那么我们所有的账户信息都会丢失掉。所以就出现了`Session`，在一次会话中将重要信息保存在`Session`中，浏览器只记录`SessionId`一个`SessionId`对应一次会话请求。
 
-<img src="img/image-20220603195550541.png" alt="image-20220603195550541" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202309261454573.png" alt="image-20220603195550541" style="zoom:80%;" />
 
 ```java
 @RequestMapping("/testSession") 
@@ -97,14 +97,14 @@ public String testGetSession(HttpSession session){
 
 这里我们写一个新的方法来测试`Session`是如何产生的，我们在请求参数中加上`HttpSession session`，然后再浏览器中输入`http://localhost:8005/testSession`进行访问可以看到在服务器的返回头中在`Cookie`中生成了一个`SessionId`。然后浏览器记住此`SessionId`下次访问时可以带着此 Id，然后就能根据此 Id 找到存储在服务端的信息了。
 
-<img src="img/image-20220515172519071.png" alt="image-20220515172519071" style="zoom: 50%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202309261454574.png" alt="image-20220515172519071" style="zoom: 50%;" />
 
 此时我们访问路径`http://localhost:8005/testGetSession`，发现得到了我们上面存储在`Session`中的信息。那么`Session`什么时候过期呢？
 
 - 客户端：和`Cookie`过期一致，如果没设置，默认是关了浏览器就没了，即再打开浏览器的时候初次请求头中是没有`SessionId`了
 - 服务端：服务端的过期是真的过期，即服务器端的`Session`存储的数据结构多久不可用了，默认是 30 分钟
 
-<img src="img/image-20220515172602476.png" alt="image-20220515172602476" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202309261454575.png" alt="image-20220515172602476" style="zoom:80%;" />
 
 既然我们知道了`Session`是在服务端进行管理的，那么或许你们看到这有几个疑问，`Session`是在在哪创建的？`Session`是存储在什么数据结构中？接下来带领大家一起看一下`Session`是如何被管理的。
 
@@ -164,7 +164,7 @@ protected Map<String, Session> sessions = new ConcurrentHashMap<>();
 
 `Session`是将要验证的信息存储在服务端，并以`SessionId`和数据进行对应，`SessionId`由客户端存储，在请求时将`SessionId`也带过去，因此实现了状态的对应。而`Token`是在服务端将用户信息经过 Base64Url 编码过后传给在客户端，每次用户请求的时候都会带上这一段信息，因此服务端拿到此信息进行解密后就知道此用户是谁了，这个方法叫做`JWT(Json Web Token)`。
 
-<img src="img/image-20220515173023151.png" alt="image-20220515173023151" style="zoom: 80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202309261454576.png" alt="image-20220515173023151" style="zoom: 80%;" />
 
 > `Token`相比较于`Session`的优点在于，当后端系统有多台时，由于是**客户端访问时直接带着数据**，因此无需做共享数据的操作。
 
@@ -179,7 +179,7 @@ protected Map<String, Session> sessions = new ConcurrentHashMap<>();
 
 实际的 JWT 大概长下面的这样，它是一个很长的字符串，中间用`.`分割成三部分
 
-<img src="img/image-20220515173238210.png" alt="image-20220515173238210" style="zoom:67%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202309261454577.png" alt="image-20220515173238210" style="zoom:67%;" />
 
 JWT是有三部分组成的
 
@@ -274,7 +274,7 @@ eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJzdWJqZWN0IiwiaXNzIjoiaXNzdWVyIiwibmFtZSI6InhpYW9
 
 此时在网上随便找个 Base64 解码的网站就能将信息解码出来
 
-<img src="img/image-20220515174033219.png" alt="image-20220515174033219" style="zoom:80%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202309261454578.png" alt="image-20220515174033219" style="zoom:80%;" />
 
 ## 总结
 

@@ -126,7 +126,7 @@ sudo systemctl daemon-reload
 
 >   **提示**
 >
->   `sudo update-alternatives --config java`可以用来切换默认 java 环境
+>   `sudo update-alternatives --config java`可以用来切换默认 java 环境到 11
 
 启动 Jenkins
 
@@ -134,6 +134,16 @@ sudo systemctl daemon-reload
 sudo systemctl enable jenkins
 sudo systemctl start jenkins
 ```
+
+> **授予 root 权限**
+>
+> ```bash
+> gpasswd -a root jenkins
+> vim /etc/default/jenkins
+> # 添加以下两行
+> JENKINS_USER="root"
+> JENKINS_GROUP="root"
+> ```
 
 #### 2.利用war包安装
 
@@ -447,7 +457,7 @@ Jenkins 定义了一种高级计算方式：
 
 3. **k8s 云原生**
 
-   Jekins 将 JAR 包和 dockerfile 一同发送到处理服务器，运行并生成镜像，由服务器将镜像推送到镜像仓库`Harobor`，然后由 k8s 拉取该镜像并创建容器服务
+   Jekins 将 JAR 包和 dockerfile 一同发送到处理服务器，运行并生成镜像，由服务器将镜像推送到镜像仓库`Harobor`，然后由 k8s 拉取该镜像并创建容器服务。
 
 ### 5.1 外挂目录
 
@@ -497,16 +507,16 @@ Jenkins 定义了一种高级计算方式：
 
 - `post steps`
 
-  发送 JAR 包到容器的`/workspace/microservice`目录
+  发送 JAR 包到容器的`/root/workspace/microservice`目录
 
   - SSH Server
   - Source file：`**/*SNAPSHOT.jar`
   - Remove prefix：`/target`
   - Remote directory：`/workspace/microservice`
 
-- 执行`rm -rf /root/workspace/config && docker run -d -p 8080:8080 --name [containername] -v /root/workspace/microservice/xxx.jar:/root/workspace/microservice/xxx.jar openjdk:8 java -jar /root/workspace/microservice/xxx.jar`
+  执行`rm -rf /root/workspace/config && docker run -d -p 8080:8080 --name [containername] -v /root/workspace/microservice/xxx.jar:/root/workspace/microservice/xxx.jar openjdk:8 java -jar /root/workspace/microservice/xxx.jar`
 
-### 5.2 打包到容器（TODO）
+### 5.2 打包到容器
 
 - `pre steps`
 
@@ -516,33 +526,36 @@ Jenkins 定义了一种高级计算方式：
 
     - 查看是否存在微服务镜像，有则删除
 
-    - 清除`/root/microservice`目录
+    - 清除`/root/workspace/[image_id]`目录
 
     - 删除运行的容器
 
     ```bash
     #!/bin/bash
     
-    SERVICEDIR=/root/workspace/microservice
     containername=$1
     jarfilename=$2
+    IMAGE_NAME=$3
+    IMAGE_TAG=$4
+    SERVICEDIR=/root/workspace/${IMAGE_NAME}_${TAG}
     
     # 检查 JDK8 镜像
-    image=`docker images -f reference=openjdk:8 | grep openjdk`
-    if [[ -z $image ]];then
-    echo "=====openjdk:8镜像不存在====="
-    echo "=====开始下载镜像====="
-    docker pull openjdk:8
+    jdk_image=`docker images -f reference=openjdk:8 | grep openjdk`
+    if [[ -z $jdk_image ]];then
+        echo "=====openjdk:8镜像不存在====="
+        echo "=====开始下载镜像====="
+        docker pull openjdk:8
     else
-    echo "=====openjdk:8镜像已存在====="
+        echo "=====openjdk:8镜像已存在====="
     fi
     
     # 检查微服务镜像
-    microservice=`docker images -f reference=microservice | grep microservice`
-    if [[ ! -z $microservice ]];then
-    echo "====删除已有微服务镜像===="
-    tag=`docker images -f reference=microservice | grep microservice | awk 'pringf $2'`
-    docker rmi microservice:$tag
+    service_image=`docker images -f reference=${IMAGE_NAME}:${TAG} | grep ${IMAGE_NAME}:${TAG}`
+    if [[ ! -z $service_image ]];then
+        echo "====删除已有微服务镜像===="
+        docker rmi ${IMAGE_NAME}:${TAG}
+        # tag=`docker images -f reference=${iamge_id} | grep ${iamge_id} | awk 'pringf $2'`
+        # docker rmi microservice:$tag
     fi
     
     # 清除目录
@@ -553,10 +566,10 @@ Jenkins 定义了一种高级计算方式：
     mkdir $SERVICEDIR
     cat > $SERVICEDIR/Dockerfile << EOF
     FROM openjdk:8
-    WORKDIR /root/workspace/microservice
-    ADD $jarfilename.jar /root/workspace/microservice/$jarfilename.jar
+    WORKDIR ${SERVICEDIR}
+    ADD $jarfilename.jar ${SERVICEDIR}/$jarfilename.jar
     EXPOSE 8080
-    ENTRYPOINT ["java", "-jar", "/root/workspace/microservice/$jarfilename.jar"]
+    ENTRYPOINT ["java", "-jar", "${SERVICEDIR}/$jarfilename.jar"]
     EOF
     
     # 删除微服务容器
@@ -573,25 +586,136 @@ Jenkins 定义了一种高级计算方式：
 
     - SSH server
     - Source file：`clean.sh`
-    - Remote directory：`/workspace/config`（会默认置于`~`）
-    - Exec command：`bash /root/workspace/config/clean.sh [containername] [jarfilename]`
+    - Remote directory：`/workspace/[image_name]:[image_tag]/config`（会默认置于`~`）
+    - Exec command：`bash /root/workspace/[image_name]:[image_tag]/config/clean.sh [containername] [jarfilename] [image_name] [image_tag]` 
 
 - `post steps`
 
-  发送 JAR 包到容器的`/workspace/microservice`目录
+  发送 JAR 包到应用服务器的`/workspace/[image_name]:[image_tag]`目录
 
   - SSH Server
   - Source file：`**/*SNAPSHOT.jar`
   - Remove prefix：`/target`
-  - Remote directory：`/workspace/microservice`
+  - Remote directory：`/workspace/[image_name]:[image_tag]`
 
-- 执行
+  执行
 
-  ` docker build -t microservice /root/workspace/microservice/`
+  ```bash
+  image_id=[image_id]
+  container_name=[container_name]
+  IMAGE_NAME=[image_name]
+  TAG=[tag]
+  docker build -t ${IMAGE_NAME}:${TAG} /root/workspace/${IMAGE_NAME}_${TAG}/
+  docker run -d -p 8080:8080 --name ${container_name} ${IMAGE_NAME}_${TAG}
+  rm -rf /workspace/image_name:image_tag/config
+  ```
 
-  `docker run -d -p 8080:8080 --name [containername] microservice`
+### 5.3 Harbor管理镜像
 
-  `rm -rf /root/workspace/config`
+- 在 Harbor 和应用服务器上建立 SSH 连接
+
+- 推送到 Harbor 仓库构建镜像，步骤同打包到容器（或者可以在 Jenkins 服务器上构建镜像然后推送到 Harbor 上，此时使用`执行 shell`选项）
+
+  - `pre steps`发送`clean.sh`
+
+    ```bash
+    #!/bin/bash
+    
+    containername=$1
+    jarfilename=$2
+    IMAGE_NAME=$3
+    IMAGE_TAG=$4
+    PROJECT_NAME=$5
+    # 目标服务器的 JAR 地址
+    SERVICEDIR=/root/workspace/${IMAGE_NAME}_${TAG}
+    # Jenkins 本地的 JAR 地址，可以在本地docker构建好后再推送到 Harbor
+    # JAR_DIR=/var/lib/jenkins/workspace/${PROJECT_NAME}/target
+    
+    # 检查 JDK8 镜像
+    jdk_image=`docker images -f reference=openjdk:8 | grep openjdk`
+    if [[ -z $jdk_image ]];then
+        echo "=====openjdk:8镜像不存在====="
+        echo "=====开始下载镜像====="
+        docker pull openjdk:8
+    else
+        echo "=====openjdk:8镜像已存在====="
+    fi
+    
+    # 检查微服务镜像
+    service_image=`docker images -f reference=${IMAGE_NAME}:${TAG} | grep ${IMAGE_NAME}:${TAG}`
+    if [[ ! -z $service_image ]];then
+        echo "====删除已有微服务镜像===="
+        docker rmi ${IMAGE_NAME}:${TAG}
+        # tag=`docker images -f reference=${iamge_id} | grep ${iamge_id} | awk 'pringf $2'`
+        # docker rmi microservice:$tag
+    fi
+    
+    # 清除目录
+    rm -rf $SERVICEDIR
+    
+    # 创建 Dockerfile
+    echo "=====创建dockerfile====="
+    mkdir $SERVICEDIR
+    cat > $SERVICEDIR/Dockerfile << EOF
+    FROM openjdk:8
+    WORKDIR ${SERVICEDIR}
+    ADD $jarfilename.jar ${SERVICEDIR}/$jarfilename.jar
+    EXPOSE 8080
+    ENTRYPOINT ["java", "-jar", "${SERVICEDIR}/$jarfilename.jar"]
+    EOF
+    ```
+
+    ```bash
+    bash /root/workspace/[image_name]:[image_tag]/config/clean.sh [containername] [jarfilename] [image_name] [image_tag] [project_name]
+    ```
+  
+  - `post steps`
+  
+    发送 JAR 包到 Harbor 服务器的`/workspace/[image_name]:[image_tag]`目录
+  
+    在 Harbor 服务器执行`build`
+  
+    ```bash
+    HARBOR_USER=admin
+    HARBOR_PASSWORD=Harbor12345
+    HARBOR_IP=192.168.11.100:80
+    IMAGE_NAME=[image_name]
+    TAG=[tag]
+    docker login -u ${HARBOR_USER} -p HARBOR_PASSWORD ${HARBOR_IP}
+    docker build -t ${HARBOR_IP}/${IMAGE_NAME}:${TAG} .
+    docker push ${HARBOR_IP}/
+    rm -rf /root/workspace/config
+    ```
+  
+    在应用服务器执行拉取和运行
+  
+    ```bash
+    HARBOR_IP=192.168.11.100:80
+    IMAGE_NAME=[image_name]
+    TAG=[tag]
+    containername=[containername]
+    
+    # 检查微服务镜像
+    service_image=`docker images -f reference=${IMAGE_NAME}:${TAG} | grep ${IMAGE_NAME}:${TAG}`
+    if [[ ! -z $service_image ]];then
+        echo "====删除已有微服务镜像===="
+        docker rmi ${IMAGE_NAME}:${TAG}
+        # tag=`docker images -f reference=${iamge_id} | grep ${iamge_id} | awk 'pringf $2'`
+        # docker rmi microservice:$tag
+    fi
+    
+    # 删除微服务容器
+    container=`docker ps -f name=$containername | grep $containername`
+    if [[ -z $container ]];then
+    exit
+    else
+    echo "=====开始清除$containername====="
+    docker rm -f $containername
+    fi
+    
+    docker pull ${HARBOR_IP}/${IMAGE_NAME}:${tag}
+    docker run -d -p 8080:8080 --name ${container_name} ${IMAGE_NAME}:${TAG}
+    ```
 
 ## 6.Jenkins集群
 

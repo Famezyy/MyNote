@@ -302,6 +302,15 @@ ResultDTO<User> readValue = objectMapper.readValue(writeValue, new TypeReference
 System.out.println(readValue);
 ```
 
+> **补充**
+>
+> ```java
+> ObjectReader reader = Wrapper.getObjectMapper().readerFor(TypeFactory.defaultInstance().constructCollectionType(List.class, clazz));
+> result = reader.readValue(Wrapper.writeValueAsString(response.getBody().getResponse()));
+> // or
+> new ObjectMapper().readValue(jsonFile, CollectionsTypeFactory.listOf(TypeFactory.defaultInstance().constructCollectionType(List.class, clazz)));
+> ```
+
 自定义`ResultDTO`类
 
 ```java
@@ -531,7 +540,7 @@ public ObjectMapper objectMapper() {
     // 通过 serializationInclusion() 设置序列化的规则
     builder.serializationInclusion(JsonInclude.Include.NON_NULL);
     
-    // 通过
+    // 添加模式
     builder.modules(new GeoJsonModule(), new JavaTimeModule(), new MoneyModule());
     
     return builder.build(); // 返回 ObjectMapper

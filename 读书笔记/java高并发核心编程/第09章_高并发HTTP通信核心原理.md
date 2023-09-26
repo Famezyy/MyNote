@@ -48,11 +48,11 @@ TCP/IP 包含了一系列协议，也叫做 TCP/IP 协议族（TCP/IP Protocol S
 
 OSI 模型定义了网络互联的七层框架（物理层、数据链路层、网络层、传输层、会话层、表示层、应用层）每一层实现各自的功能和协议，并完成与相邻层的接口通信。OSI 模型各层的通信协议大致如下：
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302252328349.png" alt="image-20230225232824335" style="zoom:50%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302252328349.png" alt="image-20230225232824335" style="zoom: 33%;" />
 
 TCP/IP 协议是互联网最基本的协议，在一定程度上参考了七层 ISO 模型，在 TCP/IP 协议中七层被简化为四个层次。TCP/IP 协议与七层 ISO 模型的对应关系大致如下：
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302252332896.png" alt="image-20230225233203880" style="zoom:50%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302252332896.png" alt="image-20230225233203880" style="zoom: 25%;" />
 
 #### 1.TCP/IP协议的应用层
 
@@ -87,11 +87,11 @@ UDP 是一个无连接的数据报协议，是一个“尽力传递”和“不�
 
 以一个 HTTP 请求的传输为例，请求从 HTTP 客户端和 HTTP 服务端应用的传输过程大致如下：
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302252351736.png" alt="image-20230225235129721" style="zoom:50%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302252351736.png" alt="image-20230225235129721" style="zoom: 33%;" />
 
 在发送数据的时候需要对数据进行封装，在数据封装时，数据经过每个层都会打上该层特定标识，添加上头部，在接收端每通过一层就删除该层的头部，TCP/IP 协议的数据分装过程大致如下：
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302252352724.png" alt="image-20230225235258707" style="zoom:50%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302252352724.png" alt="image-20230225235258707" style="zoom: 33%;" />
 
 在传输层封装时，添加的报文首部要存入一个应用程序的标识符，无论是 TCP 还是 UDP 都用一个 16 位的**端口号**来表示不同的应用程序，并且都会将原端口和目的端口存入报文首部中。
 
@@ -105,7 +105,7 @@ TCP/IP 除了与 OSI 在分层模块上的区别外，更重的要区别是：OS
 
 实际上，在传输过程中，数据报文会在不同的物理网络之间传递。以一个 HTTP 请求的传输为例：
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302260012615.png" alt="image-20230226001222601" style="zoom:50%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302260012615.png" alt="image-20230226001222601" style="zoom: 33%;" />
 
 在不同物理网络之间的传输过程中，网络层会通过路由器对不同网络之间的数据包进行存储、分组转发处理。路由器是一种特殊的用于网络互联的硬件盒，作用是为不同类型的物理网络提供连接：以太网、令牌环网、点对点的链接和 FDDI（光纤分布式数据接口）等。
 
@@ -117,7 +117,7 @@ TCP/IP 除了与 OSI 在分层模块上的区别外，更重的要区别是：OS
 
 传输层 TCP 提供了一种面向连接的、可靠的字节流服务，其数据帧格式大致如下：
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302262008273.png" alt="image-20230226200809257" style="zoom:50%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302262008273.png" alt="image-20230226200809257" style="zoom: 33%;" />
 
 - **源端口号**
 
@@ -146,7 +146,7 @@ TCP/IP 除了与 OSI 在分层模块上的区别外，更重的要区别是：OS
 
   如果发送端发送 3 个净荷为 1000B，起始 SN 序号为 1 的数据包给服务端，服务端每收到一个包之后，需要回复一个 ACK 响应确认数据包给客户端。ACK 响应数据包的 ACK Number 值为“每个客户端包的 SN + 包净荷”。除了表示服务端已经确认收到的字节数，还表示期望接受到的下一个客户端发送包的 SN 序号。
 
-  <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302262026125.png" alt="image-20230226202607107" style="zoom:50%;" />
+  <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302262026125.png" alt="image-20230226202607107" style="zoom: 33%;" />
 
   在TCP协议中，ACK（Acknowledgment）控制位是 TCP 首部中的一个控制位，用于表示确认标志。ACK 控制位用于指示 TCP 报文段中是否携带确认号字段（ACK 字段）。
 
@@ -166,7 +166,7 @@ TCP/IP 除了与 OSI 在分层模块上的区别外，更重的要区别是：OS
 
   控制标志共 6 位，具体的标志位为 URG、ACK、PSH、RST、SYN、FIN，如下图所示：
 
-  <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302262035346.png" alt="image-20230226203546330" style="zoom:50%;" />
+  <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302262035346.png" alt="image-20230226203546330" style="zoom: 25%;" />
 
 - **窗口**
 
@@ -264,7 +264,7 @@ public class socketClient {
 
 TCP 连接建立时，双方需要经过三次握手，具体过程如下：
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302262147415.png" alt="image-20230226214720394" style="zoom:50%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302262147415.png" alt="image-20230226214720394" style="zoom: 33%;" />
 
 - **第一次握手**
 
@@ -314,7 +314,7 @@ Client 和 Server 完成了三次握手后，双方就进入数据传输阶段�
 
 在 TCP 连接开始断开的过程中，连接的每个端都能独立、主动地发起。具体过程如下：
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302262206022.png" alt="image-20230226220612008" style="zoom:50%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302262206022.png" alt="image-20230226220612008" style="zoom: 33%;" />
 
 - 第一次挥手
 
@@ -360,7 +360,7 @@ Client 和 Server 完成了三次握手后，双方就进入数据传输阶段�
 
 如果把三次握手改成两次握手可能发生**死锁**。例如如下的二次握手：
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302262228131.png" alt="image-20230226222814111" style="zoom:50%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302262228131.png" alt="image-20230226222814111" style="zoom: 33%;" />
 
 Client 给 Server 发送一个 SYN 请求帧，Server 收到后发送确认应答 SYN + ACK 帧。按照两次握手的协定，Server 认为连接已经成功的建立，可以开始发送数据帧。
 
@@ -465,7 +465,7 @@ tcp4       0      0  192.168.11.10.55593    172.217.175.110.443    TIME_WAIT
 
 `netstat`命令的选项如下：
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302262328614.png" alt="image-20230226232856598" style="zoom:50%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302262328614.png" alt="image-20230226232856598" style="zoom: 25%;" />
 
 一般情况下，可以使用`netstat -antp`指令查看 TCP 的连接信息，包含进程的 PID 和名称。在实际的连接状态查看过程中，会通过`while`循环查看服务端特定监听端口的所有 TCP 连接：
 

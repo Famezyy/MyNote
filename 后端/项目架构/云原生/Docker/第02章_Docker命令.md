@@ -209,7 +209,7 @@ Docker Registry 是官方提供的工具，可以用于构建私有镜像仓库�
   # 添加如下配置
   {
     "registry-mirrors": ["https://aa25jngu.mirror.aliyuncs.com"],
-    "insecure-registries": ["192.168.11.101:5000"]
+    "insecure-registries": ["{本机ip}:5000"]
   }
   ```
 
@@ -234,6 +234,54 @@ Docker Registry 是官方提供的工具，可以用于构建私有镜像仓库�
 > **配置高级仓库**
 >
 > https://yeasy.gitbook.io/docker_practice/repository/nexus3_registry
+
+### 2.9 部署Harbor镜像仓库
+
+- 下载Harbor
+
+  https://github.com/goharbor/harbor/releases
+
+  ```bash
+  wget https://github.com/goharbor/harbor/releases/download/v2.8.2-rc1/harbor-offline-installer-v2.8.2-rc1.tgz
+  # yum -y install lrzsc（后面失败的话再安装）
+  tar xvzf harbor-offline-installer-v2.8.2-rc1.tgz
+  ```
+
+- 安装 docker 和 [compose](第04章_Docker进阶.md#4.Docker-Compose容器编排)
+
+- 配置 Harbor
+
+  ```bash
+  cp harbor.yml.tmpl harbor.yml
+  vim harbor.yml
+  
+  hostname: ip地址
+  # 注释掉 https
+  ```
+
+- 启动 Harbor
+
+  ```bash
+  ./install.sh
+  ```
+
+- 登录
+
+  默认用户名 admin，密码 Harbor12345
+
+- 创建用户，创建项目，为项目添加用户
+
+- 上传镜像
+
+  ```bash
+  docker tag SOURCE_IMAGE[:TAG] 192.168.11.100:80/library/REPOSITORY[:TAG]
+  docker login 192.168.11.100:80
+  docker push 192.168.11.100:80/library/REPOSITORY[:TAG]
+  ```
+
+  > **注意**
+  >
+  > 需要开启 http 访问！
 
 ### 面试题：docker 虚悬镜像
 

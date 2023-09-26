@@ -82,27 +82,27 @@ mybatis-plus.configuration.log-impl=org.apache.ibatis.logging.stdout.StdOutImpl
 >       */
 >       @Component
 >       public class MyMetaObjectHandler implements MetaObjectHandler {
->             
+>                   
 >           // 插入时的填充策略
 >           @Override
 >           public void insertFill(MetaObject metaObject) {
 >               this.setFieldValByName("createTime", new Date(), metaObject);
 >               this.setFieldValByName("updateTime", new Date(), metaObject);
 >           }
->             
+>                   
 >           // 更新时的填充策略
 >           @Override
 >           public void updateFill(MetaObject metaObject) {
 >               this.setFieldValByName("updateTime", new Date(), metaObject);
 >           }
 >       }
->             
+>                   
 >       /**
 >       * 新版
 >       */
 >       @Component
 >       public class MyMetaObjectHandler implements MetaObjectHandler {
->             
+>                   
 >           @Override
 >           public void insertFill(MetaObject metaObject) {
 >               log.info("start insert fill ....");
@@ -112,7 +112,7 @@ mybatis-plus.configuration.log-impl=org.apache.ibatis.logging.stdout.StdOutImpl
 >               // 或者
 >               this.fillStrategy(metaObject, "createTime", LocalDateTime.now()); // 也可以使用(3.3.0 该方法有bug)
 >           }
->             
+>                   
 >           @Override
 >           public void updateFill(MetaObject metaObject) {
 >               log.info("start update fill ....");
@@ -160,7 +160,7 @@ mybatis-plus.configuration.log-impl=org.apache.ibatis.logging.stdout.StdOutImpl
 >          public OptimisticLockerInterceptor optimisticLockerInterceptor() {
 >              return new OptimisticLockerInterceptor();
 >          }
->           
+>                
 >          /**
 >           * 新版
 >           */
@@ -513,3 +513,4 @@ protected static List<String> getTables(String tables) {
     return "all".equals(tables) ? Collections.emptyList() : Arrays.asList(tables.split(","));
 }
 ```
+

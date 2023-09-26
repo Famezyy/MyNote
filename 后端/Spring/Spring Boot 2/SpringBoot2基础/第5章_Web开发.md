@@ -247,6 +247,7 @@ public class MyConverter implements HttpMessageConverter<Bservice> {
 方法2：不使用`@Component`注解，在`WebMvcConfigurer`添加
 
 ```java
+@Configuration
 public class MyMapperConfiguration implements WebMvcConfigurer {
 
     @Override
@@ -647,6 +648,178 @@ public class MyMapperConfiguration implements WebMvcConfigurer {
 ### 5.2 拦截器执行流程
 
 <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220621183514475-fd7e9ce762be13ab6a1c113b5d526fe3-47a1ee.png" alt="image-20220621183514475" style="zoom:80%;" />
+
+<img src="https://img-blog.csdnimg.cn/d27c00135d3d400e8166d90ac9cc2240.png" style="zoom: 50%;" >
+
+如果某个拦截器返回 false，`postHandle`方法都不会被执行，另外只有返回 true 的拦截器的`afterCompletion`方法才会执行。
+
+<img src="https://img-blog.csdnimg.cn/a50f3b4ae85e4a6b8e4d54405ad6701a.png" style="zoom:50%;" >
+
+### 5.3 源码
+
+一个请求打进来时，DispatcherServlet 中的 doDispatch 方法会进行拦截器的调用，如下代码注释部分：
+
+```java
+protected void doDispatch(HttpServletRequest request, HttpServletResponse response) throws Exception {
+    HttpServletRequest processedRequest = request;
+    HandlerExecutionChain mappedHandler = null;
+    boolean multipartRequestParsed = false;
+    WebAsyncManager asyncManager = WebAsyncUtils.getAsyncManager(request);
+
+    try {
+        try {
+            ModelAndView mv = null;
+            Object dispatchException = null;
+
+            try {
+                processedRequest = this.checkMultipart(request);
+                multipartRequestParsed = processedRequest != request;
+                mappedHandler = this.getHandler(processedRequest);
+                if (mappedHandler == null) {
+                    this.noHandlerFound(processedRequest, response);
+                    return;
+                }
+
+                HandlerAdapter ha = this.getHandlerAdapter(mappedHandler.getHandler());
+                String method = request.getMethod();
+                boolean isGet = "GET".equals(method);
+                if (isGet || "HEAD".equals(method)) {
+                    long lastModified = ha.getLastModified(request, mappedHandler.getHandler());
+                    if ((new ServletWebRequest(request, response)).checkNotModified(lastModified) && isGet) {
+                        return;
+                    }
+                }
+                // 执行拦截器的全部 preHandle 方法
+                if (!mappedHandler.applyPreHandle(processedRequest, response)) {
+                    return;
+                }
+
+                mv = ha.handle(processedRequest, response, mappedHandler.getHandler());
+                if (asyncManager.isConcurrentHandlingStarted()) {
+                    return;
+                }
+
+                this.applyDefaultViewName(processedRequest, mv);
+                // 执行拦截器的全部 postHandle 方法
+                mappedHandler.applyPostHandle(processedRequest, response, mv);
+            } catch (Exception var20) {
+                dispatchException = var20;
+            } catch (Throwable var21) {
+                dispatchException = new NestedServletException("Handler dispatch failed", var21);
+            }
+
+            // 执行拦截器的全部 afterCompletion 方法
+            this.processDispatchResult(processedRequest, response, mappedHandler, mv, (Exception)dispatchException);
+        } catch (Exception var22) {
+            // 异常后，执行拦截器的全部 afterCompletion 方法
+            this.triggerAfterCompletion(processedRequest, response, mappedHandler, var22);
+        } catch (Throwable var23) {
+            // 异常后，执行拦截器的全部 afterCompletion 方法
+            this.triggerAfterCompletion(processedRequest, response, mappedHandler, new NestedServletException("Handler processing failed", var23));
+        }
+
+    } finally {
+        if (asyncManager.isConcurrentHandlingStarted()) {
+            if (mappedHandler != null) {
+mappedHandler.applyAfterConcurrentHandlingStarted(processedRequest, response);
+            }
+        } else if (multipartRequestParsed) {
+            this.cleanupMultipart(processedRequest);
+        }
+    }
+}
+```
+
+在`mappedHandler.applyPreHandle()`方法中，通过`HandlerInterceptor[] interceptors = this.getInterceptors()`依序获得`registry.addInterceptor()`中加入的拦截器，for 循环正序执行拦截器逻辑：
+
+```java
+boolean applyPreHandle(HttpServletRequest request, HttpServletResponse response) throws Exception {
+    HandlerInterceptor[] interceptors = this.getInterceptors();
+    if (!ObjectUtils.isEmpty(interceptors)) {
+        for(int i = 0; i < interceptors.length; this.interceptorIndex = i++) {
+            HandlerInterceptor interceptor = interceptors[i];
+            if (!interceptor.preHandle(request, response, this.handler)) {
+                this.triggerAfterCompletion(request, response, (Exception)null);
+                return false;
+            }
+        }
+    }
+    return true;
+}
+```
+
+而在`mappedHandler.applyPostHandle()`方法中，同样是通过`HandlerInterceptor[] interceptors = this.getInterceptors()`依序获得`registry.addInterceptor()`中加入的拦截器，不过在 for 循环中是倒序执行逻辑：
+```java
+void applyPostHandle(HttpServletRequest request, HttpServletResponse response, @Nullable ModelAndView mv) throws Exception {
+    HandlerInterceptor[] interceptors = this.getInterceptors();
+    if (!ObjectUtils.isEmpty(interceptors)) {
+        for(int i = interceptors.length - 1; i >= 0; --i) {
+            HandlerInterceptor interceptor = interceptors[i];
+            interceptor.postHandle(request, response, this.handler, mv);
+        }
+    }
+}
+```
+
+最后看一下`mappedHandler.triggerAfterCompletion()`方法，同样 for 循环里是倒序执行逻辑：
+
+```java
+void triggerAfterCompletion(HttpServletRequest request, HttpServletResponse response, @Nullable Exception ex) throws Exception {
+    HandlerInterceptor[] interceptors = this.getInterceptors();
+    if (!ObjectUtils.isEmpty(interceptors)) {
+        for(int i = this.interceptorIndex; i >= 0; --i) {
+            HandlerInterceptor interceptor = interceptors[i];
+
+            try {
+                interceptor.afterCompletion(request, response, this.handler, ex);
+            } catch (Throwable var8) {
+                logger.error("HandlerInterceptor.afterCompletion threw exception", var8);
+            }
+        }
+    }
+}
+```
+
+上面的拦截器都是按照我们配置中的顺序执行，那如果我们想要自定义顺序该怎么办呢，`InterceptorRegistry`类的`addInterceptor`和`getInterceptors`方法源码如下，我们可以看到`addInterceptor`是将拦截器加入 list 集合，在`getInterceptors`方法中`this.registrations.stream().sorted(INTERCEPTOR_ORDER_COMPARATOR)`，拦截器 list 集合按照 order 升序排序，默认 order 为 0，可以在配置中用`.order(int order)`设置顺序。
+
+```java
+public class InterceptorRegistry {
+    private final List<InterceptorRegistration> registrations = new ArrayList();
+    private static final Comparator<Object> INTERCEPTOR_ORDER_COMPARATOR;
+ 
+    public InterceptorRegistry() {
+    }
+ 
+    public InterceptorRegistration addInterceptor(HandlerInterceptor interceptor) {
+        InterceptorRegistration registration = new InterceptorRegistration(interceptor);
+        this.registrations.add(registration);
+        return registration;
+    }
+ 
+    public InterceptorRegistration addWebRequestInterceptor(WebRequestInterceptor interceptor) {
+        WebRequestHandlerInterceptorAdapter adapted = new WebRequestHandlerInterceptorAdapter(interceptor);
+        InterceptorRegistration registration = new InterceptorRegistration(adapted);
+        this.registrations.add(registration);
+        return registration;
+    }
+ 
+    protected List<Object> getInterceptors() {
+        return (List)this.registrations.stream().sorted(INTERCEPTOR_ORDER_COMPARATOR).map(InterceptorRegistration::getInterceptor).collect(Collectors.toList());
+    }
+ 
+    static {
+        INTERCEPTOR_ORDER_COMPARATOR = OrderComparator.INSTANCE.withSourceProvider((object) -> {
+            if (object instanceof InterceptorRegistration) {
+                InterceptorRegistration var10000 = (InterceptorRegistration)object;
+                ((InterceptorRegistration)object).getClass();
+                return var10000::getOrder;
+            } else {
+                return null;
+            }
+        });
+    }
+}
+```
 
 > **拦截器与过滤器区别**
 >

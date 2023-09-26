@@ -228,9 +228,9 @@ class AspectJAutoProxyRegistrar implements ImportBeanDefinitionRegistrar {
 
 Spring 提供了`ProxyFactoryBean`类用于手动创建代理对象，并将该代理对象做为目标对象的 AOP 代理。
 
-两个重要属性（声明式 AOP 中在`EnableAspectJAutoProxy`设置，默认均为 false）
+两个重要属性（声明式 AOP 中在`EnableAspectJAutoProxy`设置，或者在配置文件中使用`spring.aop.proxy-target-class=true`，默认均为 false）
 
-- `proxyTargetClass`：设置为 true 时使用 CGLIB 创建代理，如果未设置该属性，则当墓表类实现了接口则使用 JDK 创建代理，否则使用 CGLIB 创建代理
+- `proxyTargetClass`：设置为 true 时使用 CGLIB 创建代理，如果未设置该属性，则当目表类实现了接口则使用 JDK 创建代理，否则使用 CGLIB 创建代理
 - `exposeProxy`：是否将当前代理暴露给`ThreadLocal`，设置为 true 时可以使用`AopContext.currentProxy()`获取代理对象
 
 创建前置通知
