@@ -1413,6 +1413,10 @@ Spring Cloud openfeign 是对 Feign 进行的增强，支持 Spring MVC 的原�
       // 指定调用的远程方法
       @GetMapping("/reduct")
       String reduct();
+      
+      // 传参时一定要加上@RequestParam
+      @GetMapping("/reduct")
+      String reduct(@RequestParam("productId") Integer productId);
   }
   ```
 

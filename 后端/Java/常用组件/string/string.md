@@ -21,6 +21,33 @@
   System.out.println(sj); // [A,B,C,D]
   ```
 
+### 创建了几个对象
+
+- ```java
+  String str = new String("abc");
+  ```
+
+  常量池中有`abc`则只会在堆中创建 1 个`String`对象；否则会创建 2 个对象。
+
+- ```java
+  String str = "abc" + "def";
+  // and
+  final str1 = "abc";
+  String str = str1 + "def";
+  ```
+
+  都会在编译期被优化为`String str = "abcdef"`，如果常量池中不存在则会在常量池中创建 1 个对象；否则不会创建对象。
+
+- ```java
+  String str = "abc" + new String("def");
+  ```
+
+  创建 5 个对象：常量池中的`abc`、`def`和堆中的`StringBuilder`、`String(def)`、`String(abcdef)`。
+
+  > **tip**
+  >
+  > `StringBuilder.toString()`只会在堆中创建一个 String 对象，不会在常量池创建。
+
 ## String底层数组结构
 
 在`JAVA8`及以前是`char数组`，因为英文只占一个字节，用`char数组`太浪费空间了，所以`JAVA9`之后改为`byte数组`。

@@ -47,3 +47,25 @@ public RestTemplate restTemplate(RestTemplateBuilder builder) {
 }
 ```
 
+### postForObject
+
+```java
+Map<String, Integer> map = new HashMap<>();
+map.put("productId", order.getProductId());
+String s = restTemplate.postForObject("http://localhost:8081/stock?productId={productId}", null, String.class, map);
+```
+
+## 实现SSL访问
+
+```java
+KeyStore keyStore = KeyStore.getInstance("jks");
+FileInputStream inStream = new FileInputStream(new File("证书地址"));
+keyStore.load(inStream, "password".toCharArray());
+TrustManagerFactory tmf = TrustManagerFactory.getInstance("sunx509");
+tmf.init(keyStore);
+SSLContext context = SSLContext.getInstance("TLS");
+context.init(null, tmf.getTrustManagers(), null);
+SSLConnectionSlcketFactory factory = new SSLConnectionSocketFactory(context, new DefaultHostnameVerifier());
+restTemplate.setRequestFactory(new HttpComponentsClientHttpRequestFactory(HttpClientBuilder.create().setSSLSocketFactory(factory).build()));
+```
+

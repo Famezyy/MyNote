@@ -72,7 +72,7 @@ public String cookies(HttpServletResponse response){
 
 ## Session
 
-> Cookie 是存储在**客户端**方，Session 是存储在**服务端**方，底层是一个 ConcurrentMap，用来识别每个用户，客户端只存储`SessionId`
+> Cookie 是存储在**客户端**方，用作传输`SessionId`的媒介，Session 是存储在**服务端**方，底层是一个 ConcurrentMap，用来识别每个用户，客户端只存储`SessionId`
 
 在上面我们了解了什么是`Cookie`，既然浏览器已经通过`Cookie`实现了有状态这一需求，那么为什么又来了一个`Session`呢？这里我们想象一下，如果将账户的一些信息都存入`Cookie`中的话，一旦信息被拦截，那么我们所有的账户信息都会丢失掉。所以就出现了`Session`，在一次会话中将重要信息保存在`Session`中，浏览器只记录`SessionId`一个`SessionId`对应一次会话请求。
 
@@ -165,8 +165,6 @@ protected Map<String, Session> sessions = new ConcurrentHashMap<>();
 `Session`是将要验证的信息存储在服务端，并以`SessionId`和数据进行对应，`SessionId`由客户端存储，在请求时将`SessionId`也带过去，因此实现了状态的对应。而`Token`是在服务端将用户信息经过 Base64Url 编码过后传给在客户端，每次用户请求的时候都会带上这一段信息，因此服务端拿到此信息进行解密后就知道此用户是谁了，这个方法叫做`JWT(Json Web Token)`。
 
 <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202309261454576.png" alt="image-20220515173023151" style="zoom: 80%;" />
-
-> `Token`相比较于`Session`的优点在于，当后端系统有多台时，由于是**客户端访问时直接带着数据**，因此无需做共享数据的操作。
 
 ### Token的优点 
 
@@ -280,7 +278,7 @@ eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJzdWJqZWN0IiwiaXNzIjoiaXNzdWVyIiwibmFtZSI6InhpYW9
 
 相信大家看到这应该对`Cookie`、`Session`、`Token`有一定的了解了，接下来再回顾一下重要的知识点
 
-- Cookie 是存储在客户端的
+- Cookie 是 HTTP 的一个专用头部字段，存储在客户端（不支持移动端），有跨站伪造攻击的风险，不支持跨域访问
 - Session 是存储在服务端的，可以理解为一个状态列表。拥有一个唯一会话标识`SessionId`。可以根据`SessionId`在服务端查询到存储的信息
 - Session 会引发一个问题，即后端多台机器时 Session 共享的问题，解决方案可以使用 Spring 提供的框架
-- Token 类似一个令牌，无状态的，服务端所需的信息被 Base64 编码后放到 Token 中，服务器可以直接解码出其中的数据
+- Token 类似一个令牌，相当于临时密码，存储在 HTTP 头部中，无状态，支持跨域访问，服务端所需的信息被 Base64 编码后放到 Token 中，服务器可以直接解码出其中的数据

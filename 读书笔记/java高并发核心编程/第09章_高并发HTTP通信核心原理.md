@@ -12,7 +12,7 @@ HTTP 是应用层协议，是建立在传输层 TCP 基础之上。在通信过�
 
    一个简单的传统 Nginx + Tomcat 架构如下图所示
 
-   <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302252309328.png" alt="image-20230225230948315" style="zoom: 33%;" />
+   <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302252309328.png" alt="image-20230225230948315" style="zoom: 25%;" />
 
    该架构可以通过 Web 服务器的横向扩展甚至反向代理的分层扩展提高系统并发的能力。
 
@@ -22,13 +22,13 @@ HTTP 是应用层协议，是建立在传输层 TCP 基础之上。在通信过�
 
    一个经典的分布式微服务应用架构如下图所示
 
-   <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302252312921.png" alt="image-20230225231209907" style="zoom:50%;" />
+   <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302252312921.png" alt="image-20230225231209907" style="zoom: 25%;" />
 
    在使用 Nginx + Spring Cloud 微服务架构的应用中，外部接入网关 Nginx 和 内部网关 Zuul（或 Spring Cloud Gateway）之间，以及内部网关与微服务 Provider 实例之间，都存在着 HTTP 请求的反向代理（或者请求转发）的关系，所以要求这些 HTTP 连接传输层的通道具备可复用的能力，以提升效应效率和高并发能力。
 
 3. **分布式微服务 Provider 实例与实例之间 RPC 远程调用的 HTTP 高并发通信**
 
-   <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302252317360.png" alt="image-20230225231703343" style="zoom:50%;" />
+   <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302252317360.png" alt="image-20230225231703343" style="zoom: 25%;" />
 
    在微服务架构中，微服务 Provider 实例之间的 RPC 也是通过 HTTP 完成的，因此要求连接通道具备可复用的能力，以提升效应效率和高并发能力。
 
@@ -48,7 +48,7 @@ TCP/IP 包含了一系列协议，也叫做 TCP/IP 协议族（TCP/IP Protocol S
 
 OSI 模型定义了网络互联的七层框架（物理层、数据链路层、网络层、传输层、会话层、表示层、应用层）每一层实现各自的功能和协议，并完成与相邻层的接口通信。OSI 模型各层的通信协议大致如下：
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302252328349.png" alt="image-20230225232824335" style="zoom: 33%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302252328349.png" alt="image-20230225232824335" style="zoom: 25%;" />
 
 TCP/IP 协议是互联网最基本的协议，在一定程度上参考了七层 ISO 模型，在 TCP/IP 协议中七层被简化为四个层次。TCP/IP 协议与七层 ISO 模型的对应关系大致如下：
 
@@ -87,11 +87,11 @@ UDP 是一个无连接的数据报协议，是一个“尽力传递”和“不�
 
 以一个 HTTP 请求的传输为例，请求从 HTTP 客户端和 HTTP 服务端应用的传输过程大致如下：
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302252351736.png" alt="image-20230225235129721" style="zoom: 33%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302252351736.png" alt="image-20230225235129721" style="zoom: 25%;" />
 
 在发送数据的时候需要对数据进行封装，在数据封装时，数据经过每个层都会打上该层特定标识，添加上头部，在接收端每通过一层就删除该层的头部，TCP/IP 协议的数据分装过程大致如下：
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302252352724.png" alt="image-20230225235258707" style="zoom: 33%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302252352724.png" alt="image-20230225235258707" style="zoom: 25%;" />
 
 在传输层封装时，添加的报文首部要存入一个应用程序的标识符，无论是 TCP 还是 UDP 都用一个 16 位的**端口号**来表示不同的应用程序，并且都会将原端口和目的端口存入报文首部中。
 
@@ -105,7 +105,7 @@ TCP/IP 除了与 OSI 在分层模块上的区别外，更重的要区别是：OS
 
 实际上，在传输过程中，数据报文会在不同的物理网络之间传递。以一个 HTTP 请求的传输为例：
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302260012615.png" alt="image-20230226001222601" style="zoom: 33%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302260012615.png" alt="image-20230226001222601" style="zoom: 25%;" />
 
 在不同物理网络之间的传输过程中，网络层会通过路由器对不同网络之间的数据包进行存储、分组转发处理。路由器是一种特殊的用于网络互联的硬件盒，作用是为不同类型的物理网络提供连接：以太网、令牌环网、点对点的链接和 FDDI（光纤分布式数据接口）等。
 
@@ -117,7 +117,7 @@ TCP/IP 除了与 OSI 在分层模块上的区别外，更重的要区别是：OS
 
 传输层 TCP 提供了一种面向连接的、可靠的字节流服务，其数据帧格式大致如下：
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302262008273.png" alt="image-20230226200809257" style="zoom: 33%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302262008273.png" alt="image-20230226200809257" style="zoom: 25%;" />
 
 - **源端口号**
 
@@ -146,7 +146,7 @@ TCP/IP 除了与 OSI 在分层模块上的区别外，更重的要区别是：OS
 
   如果发送端发送 3 个净荷为 1000B，起始 SN 序号为 1 的数据包给服务端，服务端每收到一个包之后，需要回复一个 ACK 响应确认数据包给客户端。ACK 响应数据包的 ACK Number 值为“每个客户端包的 SN + 包净荷”。除了表示服务端已经确认收到的字节数，还表示期望接受到的下一个客户端发送包的 SN 序号。
 
-  <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302262026125.png" alt="image-20230226202607107" style="zoom: 33%;" />
+  <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302262026125.png" alt="image-20230226202607107" style="zoom: 25%;" />
 
   在TCP协议中，ACK（Acknowledgment）控制位是 TCP 首部中的一个控制位，用于表示确认标志。ACK 控制位用于指示 TCP 报文段中是否携带确认号字段（ACK 字段）。
 
@@ -477,10 +477,776 @@ while [ 1 -eq 1 ] ; do netstat -antp | grep 18899 ; sleep 2; echo --; done
 
 HTTP 属于 TCP/IP 模型中的应用层协议，HTTP 长连接和 HTTP 短连接指的是传输层的 TCP 连接是否被多次使用。
 
+一般来说，用户通过浏览器输入 URL 后按回车键，浏览器会通过 DNS 解析域名得到服务器的 IP 地址，然后通过解析出来的 IP 和 URL 中的端口发起建立 TCP 连接请求，通过三次握手之后建立 TCP 连接。
+
 ### 3.1 HTTP长连接与短连接
+
+#### 1.短连接
+
+默认情况下，在 HTTP 的 1.0 版本协议中，HTTP 在每次请求结束后都会释放 TCP 连接，因此 HTTP 连接是一种"短连接"。客户端与服务端通过 HTTP 短连接的交互过程如下图所示。
+
+<img src="img/HTTP短连接.png" style="zoom:50%;" />
+
+在短连接通信场景下，要保持客户端程序的在线状态，客户端需要不断地向服务器发起连接请求。通常的做法是即使不需要获得任何数据，客户端也保持每隔一段固定的时间向服务器发送一次"保持连接"的请求，客户端在受到该请求后对客户端进行回复，表明知道客户端"在线"。若服务器长时间无法收到客户端的请求，则认为客户端"下线"，若客户端长时间无法收到服务器的回复，则认为网络已经断开。
+
+在高并发场景使用 HTTP "短连接"通信会出现两个问题：
+
+1. 性能较差：传输层的 TCP 连接不会复用，每一次请求都需要建立和拆除一次 TCP 连接，也就是每次请求均需要 TCP 三次握手建立连接，四次挥手关闭连接，性能较差。
+2. 很容易出现端口被占满：在主动断开方，系统会出现大量的`TIME_WAIT`状态的 TCP 连接，只有等 2MSL 后 TCP 连接才会关闭。在高并发场景中，如果服务器主动断开连接，则很容易发生端口耗尽。当然如果连接被设置了`SO_RESUSEADDR`特性，则其端口可能被其他连接复用。尽管如此还是会存在不少的约束条件影响到端口复用。
+
+#### 2.长连接
+
+HTTP 长连接也叫 HTTP 持久连接，指的是 TCP 连接建立后该传输层连接不再进行释放，供应用层反复使用。客户端与服务端通过 HTTP 长连接的交互过程如下图所示。
+
+<img src="img/HTTP长连接.png" style="zoom: 33%;" />
+
+HTTP 长连接的特点是：
+
+1. 性能较高，不需要重复建立 TCP 连接或者关闭 TCP 连接。
+2. TCP 数据传输连接基本上不会出现`CLOSE_WAIT`和`TIME_WAIT`的问题，系统资源的使用效率大大提升。
+
+HTTP 长连接的缺点是：一般需要一个连接池对可供复用的 TCP 长连接进行管理和监测。常见的数据库连接池、HTTP 连接池本质上都属于 TCP 连接池。
 
 ### 3.2 不同HTTP版本中的长连接
 
+#### 1.HTTP/1.0版本
+
+从 1996 年开始，很多 HTTP/1.0 浏览器与服务器都对 HTTP 协议进行了扩展，那就是`Keep-Alive`扩展协议，该扩展作为 HTTP/1.0 版本的补充"实验型持久连接"协议出现，在 HTTP/1.0 协议基础上增加一些选项，从而实现 HTTP 长连接的建立和使用。
+
+在`Keep-Alive`扩展中，如果客户端在首部加上`Connection:Keep-Alive`请求头，表示请求服务端将传输层 TCP 连接保持在打开状态；如果服务端同意将这条 TCP 连接保持在打开状态，就会在 HTTP 相应中包含同样的首部；如果 HTTP 响应中没有包含该首部，则客户端会认为服务端不支持`Keep-Alive`扩展协议，会在发送完响应报文之后关闭当前的 TCP 连接。如果客户端和服务端都支持`Keep-Aive`扩展协议，则双方可以使用 HTTP 长连接，实现 TCP 连接的复用。
+
+包含`Keep_Alive`扩展头的 HTTP 报文首部如下图所示：
+
+<img src="img/Keep-Aive头部.png" style="zoom: 25%;" >
+
+但是 HTTP/1.0 的 Keep-Alive 扩展协议存在一些问题：
+
+1. 该扩展不是标准协议，客户端必须发送`Connection:Keep-Alive`请求头，请求服务端将传输层 TCP 连接保持在打开状态；如果没有发送该请求头，则服务端回复后会将 TCP 连接关闭。
+2. 处于客户端和服务器数据链路中间的反向代理服务器可能无法支持`Keep-Alive`扩展协议，导致无法使用 HTTP 长连接。
+
+请注意不要将 HTTP/1.0 协议的`Keep-Alive`和 TCP 协议的`Keepalive`概念搞混。HTTP/1.0 协议的`Keep-Alive`是一个 HTTP 连接复用的扩展协议，属于应用层的协议内容；而`Keepalive`是 Socket 连接的一个可选项，主要用于 Socket 连接的保活，在新建 Socket 的时候可以设置`SO_KEEPALIVE`套接字可选项，打开保活机制。`SO_KEEPALIVE`套接字保活可选项主要有三个参数：
+
+1. `tcp_keepalive_time`：最后一次数据交换到 TCP 发送第一个保活探测报文的时间，即允许连接空闲的时间，单位为秒，默认 7200 秒。
+2. `tcp_keepalive-probes`：发送 TCP 保活探测数据包的最大数量，默认是 9，即如果发送 9 个保活探测包后对端仍然没有响应，便发送 RST 关闭连接。
+3. `tcp_keepalive_intvl`：发送两个 TCP 保活探测数据包的间隔时间，默认 75 秒。
+
+`SO_KEEPALIVE`只是 TCP 连接的一个可选项，其参数配置可能会引起一些问题，所以该选项默认是关闭的。TCP 连接的保活也可以通过应用程序自己完成，类似的如 Netty 中保活报文和空闲监测机制。
+
+#### 2.HTTP/1.1版本
+
+HTTP/1.1 标准协议并没有使用 HTTP/1.0 的`Keep-Alive`扩展协议，而是定义了自己的连接复用方案。
+
+HTTP/1.1 默认使用长连接而不是短连接，除非显示关闭 TCP 连接。如果要显示关闭连接，需要在 HTTP 报文首部加上`Connection:Close`请求头，也就是说 HTTP/1.1 协议中，默认情况下所有的 TCP 连接都可以进行复用。
+
+不发送`Collection:Close`请求头并不意味着服务器承诺 TCP 连接永远保持打开，空闲的 TCP 连接也可以被客户端和服务端关闭。
+
 ## 4.服务端HTTP长连接技术
 
-## 5.客户端HTTP长连接结束与实验
+本节介绍主流的反向代理服务器 Nginx 和应用服务器 Tomcat 的服务端长连接配置。
+
+### 4.1 Tomcat长连接配置
+
+生产环境所用的 Java 应用服务器有多种如 Tomcat、JBoss、Jetty 等。无论哪一种服务器，其 HTTP 长连接配置的原理都是类似的，这里以 Tomcat 为例进行配置介绍。
+
+默认情况下 Tomcat 时使用长连接的，服务端 Tomcat 的长连接配置主要分为**独立部署场景**和**内嵌部署场景**两种。
+
+#### 1.独立部署Tomcat配置
+
+在改 Tomcat 配置文件中修改**Connector（连接器）**的配置。一个使用 HTTP 长连接的 Connector 连接器的配置示例大致如下（Tomcat 8.0 或以上）：
+
+```xml
+<Connector port="8080" redirectPort="8443"
+  protocol="org.apache.coyote.http11.Http11NioProtocol"
+  connectionTimeout="20000"
+  URIEncoding="UTF-8"
+  keepAliveTimeout="15000"
+  maxKeepAliveRequests="-1"
+  maxConnections="3000"
+  maxThreads="1000"
+  maxIdleTime="300000"
+  minSpareThreads="200"
+  acceptCount="100"
+  enableLookups="false"
+  />
+```
+
+1. `keepAliveTimeout`
+   
+   此选项为 TCP 连接保持时长，单位为毫秒，表示在下次请求过来之前该连接将被 Tomcat 保持多久。即一个不活跃的连接保持的最大时间。设置为 0 时会禁用 HTTP 长连接。
+
+2. `maxKeepAliveRequests`
+   
+   此选项表示一个长连接最大支持的请求数。超过该请求数的连接将被关闭，关闭的时候 Tomcat 会返回一个带`Connection:close`响应头的消息。
+   
+   当`maxKeepAliveRequests`的值为 -1 时，表示没有最大请求数的限制；为 1 时表示只允许发送一次请求，即禁用 HTTP 长连接。
+
+3. `maxConnections`
+   
+   Tomcat 在任意时刻能接收和处理的最大连接数。如果被设置为 -1 则表示连接数不受限制。
+   
+   由于 Linux 的内核默认限制了单进程最大打开文件句柄数 1024， 因此如果此配置项的值超过 1024，则响应的需要对 Linux 系统的单进程最大打开文件句柄数进行修改。
+   
+   使用长连接意味着一个 TCP 连接在当前请求结束后如果没有新的请求到来，Socket 连接不会立马释放，而是等`keepAliveTimeout`到期后才释放，如果一个高负载的 Tomcat 服务器建立很多长连接，就讲无法继续建立新的连接，无法为新的客户端提供服务。实际使用时需要根据具体的负载配置合适的`keepAliveTimeout`和`maxKeepAliveRequests`。
+
+#### 2.内嵌部署Tomcat配置
+
+对于 SpringBoot 内嵌 Tomcat，其长连接配置可以通过一个自动配置类完成。在自动配置类中，可以配置一个`TomcatServletWebServerFactory`容器工厂 Bean 实例，SpringBoot 将通过该工厂实例在运行时获取内嵌式 Tomcat 容器实例。在容器工厂配置代码中，可以对 Tomcat 的`Connector`的三个长连接相关属性进行具体的配置。
+
+```java
+@Configuration
+@ConditionalOnClass({Connector.class})
+public class TomcatConfig {
+    
+    @Bean
+    public TomcatServletWebServerFactory createEmbeddedServletContainerFactory() {
+        TomcatServletWebServerFactory tomcatFactory = new TomcatServletWebServerFactory();
+        // 增加连接器的定制配置
+        tomcatFactory.addConnectorCustomizers( connector -> {
+            Http11NioProtocol protocol = (Http11NioProtocol) connector.getProtocolHandler();
+            // 定制 keepAliveTimeout，确定下此请求过来之前 Socket 连接保持多久
+            // 设置 600 秒内没有请求则服务端自动断开 Socket 连接
+            protocol.setKeepAliveTimeout(600000);
+            // 当客户端发送的请求超过 10000 个时强制关闭 Socket 连接
+            protocol.setMaxKeepAliveRequests(1000);
+            // 设置最大连接数
+            protocol.setMaxConnections(3000);
+        });
+        return tomcatFactory;
+    }
+    
+}
+```
+
+### 4.2 Nginx长连接配置
+
+Nginx 承担的两种角色如下图所示。
+
+<img src="img/Nginx扮演的角色.png" style="zoom: 50%;">
+
+Nginx 承担服务端角色时的长连接，主要通过`keepalive_timeout`和`keepalive-requests`两个指令完成相关设置。一个简单的 Nginx 承担服务端角色时的长连接配置如下：
+
+```bash
+http {
+  include mime.types;
+  default_type application/octet-stream;
+
+  # 长连接保持时长
+  keepalive_timeout 65s;
+  # 长连接最大处理请求数
+  keepalive_requests 1000;
+
+  server {
+    listen 80;
+    server_name openresty localhost;
+    # 长连接保持时长
+    keepalive_timeout 10s;
+    # 长连接最大处理请求数
+    keepalive_requests 10;
+
+    location / {
+      root html;
+      index index.html index.htm;
+    }
+  }
+}
+```
+
+对于其中涉及的两个长连接相关指令介绍如下：
+
+1. `keepalive_requests`
+   
+   此指令设置同一个长连接可以处理的最大请求数，请求数超过此值时长连接将关闭，格式如下：
+
+   ```bash
+    语法：keepalive_requests number
+    默认值：keepalive_requests 100
+    上下文：http、server、location
+   ```
+
+   一个长连接建立之后，Nginx 就会为这个连接设置一个计数器，记录这个长连接上已经接收并处理的客户端请求的数量。如果达到这个参数设置的最大值，则 Nginx 会强行关闭这个长连接。
+
+2. `keepalive_timeout`
+   
+   此指令用于设置长连接的空闲保持时长，表示在下次请求过来之前该连接将被 Nginx 保持多久。在 keepalive_timeout 时间范围内，假如客户端不断有新的请求过来，则该连接将一直被保持。格式如下：
+
+   ```bash
+    语法：keepalive_timeout timeout [header_timeout];
+    默认值：keepalive_timeout 60s
+    上下文：http、server、location
+   ```
+
+   设置为 0 时表示禁用 HTTP 长连接，对于一些并发量较高的内部服务器通信场景，可以设置为 120 秒甚至 300 秒。
+
+   `keepalive_timeout`第二个参数是一个可选参数，作用是为 HTTP 响应报文增加一个`Keep-Alive: timeout=time`头部选项，用于告知客户端长连接的保持时间，通常不用设置。该响应头可以被 Mozilla 浏览器识别和处理，Mozilla 浏览器会在 timeout 空闲时间之后关闭 TCP 长连接；MSIE 浏览器则在大约 60 秒后关闭长连接。
+
+### 4.3 服务端长连接设置的注意事项
+
+在进行服务端长连接设置时，`keepalive_timeout`和`keepalive_requests`的值需要根据具体场景而定。
+
+#### 1.单个客户端请求数较少时
+
+假设客户端是普通用户，客户端是网页浏览器，当用户通过浏览器在访问服务端时，其单个用户的请求数是比较有限的，1 分钟之内发出的请求数最多在百位数左右。这种场景下，如果 Nginx 的服务端长连接设置如下：
+
+```bash
+# 长连接保持时长
+keepalive_timeout 65s;
+# 长连接最大处理请求数
+keepalive_requests 1000;
+```
+
+则会导致大量的长连接由于请求数达不到 1000 而一直空闲等待，需要等到 65 秒结束之后才被关闭，造成服务器资源的浪费。所以，需要减少长连接最大处理请求数和长连接保持时长，优化如下：
+
+```bash
+# 长连接保持时长
+keepalive_timeout 10s;
+# 长连接最大处理请求数
+keepalive_requests 100;
+```
+
+如果配置的比较极端，将长连接最大处理请求数减小得太多，就可能导致其他问题。比如将长连接最大处理请求数减到 10，则当 QPS=10000 时，假定一共有 100 个用户，当个客户端每秒发出 100 个请求。由于以上配置中每个连接只能最多处理 10 次请求，因此单个客户端每秒发出 100 个请求相当于每个用户需要 10 个连接，这意味着平均每秒钟就会有 1000 个长连接被 Nginx 主动关闭，会导致服务端 Nginx 有大量的 TIME_WAIT 的 Socket 连接。
+
+因此，`keepalive_requests`的值与单客户端在`keepalive_timeout`时间范围的实际请求数量要做到基本匹配。
+
+#### 2.单个客户端请求数较多时
+
+假设客户端不是普通用户，而是下游的代理服务器，在这种场景下，客户端数量是很少的，而单个客户端与服务器之间的请求数是非常多的。
+
+这种场景的设置比较简单，可以尽可能地对长连接进行复用，`keepalive_requests`值可以设置偏大，实例如下：
+
+```bash
+# 长连接保持时长
+keepalive_timeout 65s;
+# 长连接最大处理请求数
+keepalive_requests 100000;
+```
+
+在此场景中，选项`keepalive_timeout`可以配置一个较大的值。但是对于 Nginx 来说，不能不对单个连接的处理请求数做限制，必须定期关闭连接，才能释放每个连接所分配的内存。
+
+在Web服务器中，每个客户端连接通常会分配一些内存来存储与该连接相关的信息，如请求头、请求体等。如果一个连接一直保持打开状态并不断处理请求，这些内存资源可能会积累，最终导致服务器资源耗尽。
+
+## 5.客户端HTTP长连接技术原理与实验
+
+使用 HTTP 长连接通信还需要客户端配合，例如：
+
+1. Java 内置的`HttpURLConnection`的 HTTP 短连接通信编程技术
+2. 第三方开源 HTTP 长连接通信编程技术，如 Apache HttpClient 客户端
+3. 反向代理在承担客户端角色访问上游 RS（真实服务器）时的 HTTP 长连接配置技术
+
+### 5.1 HttpURLConnection短连接技术
+
+客户端通过 Java 内置的`HttpURLConnection `短连接访问远程服务的流程如下图所示。
+
+<img src="img/Java HTTP连接.png" style="zoom: 33%;" >
+
+1. 创建 URL 实例
+   
+   ```java
+    URL restServiceURL = new URL(url);
+   ```
+
+2. 打开`HttpURLConnection`连接实例
+   
+   ```java
+    HttpURLConnection httpConnection = restServiceURL.openConnection();
+   ```
+3. 设置请求头
+   
+   HTTP 请求头允许一个 Key 带多个用逗号分开的 Value，但是`HttpURLConnection`只提供了单个键值对的操作：
+
+   ```java
+   // 重置请求头的 key-value
+   setRequestProperty(key, value);
+   // 新增请求头的 key-value
+   addRequestProperty(key, value);
+   `
+4. 建立连接，发送请求
+   
+   ```java
+   httpConnection.connect();
+   ```
+
+   如果需要发送请求体（Request Body）则需要获取其输出流`outputStream`，并通过该流写入要发送的数据。
+
+   ```java
+   OutputStream outputStream = httpConnection.getOutputStream();
+   ```
+
+   如果调用了`getOutputStream()`方法，就会隐含地调用`connect()`方法，所以在开发中如果获取了输出流，就可以不用显式地调用`connect()`方法。
+
+5. 读取响应码和响应内容
+   
+   请求发送成功之后即可获取响应的状态码，如果返回成功就可以读取响应中的返回数据。获取这些返回数据的方法如下：
+
+   ```java
+   // 获取响应内容
+   getContent();
+   // 获取响应头
+   getHeaderField();
+   // 获取输入流
+   getInputStream();
+   ```
+
+6. 关闭连接
+   
+   每一个`HttpURLConnection`请求结束之后，应该调用`HttpURLConnections`的`InputStream`或`OutputStream`的`close()`方法，以释放请求的网络资源。
+
+HTTP 客户端处理的 Java 代码示例如下：
+
+```java
+public class HttpClientHelper {
+    public static String jdkGet(String url) {
+	InputStream inputStream = null;
+	HttpURLConnection httpConnection = null;
+	StringBuilder sb = new StringBuilder();
+	try {
+	    URL restServiceURL = new URL(url);
+	    // 打开 HttpURLConnection 连接
+	    httpConnection = (HttpURLConnection) restServiceURL.openConnection();
+	    // 设置请求头
+	    httpConnection.setRequestMethod("GET");
+	    httpConnection.setRequestProperty("accept", "application/json");
+	    // 建立连接，发送请求
+	    httpConnection.connect();
+	    // 读取响应码
+	    if (httpConnection.getResponseCode() != 200) {
+		throw new RuntimeException("Failed with Error code: " + httpConnection.getResponseCode());
+	    }
+	    // 读取响应内容
+	    inputStream = httpConnection.getInputStream();
+	    byte[] b = new byte[1024];
+	    int length = -1;
+	    while ((length = inputStream.read(b)) != -1)
+		sb.append(new String(b, 0, length));
+	} catch (IOException e) {
+	    e.printStackTrace();
+	} finally {
+	    quietlyClose(inputStream);
+	    httpConnection.disconnect();
+	}
+	return sb.toString();
+    }
+
+    private static void quietlyClose(Closeable closeable) {
+	if (null == closeable)
+	    return;
+	try {
+	    closeable.close();
+	} catch (Exception e) {
+	    e.printStackTrace();
+	}
+    }
+}
+```
+
+参考地址：https://gitee.com/crazymaker/netty_redis_zookeeper_source_code/blob/master/chatcommon/src/main/java/com/crazymakercircle/util/HttpClientHelper.java
+
+### 5.2 HTTP短连接的通信实验
+
+这里访问的服务端应用使用上一章编写的 HTTP Echo 回显服务，将其部署在 LINUX 虚拟机上。调用`jdkGet(String url)`方法访问服务的代码如下：
+
+```java
+public class HTTPKeepAliveTester {
+
+    private String url = "http://localhost:18899/";
+    private ExecutorService pool = Executors.newFixedThreadPool(10);
+
+    @Test
+    void simplGet() throws InterruptedException {
+	int index = 100;
+	while (--index > 0) {
+	    String target = url + index;
+	    pool.submit(() -> {
+		String out = HttpClientHelper.jdkGet(target);
+		System.out.println("out= " + out);
+	    });
+	}
+	Thread.sleep(Integer.MAX_VALUE);
+    }
+}
+```
+
+在 Linux 虚拟机上可以通过`netstat`指令看到具体的 TCP 连接信息。可以观察到上面实验中所建立的 HTTP 连接都是短连接。因为 HTTP 协议下层的 TCP 连接端口每一轮循环的输出都是不相同的。`netstat`指令每隔 1 秒输出一批 ESTABLISHED 状态的连接（10 个），它们的端口都是不同的。
+
+使用`netstat`指令看到的连接信息如下：
+
+```bash
+[root@localhost ~]# while [1 -eq 1]; do netstat -antp|grep 18899; sleep 2; echo; done
+```
+
+尽管服务端 HTTP Echo 服务是支持长连接的，但由于客户端完成请求之后关闭了连接，因此通信过程中仍然是一次性的 HTTP 短连接。
+
+实际上，JDK 自带的`HttpURLConnection`连接类底层通过 Map 类型的内存映射组件实现了非常简单的 TCP 连接的缓存和复用，但是实际的复用效率很低。在客户端使用长连接，还需要有一个活跃连接的管理和复用组件，这些组件一般为开源或者自制的 TCP 连接池，其原理和数据库连接池类似。
+
+### 5.3 Apache HttpClient客户端长连接技术
+
+在开发 Java 应用的过程中所涉及的 HTTP 连接复用的高并发场景大致有以下几种：
+
+1. 反向代理 Nginx 到 Java Web 应用服务之间的 HTTP 高并发通信
+2. 微服务网关之间、网关与微服务 Provider 实例之间的 HTTP 高并发通信
+3. 分布式微服务 Provider 实例与 Provider 实例之间 RPC 远程调用的 HTTP 高并发通信。例如 Spring Cloud 中的 Feign，通过合理配置，Feign 可以使用 Apache HttpClient 组件或 Google 的 okHttp 组件进行 HTTP 连接的高效复用
+4. Java 通过 HTTP 客户端调用其他 Java Web 应用的 HTTP 接口时的高并发通信
+
+以上 4 场景中，除了第 1 场景外，其他都需要 Java 客户端高性能访问远程 HTTP 接口，需要 Java 客户端具备 HTTP 长连接管理和复用的能力。
+
+带连接池的、具备长连接管理和复用能力的 HTTP 客户端开源组件很多，著名的有 Apache HttpClient 组件和 Google 的 OkHttp 组件。这里以 Apache HttpClient 组件为例介绍 Java 客户端的 HTTP 长连接使用技术。
+
+HttpClient 中使用连接池来管理持有连接，在原理上，无论是数据库连接池还是 HTTP 连接池，连接的"池化管理"技术是一种通用设计：
+
+- 在请求连接时，如果池中没有连接则建立一条新的连接
+- 在归还连接时，连接不直接关闭，而是归还到池中
+- 在请求连接时，如果池中有可用连接，则可从池中获取一个可用连接
+- 定期清理过期连接
+
+Apache HttpClient 客户端组件实现了自己的连接池组件，该组件负责长连接的创建、监控和释放，具体的类为`PoolingHttpClientConnectionManager`。
+
+以下为一个创建连接池的代码示例：
+
+```java
+public class HttpClientHelper {
+
+    // 长连接的保持时长， 单位ms
+    private static final long KEEP_ALIVE_DURATION = 600000;
+    // 连接池对不活跃连接的检查间隔，单位ms
+    private static final int VALIDATE_AFTER_INACTIVITY = 2000;
+    // 最大连接数
+    private static final int POOL_MAX_TOTAL = 500;
+    // 每一个路由（可以理解为 IP+端口）的最大连接数
+    private static final int MAX_PER_ROUTE = 500;
+    // 单例：HTTP长连接管理器，也就是连接池
+    private static PoolingHttpClientConnectionManager httpClientConnectionManager;
+
+    // 连接池：HTTP管理器
+    public static void createHttpClientConnectionManager() {
+
+	// DNS解析器
+	DnsResolver dnsResolver = SystemDefaultDnsResolver.INSTANCE;
+	// 负责HTTP传输的Socket套接字工厂
+	ConnectionSocketFactory plainSocketFactory = PlainConnectionSocketFactory.getSocketFactory();
+	// 负责HTTPS传输的安全Socket套接字工厂
+	LayeredConnectionSocketFactory sslSocketFactory = SSLConnectionSocketFactory.getSocketFactory();
+	// 根据应用层协议，为其注册传输层的套接字工厂
+	Registry<ConnectionSocketFactory> registry = RegistryBuilder.<ConnectionSocketFactory>create()
+		.register("http", plainSocketFactory).register("https", sslSocketFactory).build();
+	// 创建连接池管理器
+	httpClientConnectionManager = new PoolingHttpClientConnectionManager(registry, // 传输层套接字注册器
+		null, null, dnsResolver, // DNS解析器
+		KEEP_ALIVE_DURATION, // 长连接的连接保持时长
+		TimeUnit.MILLISECONDS); // 保持时长的时间单位
+
+	// 在从连接池获取连接时，连接不活跃多长时间后需要进行一次验证
+	// 默认为2s TimeUnit.MILLISECONDS
+	httpClientConnectionManager.setValidateAfterInactivity(VALIDATE_AFTER_INACTIVITY);
+	// 最大连接数，高于这个值时的新连接请求，需要阻塞和排队等待
+	httpClientConnectionManager.setMaxTotal(POOL_MAX_TOTAL);
+	// 设置每个route默认的最大连接数
+	// 路由是对MaxTotal的细分。
+	// 每个路由实际最大连接数默认值是由DefaultMaxPerRoute控制。
+	// MaxPerRoute设置的过小，无法支持大并发
+	httpClientConnectionManager.setDefaultMaxPerRoute(MAX_PER_ROUTE);
+    }
+}
+```
+
+通常，服务端不会允许无限期的长连接存在，会通过设置`keepalive_timeout`选项或其他类似选项关闭超过保持时常的空闲连接。但是长连接被服务端关闭后客户端不一定能收到通知，如果客户端将已经被服务端关闭的 HTTP 连接提供给 Java 线程就会导致发送请求和获取响应时发生异常。因此客户端需要开启监控线程，每隔一段时间检测一下连接池中长连接的情况并及时关闭异常连接。
+
+客户端关闭异常连接的定时代码示例如下：
+
+```java
+public class HttpClientHelper{
+    
+    //无效线程的清理间隔，单位ms
+    
+    private static final int EXPIRED_CHECK_GAP = 6000;
+    
+	/**
+     * 定时处理线程：对异常和空闲连接进行关闭
+     */
+    private static void startExpiredConnectionsMonitor(){
+        //空闲监测,配置文件默认为6s,生产环境建议稍微放大一点
+        int idleCheckGap = EXPIRED_CHECK_GAP;
+        // 设置保持连接的时长,根据实际情况调整配置
+        long keepAliveTimeout = KEEP_ALIVE_DURATION;
+        //开启监控线程,对异常和空闲线程进行关闭
+        monitorExecutor = Executors.newScheduledThreadPool(1);
+        monitorExecutor.scheduleAtFixedRate(new TimerTask()
+        {
+            @Override
+            public void run()
+            {
+                //关闭异常连接
+                httpClientConnectionManager.closeExpiredConnections();
+                //关闭keepAliveTimeout（保持连接时长）超时的不活跃的连接
+                httpClientConnectionManager.closeIdleConnections(keepAliveTimeout, TimeUnit.MILLISECONDS);
+                //获取连接池的状态
+                PoolStats status = httpClientConnectionManager.getTotalStats();
+                //输出连接池的状态,仅供测试使用
+                /*
+                log.info(" manager.getRoutes().size():" + manager.getRoutes().size());
+                log.info(" status.getAvailable():" + status.getAvailable());
+                log.info(" status.getPending():" + status.getPending());
+                log.info(" status.getLeased():" + status.getLeased());
+                log.info(" status.getMax():" + status.getMax());
+                */
+            }
+        }, idleCheckGap, idleCheckGap, TimeUnit.MILLISECONDS);
+    }    
+}
+```
+
+一般来说，在 Java 程序中可以维护一个全局静态的带连接池的 HttpClient 客户端实例。需要使用 HTTP 长连接时只需要通过全局静态的实例获取即可，不必每一次请求都去创建新的带连接池的 HttpClient 客户端实例。
+
+下面是一个创建带连接池的全局客户端实例的代码：
+
+```java
+public class HttpClientHelper{
+    
+    private static final int REQUEST_TIMEOUT = 2000;//从连接池获取连接的超时时长， 单位ms
+    private static final int CONNECT_TIMEOUT = 2000;//客户端和服务器建立连接的超时时长， 单位ms
+    private static final int SOCKET_TIMEOUT = 2000;//建立连接后，客户端从服务器读取数据的超时时长， 单位ms
+    
+    /**
+     * 创建带连接池的 httpClient 客户端
+     */
+    public static CloseableHttpClient pooledHttpClient()
+    {
+        if (null != pooledHttpClient)
+        {
+            return pooledHttpClient;
+        }
+        createHttpClientConnectionManager();
+        log.info(" Apache httpclient 初始化HTTP连接池  starting===");
+
+        //请求配置实例
+        RequestConfig.Builder requestConfigBuilder = RequestConfig.custom();
+        // 等待数据超时设置
+        requestConfigBuilder.setSocketTimeout(SOCKET_TIMEOUT);
+        // 连接超时设置
+        requestConfigBuilder.setConnectTimeout(CONNECT_TIMEOUT);
+        //从连接池获取连接的等待超时时间设置
+        requestConfigBuilder.setConnectionRequestTimeout(REQUEST_TIMEOUT);
+        RequestConfig config = requestConfigBuilder.build();
+
+        // httpclient建造者实例
+        HttpClientBuilder httpClientBuilder = HttpClientBuilder.create();
+        //设置连接池管理器
+        httpClientBuilder.setConnectionManager(httpClientConnectionManager);
+        //设置请求配置信息
+        httpClientBuilder.setDefaultRequestConfig(config);
+
+        //httpclient默认提供了一个Keep-Alive策略
+        //这里进行定制：确保客户端与服务端在长连接的保持时长一致
+        httpClientBuilder.setKeepAliveStrategy(new ConnectionKeepAliveStrategy()
+        {
+            @Override
+            public long getKeepAliveDuration(HttpResponse response, HttpContext context)
+            {
+                //获取响应头中HTTP.CONN_KEEP_ALIVE中的“Keep-Alive”部分值
+                //如服务端响应“Keep-Alive: timeout=60”，表示服务端保持时长为60秒
+                //则客户端也设置连接的保持时长为60秒
+                //目的：确保客户端与服务端在长连接的保持时长一致
+                HeaderElementIterator it = new BasicHeaderElementIterator
+                        (response.headerIterator(HTTP.CONN_KEEP_ALIVE));
+                while (it.hasNext())
+                {
+                    HeaderElement he = it.nextElement();
+                    String param = he.getName();
+                    String value = he.getValue();
+                    if (value != null && param.equalsIgnoreCase
+                            ("timeout"))
+                    {
+                        try
+                        {
+                            return Long.parseLong(value) * 1000;
+                        } catch (final NumberFormatException ignore)
+                        {
+                        }
+                    }
+                }
+                //如果服务端响应头中没有设置保持时长，则使用客户端统一定义时长为600s
+                return KEEP_ALIVE_DURATION;
+            }
+        });
+        //实例化：全局的池化HTTP客户端实例
+        pooledHttpClient = httpClientBuilder.build();
+        log.info(" Apache httpclient 初始化HTTP连接池  finished===");
+        //启动定时处理线程：对异常和空闲连接进行关闭
+        startExpiredConnectionsMonitor();
+        return pooledHttpClient;
+    }
+}
+```
+
+对于同一条 HTTP 长连接需要尽量保证客户端和服务端的保持时长一致。在创建长连接时，有的服务端（如 Nginx）可以通过设置将自己的保持时长值返回给客户端。所以，客户端在设置保持时长时，可以优先获取服务端返回的保持时长，如果没有则可以使用自己设置的默认保持时长。
+
+在创建 HttpClient 客户端实例时，需要进行`requestConfigBuilder`实例配置，其中大致可以设置三个超时时长：
+
+1. `CONNECT_TIMEOUT`：表示 TCP 连接的建立时间，也就是三次握手完成的最长时间，超时后一般会抛出`ConnectionTimeOutException`
+2. `SOCKET_TIMEOUT`：客户端从服务器读取数据的时间长度，相当于数据传输过衡中数据包之间间隔的最大时间，超时后一般会抛出`SocketTimeOutException`
+3. `REQUEST_TIMEOUT`：设置从连接池获取一个连接的请求超时时间，主要指连接池中连接不够用时阻塞等待的超时时间
+
+### 5.4 Apache HttpClient客户端长连接实验
+
+从连接池中获取连接然后发送 HTTP 请求大致有以下三步：
+
+1. 获取带连接池的 HttpClient 客户端实例
+
+   此步骤的前提是存在一个提前创建、初始化了的静态 HttpClient 客户端实例或者 Spring IOC 容器化的 HttpClient 客户端实例，该实例一般使用单例模式。
+
+2. 创建一个 HTTP 请求实例
+
+   这一步创建的 HTTP 请求实例一般可以为 HttpGet、HttpPoint、HttpHead、HttpPut、HttpDelete 等类型。
+
+3. 发送请求获取响应结果
+
+   使用带连接池的 HTTP 客户端发送请求，在完成发送请求后，可以通过 response 响应实例读取到最终的内容，一般会以字符串的形式返回给调用者。
+
+通过带连接池的 HttpClient 客户端实例发送请求和获取响应的代码如下：
+
+```java
+public class HttpClientHelper {
+    /**
+     * 使用带连接池的HTTP客户端，发送GET请求
+     * @param url 连接地址
+     * @return 请求字符串
+     */
+    public static String get(String url)
+    {
+        //1 取得带连接池的客户端
+        CloseableHttpClient client = pooledHttpClient();
+        //2 创建一个HTTP请求实例
+        HttpGet httpGet = new HttpGet(url);
+        //3 使用带连接池的HTTP客户端，发送请求，并且获取结果
+        return poolRequestData(url, client, httpGet);
+    }
+    
+    /**
+     * 使用带连接池的HTTP客户端，发送请求
+     * @param url     连接地址
+     * @param client  客户端
+     * @param request post、get或者其他请求
+     * @return 响应字符串
+     */
+    private static String poolRequestData(
+            String url, CloseableHttpClient client, HttpRequest request)
+    {
+        CloseableHttpResponse response = null;
+        InputStream in = null;
+        String result = null;
+        try
+        {
+            //从url中获取HttpHost实例，含主机和端口
+            HttpHost httpHost = getHost(url);
+            //执行HTTP请求
+            response = client.execute(httpHost, request, HttpClientContext.create());
+            //获取HTTP响应
+            HttpEntity entity = response.getEntity();
+            if (entity != null)
+            {
+                in = entity.getContent();
+                result = IOUtils.toString(in, "utf-8");
+            }
+        } catch (IOException e)
+        {
+            e.printStackTrace();
+        } finally
+        {
+            quietlyClose(in);
+            quietlyClose(response);
+            //无论执行成功或出现异常，HttpClient都会自动处理并保证释放连接
+        }
+
+        return result;
+    }
+
+}
+```
+
+接下来通过调用上面的`get(String url)`方法进行 HTTP 长连接的实验。
+
+这里访问的服务端仍然使用上一章的 HTTP Echo 服务，调用`get()`方法访问 HTTP Echo 服务的代码示例如下：
+
+```java
+public class HTTPKeepAliveTester {
+    //HTTP echo 回显服务的地址，该服务部署在虚拟机192.168.233.128上
+    private String url = "http://192.168.233.128:18899/";
+    private ExecutorService pool = Executors.newFixedThreadPool(10);
+
+    /**
+     * 测试用例：使用带连接池的Apache HttpClient提交的HTTP请求
+     */
+    @Test
+    public void pooledGet() throws IOException, InterruptedException {
+        int index = 1000000;
+        while (--index > 0) {
+            String target = url + index;
+            //使用固定20个线程的线程池发起请求
+            pool.submit(() ->
+            {
+                //使用Apache HttpClient提交的HTTP请求
+                String out = HttpClientHelper.get(target);
+                System.out.println("out = " + out);
+            });
+        }
+        Thread.sleep(Integer.MAX_VALUE);
+    }
+
+}
+```
+
+在虚拟机上通过`netstat`查看具体的 TCP 连接信息，可以发现 HTTP 通信所建立的传输层 TCP 连接都进行了复用，每一轮 TCP 连接端口的循环输出都是相通的，所以这些都是 HTTP 长连接。
+
+### 5.5 Nginx承担客户端角色时的长连接技术
+
+反向代理 Nginx 承担了两种角色：对于终端用户（或下游代理）来说，Nginx 承担了服务端角色；对于上游的真实服务器来说，Nginx 承担了客户端角色。
+
+在反向代理和上游服务器之间一定要使用 HTTP 长连接进行通信。因为如果 Nginx 服务器使用短连接请求上游服务器，当请求完成后 Nginx 进行连接的主动断开就会造成 Nginx 服务器产生大量的 TIME_WAIT 连接，压力增大可能导致 Nginx 服务器无法提供新的连接。
+
+因此我们需要调整 Nginx 参数，在 Nginx 与上游服务器上都保持一定数据量的长连接。与 Apache HttpClient 类似，Nginx 也有自己的类似客户端 TCP 连接池的连接管理组建。对于池中单个 TCP 连接的保持配置，可以通过在`upstream`区块中使用`keepalive`指令完成：
+
+```bash
+语法：keepalive connections;
+默认值：——
+上下文：upstream
+```
+
+`keepalive`指令的`connections`参数用于设置到上游服务器之间保持的长连接的最大数量，这些连接保留在每个工作进程的连接池中。池化的 TCP 连接超过此数目时，最近使用的最少的 TCP 长连接将关闭。
+
+使用示例大致如下：
+
+```nginx
+upstream memcached_backend {
+    server 127.0.0.1:11211;
+    server 10.0.2:11211;
+    # 可以理解为连接池可以缓存 32 个连接
+    keepalive 32;
+}
+```
+
+> **注意**
+>
+> 当反向代理 Nginx 承担客户端角色时，`keepalive`指令并没有限制可以打开的到上游服务器之间的连接总数。这意味着，Nginx 可以在不断重新建立连接的情况下，同时保持多达 32 个与每个后端服务器的持久连接。Nginx 的最大打开连接数受操作系统和 Nginx 配置的限制，例如在 Linux 系统中默认情况下最大只能打开 1024 个文件句柄。
+
+要想`keepalive`指令生效还需要两个必要的条件：
+
+1. 需要强制 Nginx 与后端上游服务器之间使用 1.1 版本的 HTTP，因为该版本的 HTTP 连接默认是长连接
+2. 反向代理对于下游是透明的，下游可能发送`Connection:close`头部关闭 TCP 连接。如果下游客户端传过来`Connection:close`头部并且直接被 Nginx 转发到上游的后端服务器，那么后端服务器会以为 Nginx 要求关闭连接，此时后端服务器将主动关闭 TCP 连接，Nginx 与后端服务器之间的 TCP 连接也就无法保持了。所以需要将下游客户端发送过来的 HTTP 请求头`Connection:close`重置为空白字符串
+
+综合以上两点，在 Nginx 上负责下游 HTTP 请求路由和转发的`location`配置区块中，需要使用`proxy_http_version`指令和`proxy_set_header`指令完成 HTTP 请求头的配置优化：
+
+```nginx
+server {
+    listen 8080 default_server;
+    server_name "";
+    # 处理下游客户端请求转发的 location 配置区块
+    location / {
+        proxy_pass http://memcached_backend;
+        # 转发之前重制 HTTP 协议版本为 1.1
+        proxy_http_version 1.1;
+        # 转发之前充值 Connection:close
+        proxy_set_header Connection ""
+    }
+}
+```
+
+
+

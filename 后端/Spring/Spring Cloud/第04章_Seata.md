@@ -151,10 +151,10 @@ Seata 是一款开源的分布式事务解决方案，致力于提供高性能�
 
 在 Seata 中，一个分布式事务的生命周期如下：
 
-1. TM 请求 TC 开启一个全局事务。TC 会生成一个 XID 作为该全局事务的编号。XID，会在微服务的调用链路中传播，保证将多个微服务的子事务关联在一起。当一进入事务方法中就会生成 XID， global_table 就是存储的全局事务信息
-2. RM 请求 TC 将本地事务注册为全局事务的分支事务，通过全局事务的 XID 进行关联。当运行数据库操作方法，branch_table 存储事务参与者。
-3. TM 请求 TC 告诉 XID 对应的全局事务是进行提交还是回滚。
-4. TC 驱动 RM 们将 XID 对应的自己的本地事务进行提交还是回滚。
+1. TM 请求 TC 开启一个全局事务。TC 会生成一个 XID 作为该全局事务的编号。XID，会在微服务的调用链路中传播，保证将多个微服务的子事务关联在一起。当进入事务方法中就会生成 XID，global_table 就是存储的全局事务信息
+2. RM 请求 TC 将本地事务注册为全局事务的分支事务，通过全局事务的 XID 进行关联。当运行数据库操作方法，branch_table 存储事务参与者
+3. TM 请求 TC 告诉 XID 对应的全局事务是进行提交还是回滚
+4. TC 驱动 RM 们将 XID 对应的自己的本地事务进行提交还是回滚
 
 ### 2.2 设计思路
 
@@ -365,7 +365,7 @@ seata-server 支持以下环境变量：
 
 - **SEATA_IP**
 
-  可选, 指定 seata-server 启动的 IP, 该 IP 用于向注册中心注册时使用, 如 eureka 等。
+  可选, 指定 seata-server 启动的 IP, 该 IP 用于向注册中心注册时使用, 如 eureka 等。**必须指定为宿主机 IP**，否则自动使用容器 IP，从外部访问不到。
 
 - **SEATA_PORT**
 
@@ -403,6 +403,7 @@ services:
     volumes:
       - /youyi/seata/config/resources:/seata-server/resources
     environment:
+      - SEATA_IP=192.168.11.100
       - SEATA_PORT=8091
       - STORE_MODE=db
     restart: always
@@ -503,4 +504,110 @@ docker compose up -d
 
 - 启动 seata
 
-  
+
+### 3.2 配置Seata Client
+
+前提：存在一个 order 服务和 stock 服务和 order 表、stock 表，order 服务会调用 stock 服务减库存。使用一般的`@Transactional`时当 order 服务调用完 stock 服务后发生错误时，只有 order 表回滚了 stock 表不会回滚。接下来使用 Seata 分布式事务解决这个问题。
+
+1. 在 order 和 stock 服务中添加依赖
+
+   ```xml
+   <dependency>
+   	<groupId>com.alibaba.cloud</groupId>
+   	<artifactId>spring‐cloud‐starter‐alibaba‐seata</artifactId>
+   </dependency>
+   ```
+
+2. 在各自数据库中创建`undo_log`表
+
+   ```sql
+   CREATE TABLE `undo_log` (
+   `id` bigint(20) NOT NULL AUTO_INCREMENT,
+   `branch_id` bigint(20) NOT NULL,
+   `xid` varchar(100) NOT NULL,
+   `context` varchar(128) NOT NULL,
+   `rollback_info` longblob NOT NULL,
+   `log_status` int(11) NOT NULL,
+   `log_created` datetime NOT NULL,
+   `log_modified` datetime NOT NULL,
+   PRIMARY KEY (`id`),
+   UNIQUE KEY `ux_undo_log` (`xid`,`branch_id`)
+   ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+   ```
+
+3. 修改服务配置文件
+
+   ```properties
+   # 配置事务分组，要与 seataServer.properties 中一致
+   seata.tx-service-group=default_tx_group
+   # 配置 nacos 注册中心
+   seata.registry.type=nacos
+   seata.registry.nacos.server-addr=192.168.11.100:8848
+   seata.registry.nacos.username=nacos
+   seata.registry.nacos.password=nacos
+   # 以下为默认值，不配置也可
+   seata.registry.nacos.group=SEATA_GROUP
+   seata.registry.nacos.application=seata-server
+   # 配置 nacos 配置中心
+   seata.config.type=nacos
+   seata.config.nacos.server-addr=192.168.11.100:8848
+   seata.config.nacos.username=nacos
+   seata.config.nacos.password=nacos
+   seata.config.nacos.group=SEATA_GROUP
+   ```
+
+   > **错误：can not get cluster name in registry config 'service.vgroupMapping.default_tx_group', please make sure registry config correct**
+   >
+   > 需要在 NACOS 配置中心中添加一个`service.vgroupMapping.default_tx_group`的 Data ID，Group 为`SEATA_GROUP`，值为`default`。
+
+4. 为 seata 配置数据源
+
+   ```java
+   @Configuration
+   public class DataSourceConfig {
+   
+       /**
+       	注意修改 spring.datasource.url 为 spring.datasource.jdbcUrl
+        */
+       @ConfigurationProperties("spring.datasource")
+       @Bean
+       public DataSource dataSource() {
+           return DataSourceBuilder.create().build();
+       }
+   
+       @Bean
+       public SqlSessionFactoryBean sqlSessionFactoryBean() throws IOException {
+           SqlSessionFactoryBean sqlSessionFactoryBean = new SqlSessionFactoryBean();
+           PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
+           sqlSessionFactoryBean.setMapperLocations(resolver.getResources("classpath:mapper/*.xml"));
+           sqlSessionFactoryBean.setDataSource(dataSource());
+           return sqlSessionFactoryBean;
+       }
+   
+       // 为 seata 配置数据源
+       @Bean
+       @ConditionalOnBean(DataSource.class)
+       public DataSourceProxy dataSourceProxy() {
+           return new DataSourceProxy(dataSource());
+       }
+   }
+   ```
+
+5. 添加`@GlobalTransactional`注解
+
+   ```java
+   @GetMapping("/add")
+   @GlobalTransactional
+   public String add() {
+       Order order = new Order();
+       order.setProductId(1);
+       order.setStatus("0");
+       order.setTotalAmount(100);
+       mapper.insert(order);
+       stockFeignService.stock(order.getProductId());
+       int i = 1 / 0;
+       return "s";
+   }
+   ```
+
+   

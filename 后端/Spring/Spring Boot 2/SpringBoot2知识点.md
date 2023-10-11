@@ -26,43 +26,17 @@ private HandlerMethodArgumentResolver getArgumentResolver(MethodParameter parame
 | @RequestParam |    ×    |  √   |  ×   |
 | @RequestBody  |    ×    |  ×   |  ×   |
 
----
-
-移除默认的 logback 日志
-
-```xml
-<dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-web</artifactId>
-    <exclusions>
-        <exclusion>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-logging</artifactId>
-        </exclusion>
-    </exclusions>
-</dependency>
-<dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-test</artifactId>
-    <scope>test</scope>
-    <exclusions>
-        <exclusion>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-logging</artifactId>
-        </exclusion>
-    </exclusions>
-</dependency>
-```
-
 ## spring、springMVC、springboot的区别
 
 `spring`是一个 IOC 容器，用来管理 Bean，使用依赖注入实现控制反转，可以方便的整合各种框架，提供 AOP 机制弥补 OOP 的代码重复问题，更方便地将不同类不同方法中的共同处理抽取成切面，自动注入给方法执行，比如日志、异常等。
 
+> **扩展**
+>
+> IoC（Inversion of Control）：控制反转是一种软件设计原则，它将应用程序的控制权从应用程序代码转移到外部容器或框架。在传统的编程中，应用程序代码通常控制应用程序的流程，包括对象的创建和管理。在IoC中，这些控制权被反转，框架或容器负责创建、管理和提供对象，而应用程序代码只需使用这些对象。这种方式有助于降低代码的耦合性，提高代码的可维护性和可测试性。
+
 `springMVC`是`spring`对 web 框架的一个解决方案，提供了一个总的前端控制器`Servlet`，用来接受请求，然后定义了一套路由策略（url 到 handler 的映射）及适配执行 handler，将 handler 结果使用试图解析技术生成试图传递给前端。
 
 `springboot`是`spring`提供的一个快速开发工具包，相当于`springMVC`的进阶版，让程序员能更方便、更快速的开发`spring+springMVC`应用，简化了配置（约定了默认配置，使用 class 代替 xml 配置文件），整合了一系列的解决方案（starter 机制）。
-
----
 
 ## IOC
 
@@ -922,5 +896,23 @@ public class CorsConfig implements WebMvcConfigurer {
             .allowCredentials(false).maxAge(3600);
     }
 }
+```
+
+## 连接数
+
+最大连接数为`max-connections`和`accept-count`的和，当再有连接进来时不会直接返回而是先等待，超过超时时间后返回超时错误
+
+```yaml
+server:
+	tomcat:
+		threads:
+			# 最小线程数
+			min-spare: 10
+			# 最大线程数
+			max: 20
+        # 最大连接数，默认 8192，需要 1024 倍数
+        max-connections: 30
+        # 最大等待数，默认 100
+        accept-count: 10
 ```
 
