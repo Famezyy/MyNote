@@ -132,4 +132,3 @@ OpenJDK 不同版本的源码都可以在它们的主页找到：http://openjdk.
 
 #### 2.系统需求
 
-test
