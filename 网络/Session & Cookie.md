@@ -1,4 +1,8 @@
-## Cookie
+---
+typora-copy-images-to: ./img/Session & Cookie
+---
+
+## 1.Cookie
 
 在了解这三个概念之前我们先要了解HTTP是**无状态**的 Web 服务器，什么是无状态呢？就像上面一次对话完成后下一次对话完全不知道上一次对话发生了什么。如果在 Web 服务器中只是用来管理静态文件还好说，对方是谁并不重要，把文件从磁盘中读取出来发出去即可。但是随着网络的不断发展，比如电商中的购物车只有记住了用户的身份才能够执行接下来的一系列动作。所以此时就需要我们**无状态**的服务器记住一些事情。
 
@@ -8,7 +12,7 @@
 - 浏览器看到有`Set-Cookie`字段以后就知道这是服务器给的身份标识，于是就保存起来，下次请求时会自动将此`key=value`值放入到`Cookie`字段中发给服务端
 - 服务端收到请求报文后，发现`Cookie`字段中有值，就能根据此值识别用户的身份然后提供个性化的服务
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202309261454565.png" alt="image-20220515171754148" style="zoom: 50%;" />
+<img src="img/Session & Cookie/202309261454565.png" alt="image-20220515171754148" style="zoom: 50%;" />
 
 接下来我们用代码演示一下服务器是如何生成，我们自己搭建一个后台服务器，这里我用的是 SpringBoot 搭建的，并且写入SpringMVC 的代码如下。
 
@@ -22,15 +26,15 @@ public String cookies(HttpServletResponse response){
 
 项目启动以后我们输入路径`http://localhost:8005/testCookies`，然后查看发的请求。可以看到下面那张图使我们首次访问服务器时发送的请求，可以看到服务器返回的响应中有`Set-Cookie`字段。而里面的`key=value`值正是我们服务器中设置的值。
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202309261454567.png" alt="image-20220515171906231" style="zoom: 80%;" />
+<img src="img/Session & Cookie/202309261454567.png" alt="image-20220515171906231" style="zoom: 80%;" />
 
 接下来我们再次刷新这个页面可以看到在请求体中已经设置了`Cookie`字段，并且将我们的值也带过去了。这样服务器就能够根据`Cookie`中的值记住我们的信息了。
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202309261454568.png" alt="image-20220515171928069" style="zoom: 80%;" />
+<img src="img/Session & Cookie/202309261454568.png" alt="image-20220515171928069" style="zoom: 80%;" />
 
 接下来我们换一个请求呢？是不是`Cookie`也会带过去呢？接下来我们输入路径`http://localhost:8005`请求。我们可以看到`Cookie`字段还是被带过去了。
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202309261454569.png" alt="image-20220515171947568" style="zoom: 50%;" />
+<img src="img/Session & Cookie/202309261454569.png" alt="image-20220515171947568" style="zoom: 50%;" />
 
 那么浏览器的`Cookie`是存放在哪呢？如果是使用的是`Chrome`浏览器的话，那么可以按照下面步骤。
 
@@ -42,9 +46,9 @@ public String cookies(HttpServletResponse response){
 
 然后可以根据域名进行搜索所管理的`Cookie`数据。所以是浏览器替你管理了`Cookie`的数据，如果此时你换成了`Firefox`等其他的浏览器，因为`Cookie`刚才是存储在`Chrome`里面的，所以服务器又蒙圈了，不知道你是谁，就会给`Firefox`再次贴上小纸条。
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202309261454570.png" alt="image-20220515172033012" style="zoom:67%;" />
+<img src="img/Session & Cookie/202309261454570.png" alt="image-20220515172033012" style="zoom:67%;" />
 
-### Cookie中的参数设置 
+### 1.1 Cookie中的参数设置 
 
 说到这里，应该知道了`Cookie`就是服务器委托浏览器存储在客户端里的一些数据，而这些数据通常都会**记录用户的关键识别信息**。所以`Cookie`需要用一些其他的手段用来保护，防止外泄或者窃取，这些手段就是`Cookie`的属性。
 
@@ -58,25 +62,25 @@ public String cookies(HttpServletResponse response){
 
 下面我就简单演示一下这几个参数的用法及现象。
 
-#### Path
+#### 1.Path
 
 设置为`cookie.setPath("/testCookies")`，接下来我们访问`http://localhost:8005/testCookies`，我们可以看到在左边和我们指定的路径是一样的，所以`Cookie`才在请求头中出现，接下来我们访问`http://localhost:8005`，我们发现没有`Cookie`字段了，这就是`Path`控制的路径。
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202309261454571.png" alt="image-20220515172210345" style="zoom:80%;" />
+<img src="img/Session & Cookie/202309261454571.png" alt="image-20220515172210345" style="zoom:80%;" />
 
-#### Domain
+#### 2.Domain
 
 设置为`cookie.setDomain("localhost")`，接下来我们访问`http://localhost:8005/testCookies`我们发现下图中左边的是有`Cookie`的字段的，但是我们访问`http://172.16.42.81:8005/testCookies`，看下图的右边可以看到没有`Cookie`的字段了。这就是`Domain`控制的域名发送`Cookie`。
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202309261454572.png" alt="image-20220515172239443" style="zoom:80%;" />
+<img src="img/Session & Cookie/202309261454572.png" alt="image-20220515172239443" style="zoom:80%;" />
 
-## Session
+## 2.Session
 
 > Cookie 是存储在**客户端**方，用作传输`SessionId`的媒介，Session 是存储在**服务端**方，底层是一个 ConcurrentMap，用来识别每个用户，客户端只存储`SessionId`
 
 在上面我们了解了什么是`Cookie`，既然浏览器已经通过`Cookie`实现了有状态这一需求，那么为什么又来了一个`Session`呢？这里我们想象一下，如果将账户的一些信息都存入`Cookie`中的话，一旦信息被拦截，那么我们所有的账户信息都会丢失掉。所以就出现了`Session`，在一次会话中将重要信息保存在`Session`中，浏览器只记录`SessionId`一个`SessionId`对应一次会话请求。
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202309261454573.png" alt="image-20220603195550541" style="zoom:80%;" />
+<img src="img/Session & Cookie/202309261454573.png" alt="image-20220603195550541" style="zoom:80%;" />
 
 ```java
 @RequestMapping("/testSession") 
@@ -97,14 +101,14 @@ public String testGetSession(HttpSession session){
 
 这里我们写一个新的方法来测试`Session`是如何产生的，我们在请求参数中加上`HttpSession session`，然后再浏览器中输入`http://localhost:8005/testSession`进行访问可以看到在服务器的返回头中在`Cookie`中生成了一个`SessionId`。然后浏览器记住此`SessionId`下次访问时可以带着此 Id，然后就能根据此 Id 找到存储在服务端的信息了。
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202309261454574.png" alt="image-20220515172519071" style="zoom: 50%;" />
+<img src="img/Session & Cookie/202309261454574.png" alt="image-20220515172519071" style="zoom: 50%;" />
 
 此时我们访问路径`http://localhost:8005/testGetSession`，发现得到了我们上面存储在`Session`中的信息。那么`Session`什么时候过期呢？
 
 - 客户端：和`Cookie`过期一致，如果没设置，默认是关了浏览器就没了，即再打开浏览器的时候初次请求头中是没有`SessionId`了
 - 服务端：服务端的过期是真的过期，即服务器端的`Session`存储的数据结构多久不可用了，默认是 30 分钟
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202309261454575.png" alt="image-20220515172602476" style="zoom:80%;" />
+<img src="img/Session & Cookie/202309261454575.png" alt="image-20220515172602476" style="zoom:80%;" />
 
 既然我们知道了`Session`是在服务端进行管理的，那么或许你们看到这有几个疑问，`Session`是在在哪创建的？`Session`是存储在什么数据结构中？接下来带领大家一起看一下`Session`是如何被管理的。
 
@@ -160,28 +164,28 @@ protected Map<String, Session> sessions = new ConcurrentHashMap<>();
 
 > Session 是存储在 Tomcat 的容器中，所以如果后端机器是多台的话，因此多个机器间是无法共享 Session 的，此时可以使用 Spring 提供的分布式 Session 的解决方案，是将 Session 放在了 Redis 中。
 
-## Token
+## 3.Token
 
 `Session`是将要验证的信息存储在服务端，并以`SessionId`和数据进行对应，`SessionId`由客户端存储，在请求时将`SessionId`也带过去，因此实现了状态的对应。而`Token`是在服务端将用户信息经过 Base64Url 编码过后传给在客户端，每次用户请求的时候都会带上这一段信息，因此服务端拿到此信息进行解密后就知道此用户是谁了，这个方法叫做`JWT(Json Web Token)`。
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202309261454576.png" alt="image-20220515173023151" style="zoom: 80%;" />
+<img src="img/Session & Cookie/202309261454576.png" alt="image-20220515173023151" style="zoom: 80%;" />
 
-### Token的优点 
+### 3.1 Token的优点 
 
 1. 简洁：可以通过`URL`,`POST`参数或者是在`HTTP`头参数发送，因为数据量小，传输速度也很快
 2. 自包含：由于串包含了用户所需要的信息，避免了多次查询数据库
 3. 因为 Token 是以 Json 的形式保存在客户端的，所以 JWT 是跨语言的
 4. 不需要在服务端保存会话信息，特别适用于分布式微服务
 
-### JWT的结构
+### 3.2 JWT的结构
 
 实际的 JWT 大概长下面的这样，它是一个很长的字符串，中间用`.`分割成三部分
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202309261454577.png" alt="image-20220515173238210" style="zoom:67%;" />
+<img src="img/Session & Cookie/202309261454577.png" alt="image-20220515173238210" style="zoom:67%;" />
 
 JWT是有三部分组成的
 
-#### Header
+#### 1.Header
 
 是一个 Json 对象，描述 JWT 的元数据，通常是下面这样子的
 
@@ -201,7 +205,7 @@ JWT是有三部分组成的
 >
 > 这就是 Base64URL 算法。
 
-#### Payload
+#### 2.Payload
 
 Payload 部分也是一个 Json 对象，用来存放实际需要传输的数据，JWT 官方规定了下面几个官方的字段供选用。
 
@@ -224,7 +228,7 @@ Payload 部分也是一个 Json 对象，用来存放实际需要传输的数据
 
 默认情况下 JWT 是不加密的，任何人只要在网上进行 Base64 解码就可以读到信息，所以一般不要将秘密信息放在这个部分。这个 Json 对象也要用`Base64URL`算法转成字符串。
 
-#### Signature
+#### 3.Signature
 
 这个部分需要 base64 加密后的 header 和 base64 加密后的 payload 使用。连接组成的字符串，然后通过 header 中声明的加密方式进行加盐 secret 组合加密，然后就构成了 jwt 的第三部分。
 
@@ -234,7 +238,7 @@ Payload 部分也是一个 Json 对象，用来存放实际需要传输的数据
 
 > HS256 可以使用单个密钥为给定的数据样本创建签名。当消息与签名一起传输时，接收方可以使用相同的密钥来验证签名是否与消息匹配。
 
-### Java中如何使用Token
+### 3.3 Java中使用Token
 
 上面我们介绍了关于 JWT 的一些概念，接下来如何使用呢？首先在项目中引入 Jar 包：
 
@@ -272,13 +276,26 @@ eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJzdWJqZWN0IiwiaXNzIjoiaXNzdWVyIiwibmFtZSI6InhpYW9
 
 此时在网上随便找个 Base64 解码的网站就能将信息解码出来
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202309261454578.png" alt="image-20220515174033219" style="zoom:80%;" />
+<img src="img/Session & Cookie/202309261454578.png" alt="image-20220515174033219" style="zoom:80%;" />
 
-## 总结
+## 4.Cookie和Session的区别
 
-相信大家看到这应该对`Cookie`、`Session`、`Token`有一定的了解了，接下来再回顾一下重要的知识点
+**1. 存储位置和传输方式**
 
-- Cookie 是 HTTP 的一个专用头部字段，存储在客户端（不支持移动端），有跨站伪造攻击的风险，不支持跨域访问
-- Session 是存储在服务端的，可以理解为一个状态列表。拥有一个唯一会话标识`SessionId`。可以根据`SessionId`在服务端查询到存储的信息
-- Session 会引发一个问题，即后端多台机器时 Session 共享的问题，解决方案可以使用 Spring 提供的框架
-- Token 类似一个令牌，相当于临时密码，存储在 HTTP 头部中，无状态，支持跨域访问，服务端所需的信息被 Base64 编码后放到 Token 中，服务器可以直接解码出其中的数据
+- **Cookies：** Cookies 是服务器生成并存储在客户端（通常是浏览器）的小段文本数据。它们通过 HTTP 请求的头部（`Cookie`头）发送到服务器，以便在每个请求中携带会话信息。
+- **Tokens：** Tokens 通常是基于 JSON 的数据结构，包含用户信息和其他元数据。它们通常存储在客户端的本地存储（例如，浏览器的本地存储或会话存储）中，然后通过HTTP请求头部（通常是`Authorization`头）或作为查询参数发送到服务器。
+
+**2. 安全性**
+
+- **Cookies：** Cookies 在客户端存储，容易受到跨站点脚本攻击（XSS）和跨站点请求伪造攻击（CSRF）等安全威胁的影响。为了增加安全性，可以使用 HttpOnly 和 Secure 标志来保护 Cookie，但仍然需要小心处理敏感信息。
+- **Tokens：** Tokens 可以更加安全，尤其是当使用 Bearer Token 并结合 HTTPS 加密时。它们存储在客户端，但仅包含有限信息，通常不包含敏感凭据，因此减少了安全风险。此外，JWT（JSON Web Token）等标准可以对 Token 进行**签名**和**加密**，以确保其完整性和安全性。
+
+**3. 跨域访问**
+
+- **Cookies：** Cookies 在某些情况下受到同源策略的限制，可能需要特殊配置来在不同域之间传递。这可以在一定程度上增加了复杂性。
+- **Tokens：** Tokens 可以更容易地用于跨域访问，因为它们可以在 HTTP 请求头中传递，而不受同源策略的限制。这使得单点登录（SSO）和跨域访问等场景更容易实现。
+
+**4.使用场景**
+
+- **Cookies：**通常用于保存 session ID
+- **Tokens：**用于更灵活的身份验证和授权机制

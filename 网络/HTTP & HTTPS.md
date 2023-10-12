@@ -1,10 +1,14 @@
+---
+typora-copy-images-to: ./img/HTTP & HTTPS
+---
+
 # HTTP & HTTPS
 
 ## 1.HTTP
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202309261453368.png" alt="image-20220106232550783" style="zoom:33%;" />
+<img src="img/HTTP & HTTPS/202309261453368.png" alt="image-20220106232550783" style="zoom:33%;" />
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202309261453369.png" alt="image-20220106232648764" style="zoom: 33%;" />
+<img src="img/HTTP & HTTPS/202309261453369.png" alt="image-20220106232648764" style="zoom: 33%;" />
 
 
 
@@ -15,11 +19,11 @@
 
 ### 2.1 对称加密
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202309261453370.png" alt="image-20220106230657614" style="zoom:50%;" />
+<img src="img/HTTP & HTTPS/202309261453370.png" alt="image-20220106230657614" style="zoom:50%;" />
 
 ### 2.2 密钥交换
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202309261453372.png" alt="image-20220106231017368" style="zoom:50%;" />
+<img src="img/HTTP & HTTPS/202309261453372.png" alt="image-20220106231017368" style="zoom:50%;" />
 
 ### 2.3 证书
 
@@ -28,9 +32,9 @@
 
 ### 2.4 TLS握手过程
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202309261453373.png" style="zoom:50%;" />
+<img src="img/HTTP & HTTPS/202309261453373.png" style="zoom:50%;" />
 
 - 使用了对称和非对称加密算法
 
-  <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202309261453374.png" alt="image-20220106231934547" style="zoom:50%;" />
+  <img src="img/HTTP & HTTPS/202309261453374.png" alt="image-20220106231934547" style="zoom:50%;" />
 
