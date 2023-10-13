@@ -488,7 +488,7 @@ Netty 是异步事件驱动的架构，相比于传统的 Tomcat、Jetty 等 Web
 
 本节实现一个简单的 HTTP 回显服务器 HttpEchoServer，将 HTTP 请求的请求方法、请求参数、请求 URI、请求头、请求体等内容进行回显。其服务端的 Pipeline 大致如下：
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302252123000.png" alt="image-20230225212349845" style="zoom:50%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302252123000.png" alt="image-20230225212349845" style="zoom: 25%;" />
 
 ### 1.基于Netty的HTTP请求处理流程
 
@@ -502,7 +502,7 @@ Netty 内置的 HTTP 请求的编解码处理器：
 
 基于 Netty 的 HTTP 请求的处理流程大致如下：
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302252147599.png" alt="image-20230225214701582" style="zoom:50%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302252147599.png" alt="image-20230225214701582" style="zoom: 33%;" />
 
 - 二进制的 HTTP 数据包从 Channel 通道入站后，首先进入 Pipeline 流水线的是 ByteBuf 字节流
 - `HttpRequestDecoder`将 ByteBuf 缓冲区的请求行和请求头解析成`HttpRequest`首部对象，传入到`HttpObjectAggregator`，然后将 HTTP 数据包的请求体解析成`HttpContent`对象（可能多个），传入到`HttpObjectAggregator`，解码完成后，如果没有更多的请求体内容，`HttpRequestDecoder`会传递一个`LastHttpContent`结束实例到聚合器`HttpObjectAggregator`，表示 HTTP 请求数据解析完成
@@ -536,7 +536,7 @@ Netty 内置的与 HTTP 请求报文相对应的类大致有如下几个：
 
 各个部分的对应关系如下：
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302252204873.png" alt="image-20230225220417846" style="zoom:50%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302252204873.png" alt="image-20230225220417846" style="zoom: 25%;" />
 
 Netty 的`HttpRequest`首部类中有一个 String uri 成员，主要是对请求 URI 的封装，包含了 Path 路径和请求参数。
 
@@ -798,7 +798,7 @@ public class HttpEchoHandler extends SimpleChannelInboundHandler<FullHttpRequest
 
 拦截 POST 请求的应用层 HTTP 协议数据包，结果如下：
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302252253605.png" alt="image-20230225225350573" style="zoom:50%;" />
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302252253605.png" alt="image-20230225225350573" style="zoom: 25%;" />
 
 **发送`multipart/form-data`编码类型**
 

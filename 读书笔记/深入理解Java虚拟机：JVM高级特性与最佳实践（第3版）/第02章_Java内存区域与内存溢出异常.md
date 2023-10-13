@@ -314,4 +314,74 @@ public class JavaVMStackSOF {
 
 运行结果仍然是抛出了`StackOverflowError`异常。
 
-实验表明：无论是由于栈帧太大还是虚拟机栈容量太小，当新的栈帧内存无法分配的时候，HotSpot 虚拟机抛出的都是`StackOverflowError`异常。
+实验表明：无论是由于栈帧太大还是虚拟机栈容量太小，当新的栈帧内存无法分配的时候，HotSpot 虚拟机抛出的都是`StackOverflowError`异常。但是如果在允许动态扩展栈容量大小的虚拟机上，相同的代码会导致不同的情况。例如在初始 Classic 这款可以支持动态扩展栈内存容量的虚拟机上，在 Windows 上的 JDK 1.0.2 运行上面第二段测试代码就能得到`OutOfMemoryError`。
+
+如果测试时不限于单线程，通过**不断建立线程**的方式在 HotSpot 上也是可以产生内存溢出异常的，但是这样产生的内存溢出异常和栈空间是否足够并不存在直接关系，主要取决于操作系统本身的内存使用状态。**这种情况下给每个线程的栈分配的内存越大越容易产生内存溢出异常**。
+
+因为操作系统分配给每个进程的内存是有限制的，例如 32 位 Windows 的单个进程最大内存限制为 2GB。剩余的内存即为 2GB 减去最大堆容量和最大方法区容量，由于程序计数器消耗内存很小，再把直接内存和虚拟机进程本身耗费的内存也去掉，剩下的内存就由虚拟机栈和本地方法栈来分配了。因此为每个线程分配到的栈内存越大，可以建立的线程数量自然越小。下面是一个创建线程导致内存溢出异常的测试代码（可能会导致系统假死）：
+
+```java
+/**
+ * VM Args: -Xss2m(可以设置的大些，最好在 32 位系统下运行)
+ */
+public class JavaVMStackOOM {
+    
+    private void dontStop() {
+        while (true){}
+    }
+    
+    public void stackLeakByThread() {
+        while(true) {
+            Thead thread = new Thread(() -> dontStop());
+            thread.start();
+        }
+    }
+    
+    public static void main(String[] args) throws Throwable {
+        JavaVMStackOOM oom = new JavaVMStackOOM();
+        oom.stackLeakByThread();
+    }
+}
+```
+
+在 32 位操作系统下的运行结果：
+
+```java
+Exception in tnread "main" java.lang.OutOfMemoryError: unable to create native thread
+```
+
+出现`StackOverflowError`异常时会打印明确的错误堆栈，相对而言更好定位问题。如果使用 HotSpot 虚拟机默认参数，栈深度在大多数情况下（每个方法压入栈的帧大小不固定）到达 1000～2000 是没有问题的，对于正常的方法调用完全够用了。但是如果是**建立过多线程**导致的内存溢出，在不能减少线程数量或者更换 64 位虚拟机的情况下就只能通过**减少最大堆和减少栈容量**来换取更多地线程。这一点在开发 32 位系统的多线程应用时要注意。由于这种问题比较隐蔽，从 JDK 7 开始，上述提示信息后面虚拟机会特别注明原因可以能 “possibly out of memory or process/resource limits reached”。
+
+### 3.3 方法区和运行时常量池溢出
+
+由于**运行时常量池是方法区的一部分**，这两个区域的溢出测试可以放到一起。由于 HotSpot 从 JDK 7 开始逐步去除永久代并在 JDK 8 中完全使用元空间来代替，在本节可以用代码来测试下。
+
+`String::intern()`是一个本地方法，它的作用是如果字符串常量池中已经包含一个等于此 String 对象的字符串，则返回代表池中这个字符串的 String 对象的引用；否则会将此 String 对象包含的字符串添加到常量池中，并且返回此 String 对象的引用。在 JDK 6 或更早之前的 HotSpot 虚拟机中，常量池都是分配在永久代中，可以通过`-XX:PermSize`和`-Xx:MaxPermSize`来限制永久代的大小。
+
+```java
+/**
+ * VM Args: -XX:PermSize=6M -XX:MaxPermSize=6M
+ */
+public class RuntimeConstantPoolOOM {
+    public static void main(String[] args) {
+        Set<String> set = new HashSetp<>();
+        // 在 short 范围内足以让 6M 的 PermSize 产生 OOM
+        short i = 0;
+        while (true) {
+            set.add(String.valueOf(i++).intern());
+        }
+    }
+}
+```
+
+在 JDK 6 中运行上述代码可以得到结果：
+
+```bash
+Exception in thread "main" java.lang.OutOfMemoryError: PermGen space
+	at java.lang.String.intern(Native Method)
+	at orgs.fenixsoft.oom.RuntimeConstantPoolOOM.main(RuntimeConstantPoolOOM.java: 18)
+```
+
+可以看出提示的是永久代产生 OOM，说明运行时常量池确实是属于方法区（JDK 6 中的永久代）的一部分的。
+
+而在 JDK 7 或更高版本的 JDK 中运行这段代码不会得到相同的结果，无论是在

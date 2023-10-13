@@ -405,7 +405,20 @@ ServerBootstrap b = new ServerBootstrap();
 
 此为 TCP 传输选项，表示是否开启 TCP 的心跳机制。true 为连接保持心跳，默认为 false。启用时，TCP 会主动探测空闲连接的有效性。默认的心跳间隔是 7200 秒，即 2 小时，可通过`ChannelOption.TCP_KEEPIDLE`选项更改。
 
-Netty 默认关闭该功能。
+SO_KEEPALIVE 只是 TCP 连接的一个可选项，其参数配置可能会引起一些问题，所以该选项默认是关闭的。TCP 连接的保活也可以使用自定义的保活报文和空闲监测机制。
+
+```java
+ChannelOption<ByteBuf> keepAliveOption = ChannelOption.valueOf("SO_KEEPALIVE");
+ChannelOption<Integer> keepAliveTime = ChannelOption.valueOf("TCP_KEEPIDLE");
+ChannelOption<Integer> keepAliveInterval = ChannelOption.valueOf("TCP_KEEPINTVL");
+ChannelOption<Integer> keepAliveCount = ChannelOption.valueOf("TCP_KEEPCNT");
+
+Bootstrap bootstrap = new Bootstrap();
+bootstrap.option(keepAliveOption, Unpooled.wrappedBuffer(new byte[] {1, 2, 3})); // 自定义的保活报文
+bootstrap.option(keepAliveTime, 60); // 60秒没有数据传输后开始发送保活报文
+bootstrap.option(keepAliveInterval, 10); // 10秒发送一次保活报文
+bootstrap.option(keepAliveCount, 5); // 如果连续发送5次保活报文都没有响应，则认为连接断开
+```
 
 #### 4.SO_REUSEADDR
 

@@ -32,3 +32,59 @@ Long Poll 长轮询在原理上跟 Ajax 短轮询差不多，不过采取的是�
 
 ### 1.2 WebSocket与HTTP之间的关系
 
+WebSocket 的最大特点就是全双工通信，服务器可以主动向客户端推送信息，客户端也可以主动向服务器发送信息。WebSocket 与 HTTP 之间的关系是：WebSocket 是一个新协议，通信过程与 HTTP 基本没有关系，只是为了兼容现有浏览器，所以**在握手阶段使用了 HTTP**。WebSocket 协议的握手和通信过程如下图所示：
+
+<img src="img/WebSocket协议的握手.png">
+
+WebSocket 协议和 HTTP 一样，处于 TCP/IP 协议栈的应用层，都是 TCP/IP 协议的子集。WebSocket 协议和 HTTP 有一个显著的不同：**HTTP 是单向通信的协议**，只有客户端发起 HTTP 请求，服务端才会返回数据；**WebSocket 协议是双向通信协议**，在建立连接之后，客户端和服务器都可以主动向对方发送或接收数据。
+
+## 2.WebSocket回显程序开发
+
+本节演示程序的功能：客户端通过 WebSocket 向服务器发送任意一段字符串消息，服务器将该消息通过 WebSocket 回写到客户端，最后客户端将回显消息展现到网页。
+
+### 2.1 WebSocket回显程序客户端代码
+
+使用 JavaScript 实现 WebSocket 协议通信主要分为三个步骤：
+
+1. **建立 WebSocket 连接**
+
+   使用 JavaScript 建立 WebSocket 连接的代码大致如下：
+
+   ```javascript
+   socket = new WebSocket("ws://localhost:18899/ws", "echo");
+   ```
+
+   第一个参数为服务端 WebSocket 监听 URL 地址，第二个参数为服务端配置的 WebSocket 子协议，子协议为应用程序自己使用的某个标识或者命名，客户端与服务端保持一致即可。WebSocket 有自己的协议规范，其 URL 规则与 HTTP 的 URL 规则不同。WebSocket 中未加密的 URL Schema 为`ws://`，而不是`http://`。WebSocket 中加密的 URL Schema 为`wss://`，而不是`https://`。
+
+   > **注意**
+   >
+   > 建立 WebSocket 连接时，传递的 URL 参数没有**同源策略**的限制。如果两个通信协议的 URL 的主机名（域名或者 IP）和端口都相同，则两个 URL 是同源的。同源策略是浏览器的一个安全功能，不同源的客户端在没有明确授权的情况下不能读写对方资源。WebSocket 并不受同源策略的限制，可以向不同源的 URL 发起 WebSocket 连接请求。
+
+2. **监听 WebSocket 连接的 open 事件**
+
+   在成功建立 WebSocket 连接后，客户端可以通过`onopen()`方法监听连接的 open 事件，在成功连接后可以进行后续的业务处理，大致代码如下：
+
+   ```javascript
+   socket.onopen = function(event) {
+   	var target = document.getElementById('responseText');
+       target.value = "Web Socket connected";
+   }
+   ```
+
+3. **监听 WebSocket 连接的 message 消息事件**
+   
+   当服务端的消息推送过来时会触发 message 消息事件，客户端代码可以通过`onmessage()`方法监听该事件，然后在监听方法中获取所接收到的服务端数据。
+
+   ```javascript
+   socket.onmessage = function(event) {
+       var ta = document.getElementById('responseText');
+       ta.value = ta.value + '\n' + event.data;
+   }
+   ```
+
+
+
+
+
+
+

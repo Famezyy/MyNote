@@ -758,7 +758,8 @@ keepalive_requests 100000;
    setRequestProperty(key, value);
    // 新增请求头的 key-value
    addRequestProperty(key, value);
-   `
+   ```
+   
 4. 建立连接，发送请求
    
    ```java
@@ -795,45 +796,45 @@ HTTP 客户端处理的 Java 代码示例如下：
 ```java
 public class HttpClientHelper {
     public static String jdkGet(String url) {
-	InputStream inputStream = null;
-	HttpURLConnection httpConnection = null;
-	StringBuilder sb = new StringBuilder();
-	try {
-	    URL restServiceURL = new URL(url);
-	    // 打开 HttpURLConnection 连接
-	    httpConnection = (HttpURLConnection) restServiceURL.openConnection();
-	    // 设置请求头
-	    httpConnection.setRequestMethod("GET");
-	    httpConnection.setRequestProperty("accept", "application/json");
-	    // 建立连接，发送请求
-	    httpConnection.connect();
-	    // 读取响应码
-	    if (httpConnection.getResponseCode() != 200) {
-		throw new RuntimeException("Failed with Error code: " + httpConnection.getResponseCode());
-	    }
-	    // 读取响应内容
-	    inputStream = httpConnection.getInputStream();
-	    byte[] b = new byte[1024];
-	    int length = -1;
-	    while ((length = inputStream.read(b)) != -1)
-		sb.append(new String(b, 0, length));
-	} catch (IOException e) {
-	    e.printStackTrace();
-	} finally {
-	    quietlyClose(inputStream);
-	    httpConnection.disconnect();
-	}
-	return sb.toString();
-    }
+        InputStream inputStream = null;
+        HttpURLConnection httpConnection = null;
+        StringBuilder sb = new StringBuilder();
+        try {
+            URL restServiceURL = new URL(url);
+            // 打开 HttpURLConnection 连接
+            httpConnection = (HttpURLConnection) restServiceURL.openConnection();
+            // 设置请求头
+            httpConnection.setRequestMethod("GET");
+            httpConnection.setRequestProperty("accept", "application/json");
+            // 建立连接，发送请求
+            httpConnection.connect();
+            // 读取响应码
+            if (httpConnection.getResponseCode() != 200) {
+            throw new RuntimeException("Failed with Error code: " + httpConnection.getResponseCode());
+            }
+            // 读取响应内容
+            inputStream = httpConnection.getInputStream();
+            byte[] b = new byte[1024];
+            int length = -1;
+            while ((length = inputStream.read(b)) != -1)
+            sb.append(new String(b, 0, length));
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            quietlyClose(inputStream);
+            httpConnection.disconnect();
+        }
+        return sb.toString();
+        }
 
-    private static void quietlyClose(Closeable closeable) {
-	if (null == closeable)
-	    return;
-	try {
-	    closeable.close();
-	} catch (Exception e) {
-	    e.printStackTrace();
-	}
+        private static void quietlyClose(Closeable closeable) {
+        if (null == closeable)
+            return;
+        try {
+            closeable.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
 ```
@@ -852,15 +853,15 @@ public class HTTPKeepAliveTester {
 
     @Test
     void simplGet() throws InterruptedException {
-	int index = 100;
-	while (--index > 0) {
-	    String target = url + index;
-	    pool.submit(() -> {
-		String out = HttpClientHelper.jdkGet(target);
-		System.out.println("out= " + out);
-	    });
-	}
-	Thread.sleep(Integer.MAX_VALUE);
+        int index = 100;
+        while (--index > 0) {
+            String target = url + index;
+            pool.submit(() -> {
+            String out = HttpClientHelper.jdkGet(target);
+            System.out.println("out= " + out);
+            });
+        }
+        Thread.sleep(Integer.MAX_VALUE);
     }
 }
 ```
@@ -917,32 +918,31 @@ public class HttpClientHelper {
 
     // 连接池：HTTP管理器
     public static void createHttpClientConnectionManager() {
+        // DNS解析器
+        DnsResolver dnsResolver = SystemDefaultDnsResolver.INSTANCE;
+        // 负责HTTP传输的Socket套接字工厂
+        ConnectionSocketFactory plainSocketFactory = PlainConnectionSocketFactory.getSocketFactory();
+        // 负责HTTPS传输的安全Socket套接字工厂
+        LayeredConnectionSocketFactory sslSocketFactory = SSLConnectionSocketFactory.getSocketFactory();
+        // 根据应用层协议，为其注册传输层的套接字工厂
+        Registry<ConnectionSocketFactory> registry = RegistryBuilder.<ConnectionSocketFactory>create()
+            .register("http", plainSocketFactory).register("https", sslSocketFactory).build();
+        // 创建连接池管理器
+        httpClientConnectionManager = new PoolingHttpClientConnectionManager(registry, // 传输层套接字注册器
+            null, null, dnsResolver, // DNS解析器
+            KEEP_ALIVE_DURATION, // 长连接的连接保持时长
+            TimeUnit.MILLISECONDS); // 保持时长的时间单位
 
-	// DNS解析器
-	DnsResolver dnsResolver = SystemDefaultDnsResolver.INSTANCE;
-	// 负责HTTP传输的Socket套接字工厂
-	ConnectionSocketFactory plainSocketFactory = PlainConnectionSocketFactory.getSocketFactory();
-	// 负责HTTPS传输的安全Socket套接字工厂
-	LayeredConnectionSocketFactory sslSocketFactory = SSLConnectionSocketFactory.getSocketFactory();
-	// 根据应用层协议，为其注册传输层的套接字工厂
-	Registry<ConnectionSocketFactory> registry = RegistryBuilder.<ConnectionSocketFactory>create()
-		.register("http", plainSocketFactory).register("https", sslSocketFactory).build();
-	// 创建连接池管理器
-	httpClientConnectionManager = new PoolingHttpClientConnectionManager(registry, // 传输层套接字注册器
-		null, null, dnsResolver, // DNS解析器
-		KEEP_ALIVE_DURATION, // 长连接的连接保持时长
-		TimeUnit.MILLISECONDS); // 保持时长的时间单位
-
-	// 在从连接池获取连接时，连接不活跃多长时间后需要进行一次验证
-	// 默认为2s TimeUnit.MILLISECONDS
-	httpClientConnectionManager.setValidateAfterInactivity(VALIDATE_AFTER_INACTIVITY);
-	// 最大连接数，高于这个值时的新连接请求，需要阻塞和排队等待
-	httpClientConnectionManager.setMaxTotal(POOL_MAX_TOTAL);
-	// 设置每个route默认的最大连接数
-	// 路由是对MaxTotal的细分。
-	// 每个路由实际最大连接数默认值是由DefaultMaxPerRoute控制。
-	// MaxPerRoute设置的过小，无法支持大并发
-	httpClientConnectionManager.setDefaultMaxPerRoute(MAX_PER_ROUTE);
+        // 在从连接池获取连接时，连接不活跃多长时间后需要进行一次验证
+        // 默认为2s TimeUnit.MILLISECONDS
+        httpClientConnectionManager.setValidateAfterInactivity(VALIDATE_AFTER_INACTIVITY);
+        // 最大连接数，高于这个值时的新连接请求，需要阻塞和排队等待
+        httpClientConnectionManager.setMaxTotal(POOL_MAX_TOTAL);
+        // 设置每个route默认的最大连接数
+        // 路由是对MaxTotal的细分。
+        // 每个路由实际最大连接数默认值是由DefaultMaxPerRoute控制。
+        // MaxPerRoute设置的过小，无法支持大并发
+        httpClientConnectionManager.setDefaultMaxPerRoute(MAX_PER_ROUTE);
     }
 }
 ```
@@ -1057,9 +1057,7 @@ public class HttpClientHelper{
                         try
                         {
                             return Long.parseLong(value) * 1000;
-                        } catch (final NumberFormatException ignore)
-                        {
-                        }
+                        } catch (final NumberFormatException ignore){}
                     }
                 }
                 //如果服务端响应头中没有设置保持时长，则使用客户端统一定义时长为600s
@@ -1088,15 +1086,15 @@ public class HttpClientHelper{
 
 从连接池中获取连接然后发送 HTTP 请求大致有以下三步：
 
-1. 获取带连接池的 HttpClient 客户端实例
+1. **获取带连接池的 HttpClient 客户端实例**
 
    此步骤的前提是存在一个提前创建、初始化了的静态 HttpClient 客户端实例或者 Spring IOC 容器化的 HttpClient 客户端实例，该实例一般使用单例模式。
 
-2. 创建一个 HTTP 请求实例
+2. **创建一个 HTTP 请求实例**
 
    这一步创建的 HTTP 请求实例一般可以为 HttpGet、HttpPoint、HttpHead、HttpPut、HttpDelete 等类型。
 
-3. 发送请求获取响应结果
+3. **发送请求获取响应结果**
 
    使用带连接池的 HTTP 客户端发送请求，在完成发送请求后，可以通过 response 响应实例读取到最终的内容，一般会以字符串的形式返回给调用者。
 
@@ -1126,9 +1124,7 @@ public class HttpClientHelper {
      * @param request post、get或者其他请求
      * @return 响应字符串
      */
-    private static String poolRequestData(
-            String url, CloseableHttpClient client, HttpRequest request)
-    {
+    private static String poolRequestData(String url, CloseableHttpClient client, HttpRequest request){
         CloseableHttpResponse response = null;
         InputStream in = null;
         String result = null;
