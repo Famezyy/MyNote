@@ -1,31 +1,5 @@
 # ThreadLocal
 ## 1.java中的引用类型（强软弱虚）
-### 1.1 强引用
-强引用存在时，即使`OOM`也不会被回收，除非强引用关系不再存在。
-```java
-Object o = new Object();
-```
-当一个类回收时，会调用该类的`finalize()`方法。
-> 但是重写该方法可能会造成频繁的`Full GC`和`OOM`，例如将一些资源的释放放在该方法中，但是资源的释放有时需要很长时间，相当于间接延长了该类的生命周期。
-
-```java
-// 重写 finalize() 方法，该方法已过时
-public class M {
-    @Override
-    protested void finalize() throws Throwable {
-        System.out.println("finalize");
-    }
-}
-
-public class NormalReferenceTest {
-    pulic static void main(String[] args) throws IOEception {
-        M m = new M();
-        m = null;
-        System.gc();
-        System.in.read(); // 阻塞 main 线程，给垃圾回收线程时间执行
-    }
-}
-```
 ### 1.2 软引用
 当内存足够的时候，GC 不会回收软引用，当内存不够的时候，软引用会被回收。因此软引用非常适合做**缓存**。
 

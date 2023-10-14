@@ -82,6 +82,29 @@ WebSocket 协议和 HTTP 一样，处于 TCP/IP 协议栈的应用层，都是 T
    }
    ```
 
+完整的 WebSocket 回显程序的客户端 JavaScript 脚本大致如下：
+
+```javascript
+<script type="text/javascript">
+   var socket;
+   if (!window.WebSocket) {
+      window.WebSocket = window.MozWebSocket;
+   }
+
+   // 获取浏览器上 URL 中的主机名称
+   var domain = window.location.host;
+   if (window.WebSocket) {
+      // 建立 WebSocket 连接
+      socket = new WebSocket("ws://"+domain+"/ws", "echo");
+      socket.onmessage = function(event) {
+         var ta = document.getElementById('responseText');
+         ta.value = ta.value + '\n' + event.data;
+      };
+
+      // 连接打开事件
+      
+   }
+```
 
 
 

@@ -52,7 +52,7 @@ Java 堆既可以被实现成固定大小的，也可以是可扩展的，不过
 
 ### 1.5 方法区
 
-方法区（Method Area）与 Java 堆一样，是各个**线程共享**的内存区域，它用于存储已被虚拟机加载的类型信息、常量、静态变量、即时编译器编译后的代码缓存等数据。虽然《Java 虚拟机规范》中把方法区描述为堆的一个逻辑部分，但是它有一个别名“非堆”（Non-Heap），目的是与 Java 堆区分开来。
+方法区（Method Area）与 Java 堆一样，是各个**线程共享**的内存区域，它**用于存储已被虚拟机加载的类型信息、常量、静态变量、即时编译器编译后的代码缓存等数据**。虽然《Java 虚拟机规范》中把方法区描述为堆的一个逻辑部分，但是它有一个别名“非堆”（Non-Heap），目的是与 Java 堆区分开来。
 
 方法区又被经常称呼为“永久代”（Permanent Generation），但是本质上这两者并不是等价的。仅仅是因为 JDK 8 之前，虚拟机设计团队选择把收集器的分代设计扩展至方法区，或者说**使用永久代来实现方法区**而已，这使得 HotSpot 的 垃圾收集器能够像管理 Java 堆一样管理这部分内存，省去专门为方法区编写内存管理代码的工作。但是原则上如何实现方法区不受《Java 虚拟机规范》管束，对于其他虚拟机实现，例如 JRockit、J9 等是不存在永久代的概念的。
 
@@ -364,9 +364,8 @@ Exception in tnread "main" java.lang.OutOfMemoryError: unable to create native t
  */
 public class RuntimeConstantPoolOOM {
     public static void main(String[] args) {
-        Set<String> set = new HashSetp<>();
-        // 在 short 范围内足以让 6M 的 PermSize 产生 OOM
-        short i = 0;
+        Set<String> set = new HashSet<>();
+        int i = 0;
         while (true) {
             set.add(String.valueOf(i++).intern());
         }
@@ -384,4 +383,94 @@ Exception in thread "main" java.lang.OutOfMemoryError: PermGen space
 
 可以看出提示的是永久代产生 OOM，说明运行时常量池确实是属于方法区（JDK 6 中的永久代）的一部分的。
 
-而在 JDK 7 或更高版本的 JDK 中运行这段代码不会得到相同的结果，无论是在
+而在 JDK 7 或更高版本的 JDK 中运行这段代码不会得到相同的结果，无论是在 JDK 7 中继续使用`-XX:MaxPermSize`还是在 JDK 8 及以上版本使用`-XX:MaxMeta-spaceSize`把方法区容量限制在 6MB，都不会出现 JDK 6 中的溢出异常，循环将一直进行下去（由于`short`类型范围是 -32768～32767，以`String`类型存储的话大约需要几百 KB 的空间），因为从 JDK 7 起字符串常量池被移至 Java 堆中。此时如果将最大堆容量设置为 6MB 就能看到 OOM 异常。
+
+> **扩展：String::intern()**
+>
+> ```java
+> String str1 = new StringBuilder("计算机").append("软件").toString();
+> System.out.println(str1.intern() == str1);
+> 
+> String str2 = new StringBuilder("ja").append("va").toString();
+> System.out.println(str2.intern() == str2);
+> ```
+>
+> 这段代码在 JDK 6 中运行会得到两个 false，而在 JDK 7 中运行会得到一个 true 一个 false。因为在 JDK 6 中，`intern()`方法会把首次遇到的字符串实例复制到永久代的字符串常量池中存储，返回的也是永久代里这个字符串实例的引用，而`StringBuilder`创建的字符串对象实例在 Java 堆上（`new String()`会在堆上和常量池中创建对象，而`StringBuilder::toString()`只会在堆上创建），两者不是同一个引用，所以返回 false。
+>
+> 而 JDK 7 的`intern()`方法实现就不需要再拷贝字符串实例到永久代，只需要在常量池中记录下首次出现的实例引用即可（但是如果第一次创建字符串时不是`new`而是直接使用双引号“”，则直接返回常量池中该字符串即可）。因此`intern()`返回的引用和由`StringBuilder`创建的字符串实例是同一个。对于`str2`的比较返回 false，是因为 “java” 这个字符串在加载 sun.misc.Version 这个类时被加载进常量池了，因此返回 false。
+
+方法区的主要职责是用于**存放类型的相关信息**，如类名、访问修饰符、常量池、字段描述、方法描述等。对于这部分区域的测试，基本思路是运行时产生大量的类去填满方法区直到溢出为止。本节使用 CGLib 在运行时生成大量动态类。
+
+```java
+/**
+ * VM Args: -XX:PermSize=10M -XX:MaxPermSize=10M
+ */
+public class JavaMethodAreaOOM {
+    public static void main(String[] args) {
+        while(true) {
+            Enhancer enhancer = new Enhancer();
+            enhancer.setSuperclass(OOMObject.class);
+            enhancer.setUseCache(false);
+            enhancer.setCallback(new MethodInterceptor(){
+                public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy) throws Throwable {
+                    return proxy.invokeSuper(obj, args);
+                }
+            });
+            enhancer.create();
+        }
+    }
+    static class OOMObject {}
+}
+```
+
+在 JDK 7 中的运行结果：
+
+```bash
+Caused by: java.lang.OutOfMemoryError: PermGen space
+	at java.lang.ClassLoader.defineClass1(Native Method)
+	at java.lang.ClassLoader.defineClassCond(ClassLoader.java:632)
+	at java.lang.ClassLoader.defineClass(ClassLoader.java:616)
+	... 8 more
+```
+
+方法区溢出也是一种常见的内存溢出异常，一个类如果要被垃圾收集器回收，其要达成的条件是比较苛刻的。在经常运行时生成大量动态类的应用场景中就需要特别关注这些类的回收状况。除了使用 CGLib 字节码增强和动态语言外，常见的还有：大量 JSP 或动态产生 JSP 文件的应用（JSP 第一次运行时需要编译为 Java 类）、基于 OSGi 的应用（即便是同一个类文件，被不同的加载器加载也会视为不同的类）等。
+
+在 JDK 8 之后元空间替代永久代，在默认的设置下，前面列举的那些正常的动态创建新类型的测试用例已经很难再迫使虚拟机产生方法区的溢出异常了。不过 HotSpot 还是提供了一些参数作为元空间的预防措施：
+
+- `-XX:MaxMetaspaceSize`：设置元空间最大值，默认是 -1，即不限制，或者说只受限于本地内存大小。
+- `-XX:MetaspaceSize`：指定元空间的初始空间大小，以字节为单位，达到该值就会触发垃圾收集进行类型卸载，同时收集器会对该值进行调整：如果释放了大量的空间就适当降低该值；如果释放了很少的空间，那么在不超过`-XX:MaxMetaspaceSize`（如果设置了）的情况下适当提高该值。
+- `-XX:MinMetaspaceFreeRatio`：作用是在垃圾收集之后控制最小的元空间剩余容量的百分比，可减少因为元空间不足导致的垃圾收集的频率。类似的还有`-XX:MaxMetaspaceFreeRatio`，用于控制最大的元空间剩余容量的百分比。
+
+### 3.4 本机直接内存溢出
+
+直接内存的容量大小可通过`-XX:MaxDirectMemorySize`来指定，如果不指定则默认与 Java 堆最大值一致。下面的代码越过了`DirectByteBuffer`类直接通过反射获取`Unsafe`实例进行内存分配（`Unsafe`类的`getUnsafe()`方法指定只有引导类加载器才会返回实例，在 JDK 10 时才将`Unsafe`的部分功能通过`VarHandle`开放给外部使用）。因为虽然使用`DirectByteBuffer`分配内存也会抛出内存溢出异常，但它抛出异常时并没有真正向操作系统申请分配内存，而是通过计算得知内存无法分配就会在代码里手动抛出溢出异常，真正申请分配内存的方法是`Unsafe::allocateMemory()`。
+
+```java
+/**
+ * VM Args: -Xmx20M -XX:MaxDirectMemorySize=10M
+ */
+public class DirectMemoryOOM {
+    
+    private static final int _1MB = 1024 * 1024;
+    
+    public static void main(String[] args) throws Exception {
+        Field unsafeField = Unsafe.class.getDeclaredFields()[0];
+        unsafeField.setAccessible(true);
+        Unsafe unsafe = (Unsafe) unsafeField.get(null);
+        while(true) {
+            unsafe.allocateMemory(_1MB);
+        }
+    }
+}
+```
+
+运行结果：
+
+```java
+Exception in thread "main" java.lang.OutOfMemoryError
+    at sun.misc.Unsafe.allocatememory(Native Method)
+    at org.fenixsoft.oom.DMOOM.main(DMOOM.java:20)
+```
+
+由直接内存导致的内存溢出，最明显的特征是在 Heap Dump 文件中不会看见有什么明显的异常情况，如果发现内存溢出之后产生的 Dump 文件很小，而程序中又直接或间接使用了`DirectMemory`（最典型的就是使用了 NIO），那就可以考虑检查一下直接内存方面的原因了。
+
