@@ -383,7 +383,7 @@ Exception in thread "main" java.lang.OutOfMemoryError: PermGen space
 
 可以看出提示的是永久代产生 OOM，说明运行时常量池确实是属于方法区（JDK 6 中的永久代）的一部分的。
 
-而在 JDK 7 或更高版本的 JDK 中运行这段代码不会得到相同的结果，无论是在 JDK 7 中继续使用`-XX:MaxPermSize`还是在 JDK 8 及以上版本使用`-XX:MaxMeta-spaceSize`把方法区容量限制在 6MB，都不会出现 JDK 6 中的溢出异常，循环将一直进行下去（由于`short`类型范围是 -32768～32767，以`String`类型存储的话大约需要几百 KB 的空间），因为从 JDK 7 起字符串常量池被移至 Java 堆中。此时如果将最大堆容量设置为 6MB 就能看到 OOM 异常。
+而在 JDK 7 或更高版本的 JDK 中运行这段代码不会得到相同的结果，无论是在 JDK 7 中继续使用`-XX:MaxPermSize`还是在 JDK 8 及以上版本使用`-XX:MaxMetaspaceSize`把方法区容量限制在 6MB，都不会出现 JDK 6 中的溢出异常，循环将一直进行下去（由于`short`类型范围是 -32768～32767，以`String`类型存储的话大约需要几百 KB 的空间），因为从 JDK 7 起字符串常量池被移至 Java 堆中。此时如果将最大堆容量设置为 6MB 就能看到 OOM 异常。
 
 > **扩展：String::intern()**
 >

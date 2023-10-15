@@ -101,6 +101,8 @@ Spring Cloud Gateway 是 Spring Cloud 官方推出的响应式的 API 网关，�
 
 ## 3.集成Nacos
 
+### 3.1 继承注册中心
+
 1. **引入依赖**
 
    ```xml
@@ -175,4 +177,482 @@ Spring Cloud Gateway 是 Spring Cloud 官方推出的响应式的 API 网关，�
 
    访问`http://localhost:8080/order-server/order/add`时会路由到`http://localhost:8081/order/add`。
 
+
+### 3.2 集成配置中心
+
+1. **引入依赖**
+
+   ```xml
+   <dependencies>
+       <dependency>
+           <groupId>org.springframework.cloud</groupId>
+           <artifactId>spring-cloud-starter-gateway</artifactId>
+       </dependency>
+       <dependency>
+           <groupId>com.alibaba.cloud</groupId>
+           <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
+       </dependency>
+       <dependency>
+           <groupId>org.springframework.cloud</groupId>
+           <artifactId>spring-cloud-starter-loadbalancer</artifactId>
+       </dependency>
+       <!-- 引入下面两个 config 需要的依赖 -->
+       <dependency>
+           <groupId>com.alibaba.cloud</groupId>
+           <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
+       </dependency>
+       <!-- 在SpringCloud 2020.* 版本把加载 bootstrap 的功能禁用了，导致在读取文件的时候读取不到而报错，所以我们只要把bootstrap从新导入进来就会生效了 -->
+       <dependency>
+           <groupId>org.springframework.cloud</groupId>
+           <artifactId>spring-cloud-starter-bootstrap</artifactId>
+       </dependency>
+   </dependencies>
+   ```
+
+2. 移出 springboot.yaml 的配置并新增 bootstrap.yaml 配置
+
+   ```yaml
+   spring:
+     main:
+       web-application-type: reactive
+     application:
+       name: gateway-config
+     cloud:
+       nacos:
+         server-addr: 192.168.11.100:8848
+         username: nacos
+         password: nacos
+         config:
+           file-extension: yaml
+   ```
+
+3. 在 NACOS 配置中心新增`Data ID`为 gateway-config 的配置
+
+   ```yaml
+   server:
+     port: 8080
    
+   spring:
+     cloud:
+       gateway:
+         routes:
+         - id: after_route
+           uri: lb://order-server
+           predicates:
+           - After=2017-01-20T17:42:47.789-07:00[America/Denver]
+       nacos:
+         discovery:
+           server‐addr: 192.168.11.100:8848
+           username: nacos
+           password: nacos
+   ```
+
+4. 访问即可发现路由配置生效，并且修改配置发布后也能动态感知
+
+## 4.路由断言工厂配置
+
+当请求 gateway 的时候使用断言对请求进行匹配，如果匹配成功就路由转发，如果匹配失败就返回 404，既可以使用内置配置也可以自定义配置。
+
+参考：https://docs.spring.io/spring-cloud-gateway/docs/current/reference/html/#gateway-request-predicates-factories
+
+### 4.1 内置配置
+
+#### 1.基于Datetime类型的断言工厂
+
+此类型的断言根据时间做判断，主要有三个，日期格式为`ZonedDateTime`的输出格式：
+
+1. `After`：接收一个日期参数，判断请求日期是否晚于指定日期
+
+   ```yaml
+   spring:
+     cloud:
+       gateway:
+         routes:
+         - id: after_route
+           uri: lb://order-server
+           predicates:
+           - After=2017-01-20T17:42:47.789-07:00[America/Denver]
+   ```
+
+2. `Before`：接收一个日期参数，判断请求日期是否早于指定日期
+
+   ```yaml
+   spring:
+     cloud:
+       gateway:
+         routes:
+         - id: before_route
+           uri: lb://order-server
+           predicates:
+           - Before=2017-01-20T17:42:47.789-07:00[America/Denver]
+   ```
+
+3. `Between`：接收两个日期参数，判断请求日期是否在指定时间段内
+
+   ```yaml
+   spring:
+     cloud:
+       gateway:
+         routes:
+         - id: between_route
+           uri: lb://order-server
+           predicates:
+           - Between=2017-01-20T17:42:47.789-07:00[America/Denver], 2017-01-21T17:42:47.789-07:00[America/Denver]
+   ```
+
+#### 2.基于Cookie的断言工厂
+
+接收两个参数，cookie 名字和一个正则表达式，用于判断请求 cookie 是否具有给定名称且值与正则表达式匹配。
+
+```yaml
+spring:
+  cloud:
+    gateway:
+      routes:
+      - id: cookie_route
+        uri: lb://order-server
+        predicates:
+        - Cookie=chocolate, ch.p
+```
+
+#### 3.基于Header的断言工厂
+
+接收两个参数，标题名称和正则表达式，判断请求 Header 是否具有给定名称且值与正则表达式匹配。
+
+```yaml
+spring:
+  cloud:
+    gateway:
+      routes:
+      - id: header_route
+        uri: lb://order-server
+        predicates:
+        - Header=X-Request-Id,\d+
+```
+
+#### 4.基于Host的断言工厂
+
+接收一个参数，判断请求的 Host 是否满足匹配规则，多个规则（或关系）用`,`隔开。支持占位符如`{sub}.myhost.org`，该占位符的键值对可以通过在`GatewayFileter`中调用`ServerWebExchange.getAttributes()`获取。
+
+```yaml
+spring:
+  cloud:
+    gateway:
+      routes:
+      - id: host_route
+        uri: lb://order-server
+        predicates:
+        - Host=**.somehost.org,**.anotherhost.org
+```
+
+#### 5.基于Method请求方法的断言工厂
+
+接收一个参数，判断请求类型是否跟指定的类型匹配，多个类型（或关系）用`,`隔开
+
+```yaml
+spring:
+  cloud:
+    gateway:
+      routes:
+      - id: method_route
+        uri: lb://order-server
+        predicates:
+        - Method=GET,POST
+```
+
+#### 6.基于Path请求路径的断言工厂
+
+接收一个参数，判断请求的 URI 部分是否满足路径规则，支持多个规则（或关系）和占位符，但是如果`matchTrailingSlash`设置为`false`则不支持占位符。
+
+```yaml
+spring:
+  cloud:
+    gateway:
+      routes:
+      - id: path_route
+        uri: lb://order-server
+        predicates:
+        - Path=/red/{segment},/blue/{segment}
+```
+
+该占位符的键值对可以通过在`GatewayFileter`中调用`ServerWebExchange.getAttributes()`获取。可以通过`ServerWebExchangeUtils`中的方法快速获取：
+
+```java
+Map<String, String> uriVariables = ServerWebExchangeUtils.getUriTemplateVariables(exchange);
+String segment = uriVariables.get("segment");
+```
+
+#### 7.基于Query请求参数的断言工厂
+
+接收两个参数，请求 param 和正则表达式，判断请求参数是否具有给定名称且值与正则表达式匹配。
+
+```yaml
+spring:
+  cloud:
+    gateway:
+      routes:
+      - id: query_route
+        uri: lb://order-server
+        predicates:
+        # 检查请求参数是否包含 color
+        - Query=color
+        # 检查请求参数是否包含 color 并且值符合正则表达式
+        # -Query=color, gree.
+```
+
+#### 8.基于远程地址的断言工厂
+
+接收一个 IP 地址段，判断请求主机地址是否在地址段中。
+
+```yaml
+spring:
+  cloud:
+    gateway:
+      routes:
+      - id: remoteaddr_route
+        uri: lb://order-server
+        predicates:
+        - RemoteAddr=192.168.1.1/24
+```
+
+#### 9.基于路由权重的断言工厂
+
+接收一个[组名,权重], 然后对于同一个组内的路由按照权重转发。
+
+```yaml
+spring:
+  cloud:
+    gateway:
+      routes:
+      - id: weight_high
+        uri: https://weighthigh.org
+        predicates:
+        - Weight=group1, 8
+      - id: weight_low
+        uri: https://weightlow.org
+        predicates:
+        - Weight=group1, 2
+```
+
+这个规则会转发 80% 的流量到 weighthigh.org 和 20% 的流量到 weightlow.org。
+
+### 4.2 自定义路由断言工厂
+
+自定义路由断言工厂需要继承`AbstractRoutePredicateFactory`类，重写`apply`方法的逻辑。在`apply`方法中可以通过`exchange.getRequest()`拿到`ServerHttpRequest`对象，从而可以获取到请求的参数、请求方式、请求头等信息。可参考其他内置配置类的写法。
+
+书写时必须遵守以下条件：
+
+1. 必须注册为 bean
+2. 类必须加上 **RoutePredicateFactory** 作为结尾
+3. 必须继承`AbstractRoutePredicateFactory`
+4. 必须声明静态内部 model 类，用来接收配置文件中对应的断言的信息
+5. 需要使用`shortcutFieldOrder`返回内部类中定义的参数名称
+6. 在`apply`中进行逻辑判断，true 就是匹配成功，false 则匹配失败
+
+```java
+@Component
+public class CheckRoutePredicateFactory extends AbstractRoutePredicateFactory<CheckRoutePredicateFactory.Config> {
+
+
+    public CheckRoutePredicateFactory() {
+        super(Config.class);
+    }
+
+    @Override
+    public Predicate<ServerWebExchange> apply(Config config) {
+        return new Predicate<ServerWebExchange>() {
+            @Override
+            public boolean test(ServerWebExchange serverWebExchange) {
+                return config.getValue1().equals("test1") && config.getValue2().equals("test2");
+
+            }
+        };
+    }
+
+    @Override
+    public List<String> shortcutFieldOrder() {
+        // 这里要按照配置文件中的顺序传入所有在 Config 中定义的变量
+        return CollectionUtils.list("value1", "value2");
+    }
+
+    @Data
+    public static class Config {
+        private String value1;
+        private String value2;
+    }
+}
+```
+
+```yaml
+spring:
+  main:
+    web-application-type: reactive
+  application:
+    name: api‐gateway
+  cloud:
+    gateway:
+      routes:
+        - id: after_route
+          uri: lb://order-server
+          predicates:
+            - Check=test1,test2
+```
+
+## 5.过滤器工厂配置
+
+Gateway 内置了很多的过滤器工厂，我们通过一些过滤器工厂可以进行一些业务逻辑处理器，比如添加剔除响应头，添加去除参数等。
+
+参考：https://docs.spring.io/spring-cloud-gateway/docs/current/reference/html/#gatewayfilter-factories
+
+| 过滤器工厂                  | 作用                                                         | 参数                                                         |
+| :-------------------------- | :----------------------------------------------------------- | ------------------------------------------------------------ |
+| AddRequestHeader            | 为原始请求添加 Header                                        | Header 的名称及值                                            |
+| AddRequestParameter         | 为原始请求添加请求参数                                       | 参数名称及值                                                 |
+| AddResponseHeader           | 为原始响应添加 Header                                        | Header 的名称及值                                            |
+| DedupeResponseHeader        | 剔除响应头中重复的值                                         | 需要去重的 Header 名称及去重策略                             |
+| Hystrix                     | 为路由引入 Hystrix 的断路器保护                              | HystrixCommand 的名称                                        |
+| FallbackHeaders             | 为 fallbackUri 的请求头中添加具体的异常信息                  | Header 的名称                                                |
+| PrefixPath                  | 为原始请求路径添加前缀                                       | 前缀路径                                                     |
+| PreserveHostHeader          | 为请求添加一个 preserveHostHeader=true 的属性，路由过滤器会检查该属性以决定是否要发送原始的 Host | 无                                                           |
+| RequestRateLimiter          | 用于对请求限流，限流算法为令牌桶                             | keyResolver、rateLimiter、statusCode、denyEmptyKey、emptyKeyStatus |
+| RedirectTo                  | 将原始请求重定向到指定的 URL                                 | http 状态码及重定向的 url                                    |
+| RemoveHopByHopHeadersFilter | 为原始请求删除 IETF 组织规定的一系列 Header                  | 默认就会启用，可以通过配置指定仅删除哪些 Header              |
+| RemoveRequestHeader         | 为原始请求删除某个 Header                                    | Header 名称                                                  |
+| RemoveResponseHeader        | 为原始响应删除某个 Header                                    | Header 名称                                                  |
+| RewritePath                 | 重写原始的请求路径                                           | 原始路径正则表达式以及重写后路径的正则表达式                 |
+| RewriteResponseHeader       | 重写原始响应中的某个 Header                                  | Header 名称，值的正则表达式，重写后的值                      |
+| SaveSession                 | 在转发请求之前，强制执行`WebSession::save`操作               | 无                                                           |
+| SecureHeaders               | 为原始响应添加一系列起安全作用的响应头                       | 无，支持修改这些安全响应头的值                               |
+| SetPath                     | 修改原始的请求路径                                           | 修改后的路径                                                 |
+| SetResponseHeader           | 修改原始响应中某个 Header 的值                               | Header 名称，修改后的值                                      |
+| SetStatus                   | 修改原始响应的状态码                                         | HTTP 状态码，可以是数字，也可以是字符串                      |
+| StripPrefix                 | 用于截断原始请求的路径                                       | 使用数字表示要截断的路径的数量                               |
+| Retry                       | 针对不同的响应进行重试                                       | retries、statuses、methods、series                           |
+| RequestSize                 | 设置允许接收最大请求包的大小。如果请求包大小超过设置的值，则返回`413 Payload Too Large` | 请求包大小，单位为字节，默认值为5M                           |
+| ModifyRequestBody           | 在转发请求之前修改原始请求体内容                             | 修改后的请求体内容                                           |
+| ModifyResponseBody          | 修改原始响应体的内容                                         | 修改后的响应体内容                                           |
+| Default                     | 为所有路由添加过滤器                                         | 过滤器工厂名称及值                                           |
+
+下面介绍几种常用的过滤器。
+
+### 5.1 添加请求头
+
+```yaml
+spring:
+  cloud:
+    gateway:
+    # 设置路由：路由 Id、路由到微服务的 uri、断言
+      routes:
+      ‐ id: order_route # 路由 ID，全局唯一
+        uri: http://localhost:8020 # 目标微服务的请求地址和端口
+      # 配置过滤器工厂
+      filters:
+      ‐ AddRequestHeader=X‐Request‐color, red # 添加请求头
+```
+
+### 5.2 添加请求参数
+
+```yaml
+spring:
+  cloud:
+    gateway:
+      routes:
+      ‐ id: order_route
+        uri: http://localhost:8020
+      filters:
+      ‐ AddRequestParameter=color,blue # 添加请求参数
+```
+
+### 5.3 为匹配的路由统一添加前缀
+
+```yaml
+spring:
+  cloud:
+    gateway:
+      routes:
+      ‐ id: order_route
+        uri: http://localhost:8020
+      filters:
+      ‐ PrefixPath=/mall‐order # 添加前缀 对应微服务需要配置 context‐path
+```
+
+服务中需要配置：
+
+```yaml
+server:
+  servlet:
+  context‐path: /mall‐order
+```
+
+测试：`http://localhost:8888/order/findOrderByUserId/1` ====> `http://localhost:8020/mall­order/order/findOrderByUserId/1`
+
+### 5.4 重定向操作
+
+```yaml
+spring:
+  cloud:
+    gateway:
+      routes:
+      - id: after_route
+        uri: lb://order-server
+        predicates:
+        - After=2017-01-20T17:42:47.789-07:00[America/Denver]
+        filters:
+          - RedirectTo=302,https://www.baidu.com
+```
+
+测试：`http://localhost:8080/order/add`
+
+### 5.5 自定义过滤器工厂
+
+与自定义路由断言工厂类似，需要继承`AbstractNameValueGatewayFilterFactory`且我们的自定义名称必须要以 **GatewayFilterFactory** 结尾并注册为 bean。
+
+ ```java
+ @Component
+ public class CheckGatewayFilterFactory extends AbstractGatewayFilterFactory<CheckGatewayFilterFactory.Config> {
+ 
+     public CheckGatewayFilterFactory() {
+         super(CheckGatewayFilterFactory.Config.class);
+     }
+ 
+     @Override
+     public GatewayFilter apply(Config config) {
+         return (exchange, chain) -> {
+             if (config.getValue() != null) {
+                 // 如果没有传入参数 zhao 或者 value 与配置文件不同则返回 404
+                 if (!config.getValue().equals(exchange.getRequest().getQueryParams().getFirst("zhao"))) {
+                     exchange.getResponse().setStatusCode(HttpStatus.BAD_REQUEST);
+                     return exchange.getResponse().setComplete();
+                 }
+             }
+             return chain.filter(exchange);
+         };
+     }
+ 
+     @Override
+     public List<String> shortcutFieldOrder() {
+         return Collections.singletonList("value");
+     }
+ 
+     @Data
+     public static class Config {
+         String value;
+     }
+ }
+ ```
+
+```yaml
+spring:
+  cloud:
+    gateway:
+      routes:
+      - id: after_route
+        uri: lb://order-server
+        predicates:
+        - After=2017-01-20T17:42:47.789-07:00[America/Denver]
+        filters:
+          - Check=test
+```
+
+## 6.全局过滤器配置
+
