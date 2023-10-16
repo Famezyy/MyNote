@@ -156,5 +156,28 @@ WebSocket 协议和 HTTP 一样，处于 TCP/IP 协议栈的应用层，都是 T
 </html>
 ```
 
+### 2.2 WebSocket相关的Netty内置处理类
+
+接下来介绍基于 Netty 进行 WebSocket 服务端的开发。WebSocket 协议中大致包含了 5 种类型的数据帧，与这 5 种数据帧相对应，Netty 包含了 5 种 WebSocket 数据帧的封装类型。这些类型都是`WebSocketFrame`类的子类。
+
+|WebSocket 数据帧名称|功能|
+|--|--|
+|`BinaryWebSocketFrame`|封装二进制数据的 WebSocketFrame 数据帧|
+|`TextWebSocketFrame`|封装文本数据的 WebSocketFrame 数据帧|
+|`CloseWebSocketFrame`|表示一个 CLOSE 结束请求，数据帧中包含结束状态和结束的原因，此帧属于控制帧|
+|`ContinuationWebSocketFrame`|当发送的内容多余一个数据帧时，消息将被拆非为多个 WebSocketFrame 数据帧发送，而此类型的数据帧专用于发送剩余的内容。`ContinuationWebSocketFrame`可以发送后续的文本或者二进制数据帧|
+|`PingWebSocketFrame`|Ping 和 Pong 是 WebSocket 通信中的心跳帧，用来保证客户端是在线的，一般来说只有服务端给客户端发送 Ping，然后客户端发送 Pong 来回应，表示自己仍然在线。`PingWebSocketFrame`属于控制帧，其对应的协议报文中的操作码 opcode 值为 0x9|
+|`PongWebSocketFrame`|此帧是对`PingWebSocketFrame`请求的响应帧，也属于控制帧，其对应的协议报文中的操作码 opcode 值为 0xA|
+
+与服务端 WebSocket 通信相关的 Netty 内置 Handler 处理器，主要如下表所示：
+
+|处理其名称|功能|
+|--|--|
+|`WebSocketServerProtocolHandler`|负责协议开始升级时的请求处理，也就是开启握手处理。另外在协议升级握手完成后的 WebSocket 通信过程中，此处理器还负责对 WebSocket 协议的三个控制帧 Close、Ping、Pong 进行处理|
+|`WebSocketServerProtocolHandshakeHandler`|此处理器负责进行协议升级握手处理，在握手完成后，此处理器会触发 HANDSHAKE_COMPLETE 用户事件，表示握手完成|
+|`WebSocketFrameEncoder`|WebSocketFrame 数据帧编码器，负责 WebSocket 数据帧编码。在握手时，针对不同的 WebSocket 协议版本，握手处理器在流水线上装配对应的编码器子类|
+|`WebSocketFrameDecoder`|WebSocketFrame 数据帧解码器，负责 WebSocket 数据帧解码。在握手时，针对不同的 WebSocket 协议版本，握手处理器会在流水线上装配对应的解码器子类|
+
+以上 4 个内置处理器中，`WebSocketServerProtocolHandler`是非常关键的的处理器，负责开始升级握手和控制帧的处理，可以理解为握手处理器。握手完成后，双方的通信协议会从 HTTP 升级到 WebSocket 协议，老的 HTTP 协议处理器会被该握手处理器替换掉，新的与 WebSocket 协议相关的解码器会被成功的添加到流水线上。
 
 
