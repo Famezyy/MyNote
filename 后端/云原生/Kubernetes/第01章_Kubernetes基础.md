@@ -92,7 +92,7 @@ Kubeadm 是一个K8s 部署工具，提供 kubeadm init 和 kubeadm join，用�
 
 Kubeadm 降低部署门槛，但屏蔽了很多细节，遇到问题很难排查。如果想更容易可控，推荐使用二进制包部署 Kubernetes 集群，虽然手动部署麻烦点，期间可以学习很多工作原理，也利于后期维护。
 
-### 2.4 准备环境
+### 2.1 准备环境
 
 本次环境搭建使用一主二从，因此提前创建好 3 台虚拟机。
 
@@ -102,16 +102,33 @@ Kubeadm 降低部署门槛，但屏蔽了很多细节，遇到问题很难排查
 | node01 | 172.16.19.201 | docker，kubectl，kubeadm，kubelet |
 | node02 | 172.16.19.202 | docker，kubectl，kubeadm，kubelet |
 
-### 2.5 环境初始化
+### 2.2 环境初始化
 
-#### 1.检查操作系统的版本
+https://kubernetes.io/zh-cn/docs/setup/production-environment/tools/kubeadm/install-kubeadm/
+
+#### 1.开放端口
+
+https://kubernetes.io/zh-cn/docs/reference/networking/ports-and-protocols/
+
+控制面
 
 ```bash
-# 此方式下安装 Kubernetes 集群要求 Centos 版本要在 7.5 或之上
-cat /etc/redhat-release
+6443 # kube-apiserver
+2379-2380 # kube-apiserver, etcd
+10250,10257,10259 # kubelet 端口
+30000-32767 # 默认服务暴露地址
+8472 # flannel
 ```
 
-#### 2.主机名解析
+工作节点
+
+```bash
+30000-32767 # 默认服务暴露地址
+10250 # kubelet 端口
+8472 # flannel
+```
+
+#### 2.*主机名解析
 
 为了方便集群节点间的直接调用，在这个配置一下主机名解析，企业中推荐使用内部 DNS 服务器
 
@@ -125,7 +142,7 @@ vim /etc/hosts
 
 #### 3.时间同步
 
-kubernetes要求集群中的节点时间必须精确一直，这里使用chronyd服务从网络同步时间
+kubernetes 要求集群中的节点时间必须精确一直，这里使用chronyd服务从网络同步时间
 
 企业中建议配置内部的会见同步服务器
 
@@ -134,22 +151,19 @@ kubernetes要求集群中的节点时间必须精确一直，这里使用chronyd
 systemctl start chronyd
 systemctl enable chronyd
 date
+
+# 设置地区
+timedatectl list-timezones | grep Tokyo
+sudo timedatectl set-timezone Asia/Tokyo
 ```
 
-#### 4.禁用iptable和firewalld服务
-
-kubernetes 和 docker 在运行的中会产生大量的 iptables 规则，为了不让系统规则跟它们混淆，直接关闭系统的规则
+#### 4.关闭防火墙
 
 ```bash
-# 关闭 firewalld 服务
-systemctl stop firewalld
-systemctl disable firewalld
-# 关闭 iptables 服务
-systemctl stop iptables
-systemctl disable iptables
+sudo ufw disable && sudo ufw status
 ```
 
-#### 2.6.5 禁用selinux
+#### *5.禁用selinux
 
 selinux 是 linux 系统下的一个安全服务，如果不关闭它，在安装集群中会产生各种各样的奇葩问题
 
@@ -168,7 +182,7 @@ vim /etc/selinux/config
 SELINUX=disabled
 ```
 
-#### 2.6.6 禁用swap分区
+#### 6.禁用swap分区
 
 swap 分区指的是虚拟内存分区，它的作用是物理内存使用完，之后将磁盘空间虚拟成内存来使用，启用 swap 设备会对系统的性能产生非常负面的影响，因此 kubernetes 要求每个节点都要禁用 swap 设备，但是如果因为某些原因确实不能关闭 swap 分区，就需要在集群安装过程中通过明确的参数进行配置说明
 
@@ -187,25 +201,42 @@ vim /etc/fstab
 # /dev/mapper/centos-swap swap
 ```
 
-#### 2.6.7 修改linux的内核参数
+#### 7.修改linux的网桥参数
 
 ```bash
-# 修改 linux 的内核采纳数，添加网桥过滤和地址转发功能
-# 编辑 /etc/sysctl.d/k8s.conf 文件，添加如下配置：
-vim /etc/sysctl.d/k8s.conf
-net.bridge.bridge-nf-call-ip6tables = 1
-net.bridge.bridge-nf-call-iptables = 1
-net.ipv4.ip_forward = 1
+cat <<EOF | sudo tee /etc/modules-load.d/k8s.conf
+overlay
+br_netfilter
+EOF
 
-# 重新加载配置
-sysctl -p
-# 加载网桥过滤模块
-modprobe br_netfilter
-# 查看网桥过滤模块是否加载成功
-lsmod | grep br_netfilter
+sudo modprobe overlay
+sudo modprobe br_netfilter
+
+# 设置所需的 sysctl 参数，参数在重新启动后保持不变
+cat <<EOF | sudo tee /etc/sysctl.d/k8s.conf
+net.bridge.bridge-nf-call-iptables  = 1
+net.bridge.bridge-nf-call-ip6tables = 1
+net.ipv4.ip_forward                 = 1
+EOF
+
+# 应用 sysctl 参数而不重新启动
+sudo sysctl --system
 ```
 
-#### 2.6.8 配置ipvs功能
+通过运行以下指令确认 `br_netfilter` 和 `overlay` 模块被加载：
+
+```bash
+lsmod | grep br_netfilter
+lsmod | grep overlay
+```
+
+通过运行以下指令确认 `net.bridge.bridge-nf-call-iptables`、`net.bridge.bridge-nf-call-ip6tables` 和 `net.ipv4.ip_forward` 系统变量在你的 `sysctl` 配置中被设置为 1：
+
+```bash
+sysctl net.bridge.bridge-nf-call-iptables net.bridge.bridge-nf-call-ip6tables net.ipv4.ip_forward
+```
+
+#### *8.配置ipvs功能
 
 在 kubernetes 中 service 有两种带来模型，一种是基于 iptables 的，一种是基于 ipvs 的两者比较的话，ipvs 的性能明显要高一些，但是如果要使用它，需要手动载入 ipvs 模块
 
@@ -231,76 +262,120 @@ chmod +x /etc/sysconfig/modules/ipvs.modules
 lsmod | grep -e ip_vs -e nf_conntrack_ipv4
 ```
 
-### 2.6 安装Docker
+### 2.3 安装Docker
 
-参考<a href="../Docker/第01章_Docker简介">Docker</a>章节。
+- 更新`apt`索引信息并安装必要程序包
 
-```bash
-# 添加一个配置文件
-# Docker 在默认情况下使用 Vgroup Driver 为 cgroupfs，而 Kubernetes 推荐使用 systemd 来替代 cgroupfs
-mkdir /etc/docker
-cat <<EOF> /etc/docker/daemon.json
-{
-	"exec-opts": ["native.cgroupdriver=systemd"],
-	"registry-mirrors": ["https://kn0t2bca.mirror.aliyuncs.com"]
-}
-EOF
+  ```bash
+  sudo apt update
+  sudo apt install apt-transport-https ca-certificates curl gnupg-agent software-properties-common
+  ```
 
-# 5.启动dokcer
-systemctl restart docker
-systemctl enable docker
-```
+- 添加 Docker 官方的 GPG 证书验证程序包签名
 
-### 2.7 安装Kubernetes
+  ```bash
+  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+  ```
 
-阿里云：https://developer.aliyun.com/mirror/kubernetes?spm=a2c6h.13651102.0.0.73281b11YKT2nT
+- 为`apt`添加稳定版本的 Docker-CE 仓库
 
-```bash
-# 国内
-cat <<EOF > /etc/yum.repos.d/kubernetes.repo
-[kubernetes]
-name=Kubernetes
-baseurl=https://mirrors.aliyun.com/kubernetes/yum/repos/kubernetes-el7-x86_64/
-enabled=1
-gpgcheck=1
-repo_gpgcheck=1
-gpgkey=https://mirrors.aliyun.com/kubernetes/yum/doc/yum-key.gpg https://mirrors.aliyun.com/kubernetes/yum/doc/rpm-package-key.gpg
-EOF
-```
+  ```bash
+  sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+  # 国内可以使用 https://mirrors.aliyun.com/docker-ce/linux/ubuntu
+  ```
 
-```bash
-# 国外
-cat <<EOF > /etc/yum.repos.d/kubernetes.repo
-[kubernetes]
-name=Kubernetes
-baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
-enabled=1
-gpgcheck=1
-repo_gpgcheck=1
-gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg
-        https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
-EOF
-```
+- 更新`apt`索引后安装 docker-ce
 
-```bash
-yum install -y kubelet kubeadm kubectl
-```
+  ```bash
+  sudo apt update
+  sudo apt install docker-ce docker-ce-cli containerd.io
+  ```
 
-```bash
-# 配置 kubelet 的 cgroup
-# 编辑 /etc/sysconfig/kubelet, 添加下面的配置
-vim /etc/sysconfig/kubelet
-KUBELET_CGROUP_ARGS="--cgroup-driver=systemd"
-KUBE_PROXY_MODE="ipvs"
-```
+- 配置 Docker
 
-```bash
-systemctl enable kubelet && systemctl start kubelet
-```
+  添加一个配置文件
 
-### 2.8 配置Kubernetes集群
+  ```bash
+  mkdir /etc/docker
+  ```
 
-#### 1.准备集群镜像
+  ```bash
+  # Docker 在默认情况下使用 Vgroup Driver 为 cgroupfs，而 Kubernetes 推荐使用 systemd 来替代 cgroupfs
+  cat <<EOF> /etc/docker/daemon.json
+  {
+    "exec-opts": ["native.cgroupdriver=systemd"],
+    "log-driver": "json-file",
+    "log-opts": {
+      "max-size": "100m"
+    },
+    "storage-driver": "overlay2"
+  # "registry-mirrors": ["https://kn0t2bca.mirror.aliyuncs.com"]
+  }
+  EOF
+  ```
+
+  启动 dokcer 并设置开机启动
+  ```bash
+  systemctl restart docker
+  systemctl enable docker
+  ```
+
+> **说明**
+>
+> 在版本 1.28 之后暂时移除了 docker 的支持，需要额外安装`cri-dockerd`
+>
+> ```bash
+> wget https://github.com/Mirantis/cri-dockerd/releases/download/v0.3.6/cri-dockerd_0.3.6.3-0.ubuntu-jammy_amd64.deb
+> sudo dpkg -i cri-dockerd_0.3.6.3-0.ubuntu-jammy_amd64.deb
+> ```
+>
+> 因此建议使用`containerd`，使用`containerd`时，在上面安装 docker 时只需安装`containerd.io`
+>
+> ```bash
+> sudo apt install docker-ce docker-ce-cli containerd.io
+> ```
+>
+> 配置 cgroup，参考：https://kubernetes.io/zh-cn/docs/setup/production-environment/container-runtimes/#containerd-systemd
+>
+> 执行`containerd config default > /etc/containerd/config.toml`并修改`SystemdCgroup = true`和确保`disabled_plugins=[]`，修改完成后重启`sudo systemctl restart containerd`。
+
+### 2.4 安装Kubernetes
+
+- 添加官方密钥
+
+  ```bash
+  sudo curl https://mirrors.aliyun.com/kubernetes/apt/doc/apt-key.gpg | apt-key add -
+  ```
+
+- 在配置文件`/etc/apt/sources.list.d/kubernetes.list`中添加：
+
+  ```bash
+  deb https://mirrors.aliyun.com/kubernetes/apt/ kubernetes-xenial main
+  ```
+
+- 更新程序包索引并安装
+
+  ```bash
+  sudo apt update
+  sudo apt install -y kubelet kubeadm kubectl
+  ```
+
+- *配置 kubelet 的 cgroup 和 ipvs
+
+  ```bash
+  # 编辑 /etc/sysconfig/kubelet, 添加下面的配置
+  vim /etc/sysconfig/kubelet
+  KUBELET_CGROUP_ARGS="--cgroup-driver=systemd"
+  KUBE_PROXY_MODE="ipvs"
+  ```
+
+  > **说明**
+  >
+  > 在版本 1.22 及更高版本中，如果用户没有设置`cgroupDriver`字段，`kubeadm`会将它设置为默认值`systemd`。
+
+### 2.5 配置Kubernetes集群
+
+#### *1.国内准备集群镜像
 
 在安装 kubernetes 集群之前，必须要提前准备好集群需要的镜像，所需镜像可以通过下面命令查看
 
@@ -308,7 +383,7 @@ systemctl enable kubelet && systemctl start kubelet
 kubeadm config images list
 ```
 
-**下载镜像**
+下载镜像
 
 ```bash
 images=(
@@ -323,7 +398,6 @@ images=(
 ```
 
 ```bash
-# 国内
 for imageName in ${images[@]};do
 	# 从阿里源拉取镜像文件，但是名字格式不同
 	docker pull registry.cn-hangzhou.aliyuncs.com/google_containers/$imageName
@@ -333,29 +407,14 @@ for imageName in ${images[@]};do
 done
 ```
 
-```bash
-# 国外
-for imageName in ${images[@]};do
-	docker pull $imageName
-done
-```
-
 #### 2.集群初始化
 
 下面的操作只需要在 master 节点上执行即可
 
 ```bash
 # 创建集群
-kubeadm init --apiserver-advertise-address=192.168.11.100 --kubernetes-version=1.26.1 --service-cidr=10.96.0.0/12 --pod-network-cidr=10.244.0.0/16 # --image-repository=registry.aliyuncs.com/google_containers
-
-# 执行下面的命令
-export KUBECONFIG=/etc/kubernetes/admin.conf
+kubeadm init --apiserver-advertise-address=10.0.0.4 --kubernetes-version=1.28.2 --service-cidr=10.96.0.0/12 --pod-network-cidr=10.244.0.0/16 # 国内传入 --image-repository=registry.aliyuncs.com/google_containers # 设置了cri-dockered后传入 --cri-socket=unix:///run/cri-dockerd.sock  
 ```
-
-> **提示**
->
-> 当出现`E0205 12:44:31.717817    1505 memcache.go:238] couldn't get current server API group list: Get "http://localhost:8080/api?timeout=32s": dial tcp [::1]:8080: connect: connection refused
-> The connection to the server localhost:8080 was refused - did you specify the right host or port?`错误时，可尝试执行`export KUBECONFIG=/etc/kubernetes/admin.conf`。
 
 > **问题**
 >
@@ -374,29 +433,48 @@ export KUBECONFIG=/etc/kubernetes/admin.conf
 > kubeadm token create --print-join-command
 > ```
 
-#### 3.安装网络插件
+#### 3.配置kubectl
+
+使用`kubeadm init`后会自动生成一个用于管理员权限的配置文件`/etc/kubernetes/admin.conf`，将它复制为常用用户的`$HONE/.kube/config`文件便可以以管理员身份访问
+
+```bash
+mkdir -p $HOME/.kube
+sudo cp -i /etc/kubernetes/admin.conf $HONME/.kube/config
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+# 如果是管理员账户，直接执行
+export KUBECONFIG=/etc/kubernetes/admin.conf
+```
+
+测试
+
+```bash
+kubectl get nodes
+```
+
+#### 4.安装网络插件
 
 kubernetes 支持多种网络插件，如 flannel，calico，cannal 等，本次选择 flannel，只在 master 节点操作即可，插件会通过 DaemonSet 控制器同步安装
 
 ```bash
-wget https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
 ```
 
 > **注意**
 >
-> 国内使用时修改文件中 quay.io 仓库为`quay-mirror.qiniu.com`。
+> 国内使用时下载文件并修改文件中 quay.io 仓库为`quay-mirror.qiniu.com`。
 >
 > 由于外网不好访问，如果出现无法访问的情况，可以直接用下面的：
 >
 > ```bash
 > https://github.com/flannel-io/flannel/tree/master/Documentation/kube-flannel.yml
 > ```
-
-使用配置文件启动 fannel
-
-```bash
-kubectl apply -f kube-flannel.yml
-```
+>
+> 然后运行
+>
+> ```bash
+> kubectl apply -f kube-flannel.yml
+> ```
 
 > **问题**
 >
@@ -408,7 +486,7 @@ kubectl apply -f kube-flannel.yml
 >
 > - 若显示`cni plugin not initialized`，可尝试重启`contained`
 
-#### 4.重置
+#### 5.重置
 
 ```bash
 kubeadm reset -f
@@ -417,11 +495,9 @@ rm -rf /etc/cni/net.d
 rm -rf $HOME/.kube/config
 ip link delete flannel.1
 ip link delete cni0
-rm -rf /etc/containerd/config.toml
-systemctl restart containerd
 ```
 
-### 2.9 测试
+### 2.6 测试
 
 **创建一个 nginx 服务**
 
