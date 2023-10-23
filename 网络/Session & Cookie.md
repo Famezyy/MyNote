@@ -234,7 +234,7 @@ Payload 部分也是一个 Json 对象，用来存放实际需要传输的数据
 
 首先需要定义一个秘钥，这个秘钥只有服务器才知道，不能泄露给用户，然后使用 Header 中指定的签名算法（默认情况是HMAC SHA256），算出签名以后将 Header、Payload、Signature 三部分拼成一个字符串，每个部分用`.`分割开来，就可以返给用户了。
 
-服务端会验证 token，如果验证通过就会从中获取信息。
+服务端会验证 token，如果验证通过就会从中获取信息，可以保证数据的完整性和防止伪造。
 
 > HS256 可以使用单个密钥为给定的数据样本创建签名。当消息与签名一起传输时，接收方可以使用相同的密钥来验证签名是否与消息匹配。
 
@@ -278,17 +278,17 @@ eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJzdWJqZWN0IiwiaXNzIjoiaXNzdWVyIiwibmFtZSI6InhpYW9
 
 <img src="img/Session & Cookie/202309261454578.png" alt="image-20220515174033219" style="zoom:80%;" />
 
-## 4.Cookie和Session的区别
+## 4.Cookie和Token的区别
 
 **1. 存储位置和传输方式**
 
 - **Cookies：** Cookies 是服务器生成并存储在客户端（通常是浏览器）的小段文本数据。它们通过 HTTP 请求的头部（`Cookie`头）发送到服务器，以便在每个请求中携带会话信息。
-- **Tokens：** Tokens 通常是基于 JSON 的数据结构，包含用户信息和其他元数据。它们通常存储在客户端的本地存储（例如，浏览器的本地存储或会话存储）中，然后通过HTTP请求头部（通常是`Authorization`头）或作为查询参数发送到服务器。
+- **Tokens：** Tokens 通常是基于 JSON 的数据结构，包含用户信息和其他元数据。它们通常存储在客户端的本地存储（例如，浏览器的本地存储或会话存储）中，然后通过 HTTP 请求头部（通常是`Authorization`头）或作为查询参数发送到服务器。
 
 **2. 安全性**
 
 - **Cookies：** Cookies 在客户端存储，容易受到跨站点脚本攻击（XSS）和跨站点请求伪造攻击（CSRF）等安全威胁的影响。为了增加安全性，可以使用 HttpOnly 和 Secure 标志来保护 Cookie，但仍然需要小心处理敏感信息。
-- **Tokens：** Tokens 可以更加安全，尤其是当使用 Bearer Token 并结合 HTTPS 加密时。它们存储在客户端，但仅包含有限信息，通常不包含敏感凭据，因此减少了安全风险。此外，JWT（JSON Web Token）等标准可以对 Token 进行**签名**和**加密**，以确保其完整性和安全性。
+- **Tokens：** Tokens 不直接存储在客户端而是作为请求头的一部分，尤其是当使用 Bearer Token 并结合 HTTPS 加密时，虽然不容易受到 XSS 攻击（不像 cookie 容易被 JS 访问）但是会受到 CSRF 攻击，需要采取额外手段如验证 Referer 头等。此外，JWT（JSON Web Token）等标准可以对 Token 进行**签名**和**加密**，以确保其完整性和安全性。
 
 **3. 跨域访问**
 

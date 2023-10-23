@@ -1,24 +1,24 @@
-# 第02章_Pod
+# 第03章_Pod
 
 ## 1.Pod介绍
 
+同一 Pod 内部的各容器具有超亲密关系，他们共享网络协议栈、网络设备、路由、IP 地址和端口等网络资源，可以基于本地回环接口 lo 互相通信。每个 Pod 还可附加一组存储卷（volume）资源实现数据共享，持久类型的数据卷还能保证数据的持久化。Kubernetes 集群的网络模型要求其各 Pod 对象的 IP 地址位于同一网络平面内（同一 IP 网段），各 Pod 间可使用真实 IP 地址直接进行通信，无论他们运行于集群内的哪个工作节点之上。
+
 ### 1.1 结构
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20200407121501907-f2c6952ce8653f267c6e0592877e8506-51f173.png" alt="image-20200407121501907" style="zoom:67%;" />
+<img src="img/第03章_Pod/image-20200407121501907-f2c6952ce8653f267c6e0592877e8506-51f173.png" alt="image-20200407121501907" style="zoom:67%;" />
 
 每个Pod中都可以包含一个或者多个容器，这些容器可以分为两类：
 
 - 用户程序所在的容器，数量可多可少
 
-- Pause 容器，这是每个 Pod 都会有的一个**根容器**，它的作用有两个：
+- `Pause`容器，这是每个 Pod 都会有的一个**根容器**，它的作用有两个：
 
   - 可以以它为依据，评估整个 Pod 的健康状态
 
   - 可以在根容器上设置 IP 地址，其它容器共用这个 IP（Pod IP），以实现 Pod 内部的网路通信
 
-    ```
-    这里是 Pod 内部的通讯，Pod 的之间的通讯采用虚拟二层网络技术来实现，我们当前环境用的是 Flannel
-    ```
+    > 这里是 Pod 内部的通讯，Pod 的之间的通讯采用虚拟二层网络技术来实现，我们当前环境用的是 Flannel
 
 ### 1.2 配置项
 
@@ -539,7 +539,7 @@ Warning  FailedScheduling  6s    default-scheduler  0/3 nodes are available: 1 n
   - 容器的存活性探测（liveness probe）、就绪性探测（readiness probe）
 - Pod 终止过程
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20200412111402706-1626782188724-adeb7bf540a10708bdacb03c2f7c7524-efe5d5.png" alt="img" style="zoom: 50%;" />
+<img src="img/第03章_Pod/image-20200412111402706-1626782188724-adeb7bf540a10708bdacb03c2f7c7524-efe5d5.png" alt="img" style="zoom: 50%;" />
 
 在整个生命周期中，Pod 会出现 5 种**状态**（**相位**），分别如下：
 
@@ -560,7 +560,7 @@ Warning  FailedScheduling  6s    default-scheduler  0/3 nodes are available: 1 n
   5. node 节点上的 Kubelet 发现有 Pod 调度过来，尝试调用 docker 启动容器，并将结果回送至 ApiServer
   6. ApiServer 将接收到的 Pod 状态信息存入 etcd 中
 
-  <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20200406184656917-1626782168787-26e2021c0d047bf8690f5e7ec477bc5d-1b6465.png" alt="img" style="zoom: 50%;" />
+  <img src="img/第03章_Pod/image-20200406184656917-1626782168787-26e2021c0d047bf8690f5e7ec477bc5d-1b6465.png" alt="img" style="zoom: 50%;" />
 
 - Pod 的终止过程
 
@@ -1536,7 +1536,7 @@ Node 被设置上污点之后就和 Pod 之间存在了一种相斥的关系，�
 - `NoSchedule`：kubernetes 将不会把Pod调度到具有该污点的 Node 上，但不会影响当前 Node 上已存在的 Pod
 - `NoExecute`：kubernetes 将不会把Pod调度到具有该污点的 Node 上，同时也会将 Node 上已存在的 Pod 驱离
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20200605021831545-93f3766a93672650b5163c8c6e1a5187-8fa676.png" alt="image-20200605021606508" style="zoom:80%;" />
+<img src="img/第03章_Pod/image-20200605021831545-93f3766a93672650b5163c8c6e1a5187-8fa676.png" alt="image-20200605021606508" style="zoom:80%;" />
 
 使用 kubectl 设置和去除污点的命令示例如下：
 
@@ -1623,7 +1623,7 @@ taint3-6bf445bf69-ftdhf   1/1     Running   0          24m   10.244.2.4   node2 
 
 上面介绍了污点的作用，我们可以在 Node 上添加污点用于拒绝 Pod 调度上来，但是如果就是想将一个 Pod 调度到一个有污点的 Node 上去，这就要使用到容忍。
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202302010048143.png" alt="image-20200514095913741" style="zoom: 67%;" />
+<img src="img/第03章_Pod/202302010048143.png" alt="image-20200514095913741" style="zoom: 67%;" />
 
 
 
