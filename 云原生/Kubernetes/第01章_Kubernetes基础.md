@@ -34,19 +34,19 @@ Kubernetes 的本质是**一组服务器集群**，它可以在集群的每个�
 
 **master**：集群的控制平面，负责集群的决策 (管理)
 
-- **ApiServer**: 资源操作的唯一入口，接收用户输入的命令，提供认证、授权、API 注册和发现等机制
+- **ApiServer**：资源操作的唯一入口，接收用户输入的命令，提供认证、授权、API 注册和发现等机制
 
-- **Scheduler**: 负责集群资源调度，按照预定的调度策略将 Pod 调度到相应的 node 节点上
+- **Scheduler**：负责集群资源调度，按照预定的调度策略将 Pod 调度到相应的 node 节点上
 
-- **ControllerManager**: 负责维护集群的状态，比如程序部署安排、故障检测、自动扩展、滚动更新等
+- **ControllerManager**：负责维护集群的状态，比如程序部署安排、故障检测、自动扩展、滚动更新等
 
 - **Etcd**：负责存储集群中各种资源对象的信息
 
 **node**：集群的数据平面，负责为容器提供运行环境 (干活)
 
-- **Kubelet**: 负责维护容器的生命周期，即通过控制 docker，来创建、更新、销毁容器
-- **KubeProxy**: 负责提供集群内部的服务发现和负载均衡
-- **Docker**: 负责节点上容器的各种操作
+- **Kubelet**：负责维护容器的生命周期，即通过控制 docker，来创建、更新、销毁容器
+- **KubeProxy**：负责提供集群内部的服务发现和负载均衡
+- **Docker**：负责节点上容器的各种操作
 
 <img src="img/第01章_Kubernetes基础/202301281701331.png" alt="image-20200406184656917" style="zoom: 67%;" />
 
@@ -75,13 +75,27 @@ Pod 网络及其 IP 由 Kubernetes 的网络插件负责配置和管理，例如
 
 Service IP 也称为 Cluster IP，专用于集群内通信，一般使用不同于 Pod 网络的专用地址段，例如用 10.96.0.0/12。各 Service 对象的 IP 地址在此范围内由系统创建 Service 对象时动态分配，集群内的 Pod 对象可直接用 Cluster IP 作为目标服务的地址。 
 
-概括来说，Kubernetes集群上会存在 3 个分别用于节点、Pod 和 Service 的不同网络，3 种网络在工作节点之上实现交会，由节点内核中的路由组件以及 iptables/netfilter 和 ipvs 等完成网络间的报文转发：
+概括来说，Kubernetes 集群上会存在 3 个分别用于节点、Pod 和 Service 的不同网络，3 种网络在工作节点之上实现交会，由节点内核中的路由组件以及 iptables/netfilter 和 ipvs 等完成网络间的报文转发：
 
 - 节点网络：各主机（Master 和 Node）自身所属的网络
 - Pod 网络：Pod 对象所属的网络，是一种虚拟网络，需要通过网络插件实现，常见的实现机制有 Overlay 和 Underlay
 - Service 网络：一个虚拟网络，通过 Node 上的 kube-proxy 配置为节点的 iptables 或 ipvs 规则将流量调度至 Service 后端的各 Pod 对象之上
 
 <img src="img/第01章_Kubernetes基础/image-20231023211251455.png" alt="image-20231023211251455" style="zoom:80%;" />
+
+**Pod IP 和 Service IP 的区别：**
+
+**Pod IP**
+
+- 每个 Pod 都有自己的 IP 地址
+- Pod IP 是临时的，如果 Pod 失败或被重新调度，它的 IP 地址可能会发生变化
+- Pod IP 通常用于 Pod 之间的通信，因为它们可以直接相互访问
+
+**Service IP**
+
+- Service 是 Kubernetes 中的一种抽象，用于公开应用程序的网络端点，而不依赖于单个 Pod 的 IP 地址
+- Service IP 是稳定的，即使 Pod 重启或重新调度，Service IP 仍然保持不变
+- Service IP 通常用于从外部访问应用程序，负载均衡流量到后端的多个 Pod
 
 ### 1.5 相关概念
 
@@ -139,7 +153,7 @@ Kubernetes 集群主要由 Master 和 Node 两类节点组成：Master 节点主
 
    <img src="img/第01章_Kubernetes基础/image-20231023215006320.png" alt="image-20231023215006320" style="zoom:80%;" />
 
-2. 静态Pod模式：控制平面的各组件以静态 Pod 对象形式运行在 Master 主机之上，而 Node 主机上的 kubelet 和 Docker 运行为系统级守护进程，kube-proxy 托管于集群上的 DaemonSet 控制器
+2. 静态 Pod 模式：控制平面的各组件以静态 Pod 对象形式运行在 Master 主机之上，而 Node 主机上的 kubelet 和 Docker 运行为系统级守护进程，kube-proxy 托管于集群上的 DaemonSet 控制器
 
    <img src="img/第01章_Kubernetes基础/image-20231023215929240.png" alt="image-20231023215929240" style="zoom:80%;" />
 
