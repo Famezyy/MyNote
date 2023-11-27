@@ -880,8 +880,9 @@ public static void printFileContent(Object obj) throws IOException {
   pOJO2 = completableFuture2.get();
   ```
 
-
 ## 跨域问题
+
+**使用`WebMvcConfigurer`注册**
 
 ```java
 @Configuration
@@ -894,6 +895,64 @@ public class CorsConfig implements WebMvcConfigurer {
             .allowedHeaders("header1", "header2", "header3")
             .exposedHeaders("header1", "header2")
             .allowCredentials(false).maxAge(3600);
+    }
+}
+```
+
+**使用`Filter`注册**
+
+```java
+// 1.使用原生 Filter
+@Component
+@Order(Ordered.HIGHEST_PRECEDENCE)
+public class RequestFilter implements Filter {
+    public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException {
+        HttpServletRequest request = (HttpServletRequest) req;
+        HttpServletResponse response = (HttpServletResponse) res;
+        response.setHeader("Access-Control-Allow-Origin", request.getHeader("Origin"));
+        response.setHeader("Access-Control-Allow-Credentials", "true");
+        response.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS, DELETE");
+        chain.doFilter(req, res);
+    }    
+}
+
+// 2.使用FilterRegistrationBean
+@Configuration
+public class MyConfiguration {
+ 
+    @Bean
+    public FilterRegistrationBean corsFilter() {
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowCredentials(true);
+        config.addAllowedOrigin("http://domain1.com");
+        config.addAllowedHeader("*");
+        config.addAllowedMethod("*");
+        source.registerCorsConfiguration("/**", config);
+        FilterRegistrationBean bean = new FilterRegistrationBean(new CorsFilter(source));
+        bean.setOrder(Ordered.HIGHEST_PRECEDENCE);
+        return bean;
+    }
+}
+```
+
+**针对单个 Controler 进行配置**
+
+```java
+@CrossOrigin(allowCredentials = "true")
+@RestController
+@RequestMapping("/account")
+public class AccountController {
+ 
+    @CrossOrigin(origins = "http://domain2.com")
+    @GetMapping("/{id}")
+    public Account retrieve(@PathVariable Long id) {
+        // ...
+    }
+ 
+    @DeleteMapping("/{id}")
+    public void remove(@PathVariable Long id) {
+        // ...
     }
 }
 ```

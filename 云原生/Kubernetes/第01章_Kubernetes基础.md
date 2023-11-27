@@ -30,7 +30,7 @@ Kubernetes 的本质是**一组服务器集群**，它可以在集群的每个�
 
 ### 1.3 组件
 
-一个 Kubernetes 集群主要是由**控制节点（master）**、**工作节点（node）**构成，每个节点上都会安装不同的组件。
+一个 Kubernetes 集群主要是由**控制节点**（master）、**工作节点**（node）构成，每个节点上都会安装不同的组件。
 
 **master**：集群的控制平面，负责集群的决策 (管理)
 
@@ -47,19 +47,6 @@ Kubernetes 的本质是**一组服务器集群**，它可以在集群的每个�
 - **Kubelet**：负责维护容器的生命周期，即通过控制 docker，来创建、更新、销毁容器
 - **KubeProxy**：负责提供集群内部的服务发现和负载均衡
 - **Docker**：负责节点上容器的各种操作
-
-<img src="img/第01章_Kubernetes基础/202301281701331.png" alt="image-20200406184656917" style="zoom: 67%;" />
-
-下面，以部署一个 nginx 服务来说明 Kubernetes 系统各个组件调用关系：
-
-1. 首先要明确，一旦 Kubernetes 环境启动之后，master 和 node 都会将自身的信息存储到`etcd`数据库中
-2. 一个 nginx 服务的安装请求会首先被发送到 master 节点的`ApiServer`组件
-3. `ApiServer`组件会调用`Scheduler`组件来决定到底应该把这个服务安装到哪个 node 节点上，此时，它会从`etcd`中读取各个 node 节点的信息，然后按照一定的算法进行选择，并将结果告知`ApiServer`
-4. `ApiServer`调用`controller-manager`去调度 Node 节点安装 nginx 服务
-5. `kubelet`接收到指令后，会通知`docker`，然后由`docker`来启动一个 nginx 的`pod`
-6. 同时用户需要额外创建一个具体的 Service 对象为 Pod 建立一个固定的访问入口
-
-至此，一个 nginx 服务就运行了，如果需要访问 nginx，就需要通过`kube-proxy`来对`pod`产生访问的代理。
 
 ### 1.4 网络基础
 
@@ -243,7 +230,7 @@ kubeadm 拉起一个 Kubernetes 集群主要需要两个步骤：先在第一个
 
 ### 1.11 kubeadm配置文件
 
-初始化集群的`kubeadm inti`命令也可通过`--config`选项让配置文件接收配置信息，它支持 InitConfiguration、ClusterConfiguration、KubeProxyConfiguration 和 KubeletConfiguration 这 4 种配置类型，而且仅 InitConfiguration 或 ClusterConfiguration 其中之一为强制要求提供的配置信息。
+初始化集群的`kubeadm init`命令也可通过`--config`选项让配置文件接收配置信息，它支持 InitConfiguration、ClusterConfiguration、KubeProxyConfiguration 和 KubeletConfiguration 这 4 种配置类型，而且仅 InitConfiguration 或 ClusterConfiguration 其中之一为强制要求提供的配置信息。
 
 - InitConfiguration 提供运行时配置，用于配置 Bootstrap Token 及节点自身特有的设置，例如节点名称等
 - ClusterConfiguration 定义集群配置，主要包括 etcd、networking、kubernetesVersion、controlPlaneEndpoint、apiserer、controllerManager、scheduler、imageRepository 和 clusterName 等
@@ -364,14 +351,14 @@ swap 分区指的是虚拟内存分区，它的作用是物理内存使用完，
 查看 swap 分区状态
 
 ```bash
-free -m
+swapon -s
 ```
 
 禁用
 
 ```bash
+swapoff -a
 # 编辑分区配置文件 /etc/fstab，注释掉 swap 分区一行
-# 注意修改完毕之后需要重启 linux 服务
 vim /etc/fstab
 # /dev/mapper/centos-swap swap
 ```
@@ -480,13 +467,21 @@ lsmod | grep -e ip_vs -e nf_conntrack_ipv4
       "max-size": "100m"
     },
     "storage-driver": "overlay2"
-  # "registry-mirrors": ["https://kn0t2bca.mirror.aliyuncs.com", "https://docker.mirrors.ustc.edu.cn", "https://registry.docker-cn.com"]
   }
   EOF
   ```
-
+  
+  > **提示**
+  >
+  > 国内可以添加镜像源：
+  >
+  > ```bash
+  > # 放在{}根下
+  > "registry-mirrors": ["https://kn0t2bca.mirror.aliyuncs.com", "https://docker.mirrors.ustc.edu.cn", "https://registry.docker-cn.com"]
+  > ```
+  
   启动 dokcer 并设置开机启动
-
+  
   ```bash
   systemctl restart docker
   systemctl enable docker
@@ -501,13 +496,11 @@ lsmod | grep -e ip_vs -e nf_conntrack_ipv4
 > sudo dpkg -i cri-dockerd_0.3.6.3-0.ubuntu-jammy_amd64.deb
 > ```
 >
-> 因此建议使用`containerd`，使用`containerd`时，在上面安装 docker 时只需安装`containerd.io`
+> 因此建议使用`containerd`，使用`containerd`时，在上面安装 docker 时只需安装`containerd.io`并配置 `cgroup`：
 >
 > ```bash
 > sudo apt install docker-ce docker-ce-cli containerd.io
 > ```
->
-> 配置 cgroup：
 >
 > 执行`containerd config default > /etc/containerd/config.toml`并修改`SystemdCgroup = true`和确保`disabled_plugins=[]`，修改完成后重启`sudo systemctl restart containerd`。
 >

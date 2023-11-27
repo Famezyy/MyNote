@@ -6,7 +6,7 @@ Docker 是一种容器虚拟化技术，方便做持续集成并有助于整体�
 
 Docker 是基于 Go 语言实现的云开源项目。Docker 的主要目标是`Build，Ship and Run Any App,Anywhere`，即一次镜像，处处运行，通过对应用组件的封装、分发、部署、运行等生命周期的管理，实现了跨平台、跨服务器。
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20230109153105118-9c688ff9385960cd114408b621ca3297-052f0f.png" alt="image-20230109153105118" style="zoom: 67%;" />
+<img src="img/第01章_Docker简介/image-20230109153105118-9c688ff9385960cd114408b621ca3297-052f0f.png" alt="image-20230109153105118" style="zoom: 67%;" />
 
 ### 1.1 Docker的优点
 
@@ -54,11 +54,11 @@ Docker 镜像（Image）就是一个**只读**的模板。镜像可以用来创�
 
 Docker 镜像层都是只读的，容器层是可写的。当容器启动时，一个新的可写层被加载到镜像的顶部。 这一层通常被称作“容器层”，“容器层”之下的都叫“镜像层”。当容器启动时，一个新的可写层被加载到镜像的顶部。这一层通常被称作“容器层”，“容器层”之下的都叫“镜像层”。所有对容器的改动 - 无论添加、删除、还是修改文件都只会发生在容器层中。只有容器层是可写的，容器层下面的所有镜像层都是只读的。
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20230115233542948-3ae7bff9ddab20891cf0509f64539659-0a1e3c.png" alt="image-20230115233542948" style="zoom: 50%;" />
+<img src="img/第01章_Docker简介/image-20230115233542948-3ae7bff9ddab20891cf0509f64539659-0a1e3c.png" alt="image-20230115233542948" style="zoom: 50%;" />
 
 Docker 中的镜像分层，支持通过扩展现有镜像，创建新的镜像。类似 Java 继承于一个 Base 基础类，自己再按需扩展。新镜像是从 base 镜像一层一层叠加生成的。每安装一个软件，就在现有镜像的基础上增加一层。
 
-![image-20230115233901788](https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20230115233901788-f2e9ca648c0e7a220043af5d8c099bee-51047e.png)
+![image-20230115233901788](img/第01章_Docker简介/image-20230115233901788-f2e9ca648c0e7a220043af5d8c099bee-51047e.png)
 
 **容器**
 
@@ -80,7 +80,7 @@ Docker 是一个 C/S 模式的架构，后端是一个松耦合架构，运行�
 6. 通过 Exec Driver 限制 Docker 容器运行资源或执行用户指令等操作
 7. Libcontainer 是一项独立的容器管理包，Network Driver 以及 Exec Driver 都是通过 Libcontainer 来实现具体对容器进行的操作
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20230109162918752-cae0b6d9d5d60e98c56b1cbb0b6460d0-2df30e.png" alt="image-20230109162918752" style="zoom:80%;" />
+<img src="img/第01章_Docker简介/image-20230109162918752-cae0b6d9d5d60e98c56b1cbb0b6460d0-2df30e.png" alt="image-20230109162918752" style="zoom:80%;" />
 
 ## 2.Docker的下载与安装
 
@@ -193,7 +193,7 @@ https://promotion.aliyun.com/ntms/act/kubernetes.html
 
 ## 3.run命令底层流程
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20230109214708010-ec739d0af033be4f8a2841619d0f051e-d9b62d.png" alt="image-20230109214708010"  />
+<img src="img/第01章_Docker简介/image-20230109214708010-ec739d0af033be4f8a2841619d0f051e-d9b62d.png" alt="image-20230109214708010"  />
 
 ## 4.容器和虚拟机
 
@@ -215,4 +215,4 @@ https://promotion.aliyun.com/ntms/act/kubernetes.html
 
    当新建一个容器时，docker 不需要和虚拟机一样重新加载一个操作系统内核。当新建一个虚拟机时，虚拟机软件需要加载 OS，返回新建过程是分钟级别的。而 docker 由于直接利用宿主机的操作系统，则省略了返回过程，因此新建一个 docker 容器只需要几秒钟。
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202301281534918.png" alt="image-20200505183738289" style="zoom:80%;" />
+<img src="img/第01章_Docker简介/202301281534918.png" alt="image-20200505183738289" style="zoom:80%;" />

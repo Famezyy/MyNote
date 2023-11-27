@@ -140,7 +140,7 @@ redislabs/redisearch                Redis With the RedisSearch module pre-loaded
 
 ### 2.7 发布到阿里云
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20230119213036399-7c77f043af85167eb6a71d74f1182b57-eb1c80.png" alt="image-20230119213036399" style="zoom:80%;" />
+<img src="img/第02章_Docker命令/image-20230119213036399-7c77f043af85167eb6a71d74f1182b57-eb1c80.png" alt="image-20230119213036399" style="zoom:80%;" />
 
 阿里云开发者平台：https://promotion.aliyun.com/ntms/act/kubernetes.html
 
@@ -283,11 +283,37 @@ Docker Registry 是官方提供的工具，可以用于构建私有镜像仓库�
   >
   > 需要开启 http 访问！
 
+### 2.10 导出和导入
+
+**导出镜像**
+
+使用`docker save`命令将镜像保存到一个文件中，例如`my_image.tar`：
+
+```
+docker save -o my_image.tar my_image_name:tag
+```
+
+其中`my_image_name:tag`是您要导出的镜像的名称和标签。
+
+这将在当前目录下创建一个名为`my_image.tar`的文件，其中包含了您选择的镜像。
+
+**导入镜像**
+
+在目标 Docker 环境中，将之前导出的镜像文件`my_image.tar`复制到合适的位置。
+
+使用`docker load`命令从文件中导入镜像：
+
+```
+docker load -i my_image.tar
+```
+
+这将从`my_image.tar`文件中还原导出的镜像。您可以使用`docker images`命令检查导入的镜像是否已经加载到本地镜像列表中。
+
 ### 面试题：docker 虚悬镜像
 
 仓库名、标签都是\<none\>的镜像，俗称虚悬镜像 dangling image。
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20230109225918706-fe135b483329b2e8cd7c21bdca45c136-9e2697.png" alt="image-20230109225918706" style="zoom:80%;" />
+<img src="img/第02章_Docker命令/image-20230109225918706-fe135b483329b2e8cd7c21bdca45c136-9e2697.png" alt="image-20230109225918706" style="zoom:80%;" />
 
 ## 3.容器命令
 
@@ -411,7 +437,7 @@ Docker Registry 是官方提供的工具，可以用于构建私有镜像仓库�
 
 ### 3.12 总结
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20230115222224465-4eafac09eb0af2b1736b092a5fc85784-3a5e8f.png" alt="image-20230115222224465"  />
+<img src="img/第02章_Docker命令/image-20230115222224465-4eafac09eb0af2b1736b092a5fc85784-3a5e8f.png" alt="image-20230115222224465"  />
 
 ```bash
 attach    Attach to a running container                 # 当前 shell 下 attach 连接指定运行镜像

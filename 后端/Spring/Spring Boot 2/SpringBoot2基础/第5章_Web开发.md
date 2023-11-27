@@ -384,6 +384,8 @@ public class CSVParser implements Parser {
 
 ## 4.视图解析与模板引擎
 
+如果不是一个**RestController**则返回 String 时会自动将其视为视图并进行解析，如果无法解析则抛出相关错误。
+
 ### 4.1 视图解析
 
 `SpringBoot`默认不支持 JSP，需要引入第三方模块引擎技术实现页面渲染。
@@ -592,6 +594,7 @@ public String main(User user, HttpSession session, Model model) {
         return "redirect:/main.html";
     } else {
         model.addAttribute("msg", "incorrect password");
+        // thymeleaf 会试图在 /resources/templates 下找 login.html 模板文件
         return "login";
     }
 }
@@ -821,13 +824,13 @@ public class InterceptorRegistry {
 }
 ```
 
-> **拦截器与过滤器区别**
->
-> <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20221126145109515-e114f94e27ce22b901c7f0927a429035-150191.png" alt="image-20221126145109515" style="zoom:67%;" />
->
-> 1. 过滤器和拦截器触发时机不一样，过滤器是在请求进入容器后，但请求进入 servlet 之前进行预处理的；拦截器是在进入 controller 前进行预处理
->2. filter 接口在`javax.servlet`包下面，interceptor 在`org.springframework.web.servlet`下面，可以使用 spring 的组件
-> 3. filter 通过`dochain`放行，intercetor 通过`prehandler`放行，并且粒度更细，还有`posthandler`、`aftercompletion`方法来处理 controller 执行后或者异常发生后的逻辑
+### 5.4 拦截器与过滤器区别
+
+<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20221126145109515-e114f94e27ce22b901c7f0927a429035-150191.png" alt="image-20221126145109515" style="zoom:67%;" />
+
+1. 过滤器和拦截器触发时机不一样，过滤器是在请求进入容器后，但请求进入 servlet 之前进行预处理的；拦截器是在进入 controller 前进行预处理
+2. filter 接口在`javax.servlet`包下面，interceptor 在`org.springframework.web.servlet`下面，可以使用 spring 的组件
+3. filter 通过`dochain`放行，intercetor 通过`prehandler`放行，并且粒度更细，还有`posthandler`、`aftercompletion`方法来处理 controller 执行后或者异常发生后的逻辑
 
 ## 6.文件上传
 
@@ -1140,7 +1143,7 @@ public class DispatcherServletAutoConfiguration {
 
 3. 编写自定义的配置类`@Configuration` + `@Bean`替换或者增加组件
 
-   - 实现`WebMvcConfigurer`可定制化大部分 web 功能
+   - 可以实现`WebMvcConfigurer`可定制化大部分 web 功能
      - 开启矩阵变量
      - 添加`converter`
      - 添加内容协商策略

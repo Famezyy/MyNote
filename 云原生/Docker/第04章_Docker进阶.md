@@ -6,7 +6,7 @@ Dockerfile 是用来构建 Docker 镜像的文本文件，是由一条条构建�
 
 官网：https://docs.docker.com/engine/reference/builder/
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20230122220731223-4142ba0c93cebb98a94613ccfb4a8be1-c32c54.png" alt="image-20230122220731223" style="zoom:67%;" />
+<img src="img/第04章_Docker进阶/image-20230122220731223-4142ba0c93cebb98a94613ccfb4a8be1-c32c54.png" alt="image-20230122220731223" style="zoom:67%;" />
 
 **构建三步骤**
 
@@ -155,10 +155,10 @@ Dockerfile 面向开发，Docker 镜像成为交付标准，Docker 容器则涉�
   CMD ["/etc/nginx/nginx.conf"]
   ```
 
-  |     是否传参     |     按照 dockerfile 编写执行     |                  传参运行                   |
-  | :--------------: | :------------------------------: | :-----------------------------------------: |
-  |   Docker 命令    |     `docker run nginx:test`      | `docker run nginx:test /etc/nginx/new.conf` |
-  | 衍生出的实际命令 | `nginx -c /etc/nginx/nginx.conf` |       `nginx -c /etc/nginx/new.conf`        |
+  |              |              不传参              |                    传参                     |
+  | :----------: | :------------------------------: | :-----------------------------------------: |
+  | Docker 命令  |     `docker run nginx:test`      | `docker run nginx:test /etc/nginx/new.conf` |
+  | 实际执行命令 | `nginx -c /etc/nginx/nginx.conf` |       `nginx -c /etc/nginx/new.conf`        |
 
 ### 1.3 案例1
 
@@ -625,7 +625,7 @@ $ docker inspect micro | tail -n 20
 
 新建的容器和已经存在的一个容器共享一个网络 IP 配置而不是和宿主机共享。新创建的容器不会创建自己的网卡，配置自己的IP，而是和一个指定的容器共享 IP、端口范围等。同样，两个容器除了网络方面，其他的如文件系统、进程列表等还是隔离的。
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/202301250314194.png" alt="image-20230121190827447" style="zoom:67%;" />
+<img src="img/第04章_Docker进阶/202301250314194.png" alt="image-20230121190827447" style="zoom:67%;" />
 
 此时要注意新建的容器所暴露的端口不能和原容器相同，否则会出错：
 

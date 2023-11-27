@@ -140,3 +140,25 @@ System.out.println(Character.isSurrogate(s2.charAt(5))); // true
 在**编译期**，java 编译器要求字符串字面量的长度小于`Poll.MAX_STRING_LENGTH = 2^16-1 = 65535`，也就是最大`65534`。
 
 在**运行期**，字符串是以`char[]`形式存在，而数组长度是 int 类型，`Integer.MAX_VALUE = 2^31-1 = 2147483647`，约为 21 亿，一个 char 占用两个字节，共需要大约 4G 存储空间。
+
+## MessageFormat
+
+```java
+public class MessageFormatterExample {
+    public static void main(String[] args) {
+        String message = "Hello, {0}. Today is {1}.";
+        String formattedMessage = MessageFormat.format(message, "John", "Monday");
+        System.out.println(formattedMessage);
+    }
+}
+
+public class MessageArrayExample {
+    public static void main(String[] args) {
+        String message = "User {0} has logged in from {1} IP.";
+        Object[] arguments = {"Alice", "192.168.1.100"};
+        String formattedMessage = MessageFormat.format(message, arguments);
+        System.out.println(formattedMessage);
+    }
+}
+```
+

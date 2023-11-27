@@ -11,6 +11,8 @@
 
 如果上述两种方法同时使用，则消息的过期时间以两者之间 TTL **较小**的那个数值为准。消息在队列的生存时间一旦超过设置的 TTL 值，就称为`dead message`被投递到死信队列，消费者将无法再收到该消息。
 
+不过，过期时间 TTL 有个大问题：假设，我们先往队列放入一条过期时间是 10 秒的 A 消息，再放入一条过期时间是 5 秒的 B 消息。B 消息会优先遵守队列的先进先出规则，在 A 消息过期后，和其一起进入死信队列被消费者消费。
+
 ### 1.2 设置队列TTL
 
 - 配置类
@@ -141,6 +143,8 @@
 > **区别**
 >
 > 过期队列当消息过期后会移除到`死信队列`中，而过期消息过期后就会被直接移除。
+
+
 
 ## 2.消息确认机制的配置
 
@@ -707,8 +711,6 @@ channel.basicPublish(
 );
 ```
 
-
-
 **SpringBoot**
 
 消息持久化是通过消息的属性 deliveryMode 来设置是否持久化。持久化的是队列的元数据以及数据相关存储位置指针。
@@ -958,8 +960,6 @@ RabbitMQ 这款消息队列中间件产品本身是基于 Erlang 编写，Erlang
    > spring.rabbitmq.addresses= 192.168.11.101:5672,192.168.11.102:5673
    > ```
 
-
-
 **小结**
 
 主从节点都运行时，不论主从节点都可以操作数据，但是**如果主节点下线，从节点则无法操作数据**。
@@ -977,6 +977,106 @@ RabbitMQ 这款消息队列中间件产品本身是基于 Erlang 编写，Erlang
    ip2：rabbit-2
 
 其它步骤雷同单机部署方式。
+
+### 5.3 Docker搭建
+
+执行如下命令，创建三个 RabbitMQ 容器
+
+```bash
+$ docker run -d --hostname rabbit01 --name mq01 -p 5671:5672 -p 15671:15672 -e RABBITMQ_ERLANG_COOKIE="rabbitmq_cookie" rabbitmq
+$ docker run -d --hostname rabbit02 --name mq02 -p 5672:5672 -p 15672:15672 --link mq01:mylink01 -e RABBITMQ_ERLANG_COOKIE="rabbitmq_cookie" rabbitmq
+$ docker run -d --hostname rabbit03 --name mq03 -p 5673:5672 -p 15673:15672 --link mq01:mylink02 --link mq02:mylink03 -e RABBITMQ_ERLANG_COOKIE="rabbitmq_cookie" rabbitmq
+```
+
+mq02 和 mq03 分别使用了`--link`参数来实现容器连接。注意：mq03 容器既要能够连接 mq01，也要能够连接 mq02。
+
+执行如下命令，将 mq02 容器加入到集群中：
+
+```bash
+$ docker exec -it mq02 /bin/bash
+$ rabbitmqctl stop_app
+$ rabbitmqctl join_cluster rabbit@rabbit01
+$ rabbitmqctl start_app
+```
+
+执行如下命令，将 mq03 容器加入到集群中：
+
+```bash
+$ docker exec -it mq03 /bin/bash
+$ rabbitmqctl stop_app
+$ rabbitmqctl join_cluster rabbit@rabbit01
+$ rabbitmqctl start_app
+```
+
+进入任意一个容器内，输入以下命令查看集群状态：
+
+```bash
+$ rabbitmqctl cluster_status
+```
+
+开启控制台界面，在每一个容器内，执行以下命令：
+
+```bash
+$ rabbitmq-plugins enable rabbitmq_management 
+```
+
+> **错误**：控制台界面点击 Connection 提示 Stats in management UI are disabled on this node
+>
+> ```bash
+> $ docker exec -it mq01 /bin/bash  # 进入容器
+> $ cd /etc/rabbitmq/conf.d/   # 进入容器内该目录下
+> $ echo management_agent.disable_metrics_collector = false > management_agent.disable_metrics_collector.conf
+> $ exit  # 退出当前容器
+> $ docker restart mq01  # 重启容器
+> ```
+
+但是此时 mq01 关机时从节点将无法使用。可以通过搭建镜像集群解决。
+
+### 5.4 搭建镜像集群
+
+镜像集群不需要额外搭建，只需要将队列配置为镜像队列即可。这个配置可以通过网页配置，也可以通过命令行配置。
+
+#### 1.网页配置镜像队列
+
+1. 点击 Admin 选项卡，然后点击右边的 Policies，再点击`Add/update a policy`
+
+2. 接下来，添加一个策略
+
+   <img src="img/第7章_RabbitMQ高级/image-20231126144521220.png" alt="image-20231126144521220" style="zoom:67%;" />
+
+   各参数含义如下：
+
+   - Name：policy 的名称
+
+   - Pattern：queue 的匹配模式（正则表达式）
+
+   - Definition：镜像定义，主要由三个参数：ha-mode，ha-params，ha-sync-mode。
+
+     - ha-mode：指明镜像队列的模式，有效值为 all、exactly、nodes。其中 all 表示在集群中所有的节点上进行镜像（默认即此）；exactly 表示在指定个数的节点上进行镜像，节点的个数由 ha-params 指定；nodes 表示在指定的节点上进行镜像，节点名称通过 ha-params 指定。
+
+     - ha-params：ha-mode 模式需要用到的参数
+
+     - ha-sync-mode：进行队列中消息的同步方式，有效值为 automatic 和 manual
+
+3. 配置完成后，点击下面的`add/update policy`按钮，完成策略的添加
+
+添加完成后，进行一个简单测试：
+
+首先确认三个 RabbitMQ 都启动了，然后向消息队列发送一条消息。发送完成之后关闭 mq01 实例。接下来启动 consumer，此时发现 consumer 可以完成消息的消费（注意和前面的反向测试区分），这就说明镜像队列已经搭建成功了。
+
+#### 2.命令行配置镜像队列
+
+命令行的配置格式如下：
+
+```bash
+rabbitmqctl set_policy [-p vhost] [--priority priority] [--apply-to apply-to] {name} {pattern} {definition}
+```
+
+例如：
+
+```bash
+rabbitmqctl set_policy -p / --apply-to queues my_queue_mirror "^" '{"ha-mode":"all","ha-sync-mode":"automatic"}'
+```
 
 ## 6.分布式事务
 

@@ -576,13 +576,58 @@ public User getUser(User queryPram, int[] arr, String str) {
 
 ---
 
-## 4.Spring 的缓存抽象
-
-**API 结构**
+## 4.Spring 的缓存
 
 <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220113005837032-feb75e3e93bb8b305c1294b0e1ce09df-ce844d.png" alt="image-20220113005837032" style="zoom:80%;" />
 
----
+```java
+@Configuration
+@EnableCaching
+public class CacheConfig {
+    // 创建 cacheManager
+    @Bean
+    public CacheManager cacheManager() {
+        return new ConcurrentMapCacheManager("cacheName");
+    }
+}
+```
+
+```java
+@Service
+public class TokenService {
+    // 使用 Cacheable 注解传入 cache 的名称和 key 的名称，方法返回的值会被设置为 value
+    @CachePut(value = "cacheName", key="'token'")
+    public String getToken() throws NasToolsException {
+        ...
+    }
+}
+```
+
+```java
+@RestController
+public class InfoController {
+    // 使用 cacheManager
+    @Autowired
+    CacheManager cacheManager;
+
+    @Autowired
+    TokenService tokenService;
+
+    @GetMapping("/getInfos")
+    public XXXResponse getInfos() throws NasToolsException {
+        HttpHeaders httpHeaders = new HttpHeaders();
+        for (int i = 0; i < 2; i++) {
+            Cache.ValueWrapper cacheWrapper = cacheManager.getCache("cacheName").get("token");
+            if (Objects.isNull(cacheWrapper)) {
+                tokenService.getToken();
+                continue;
+            }
+            String token = cacheWrapper.get().toString();
+            httpHeaders.set("Authorization", token);
+            ...
+    }
+}
+```
 
 ## 5.自定义缓存
 

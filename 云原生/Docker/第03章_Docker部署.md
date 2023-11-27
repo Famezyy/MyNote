@@ -324,7 +324,7 @@ Redis 集群模式为了解决单机 Redis 容量有限的问题，将数据按�
 
 Redis 集群中内置了 16384 个哈希槽，redis 会根据节点数量大致均等的将哈希槽映射到不同的节点。当需要在 Redis 集群中放置一个 key-value 时，redis 先对 key 使用 crc16 算法算出一个结果，然后把结果对 16384 求余数，这样每个 key 都会对应一个编号在 0-16383 之间的哈希槽，也就是映射到某个节点上。如下代码，key 之 A 、B 在 Node2， key 之 C 落在 Node3 上：
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20230121190827447-b9a8299d17a335489c92489f6abaa9ce-749934.png" alt="image-20230121190827447" style="zoom:67%;" />
+<img src="img/第03章_Docker部署/image-20230121190827447-b9a8299d17a335489c92489f6abaa9ce-749934.png" alt="image-20230121190827447" style="zoom:67%;" />
 
 ### 3.2 哨兵配置
 
