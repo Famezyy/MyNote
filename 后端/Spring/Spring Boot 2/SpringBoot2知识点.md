@@ -1,4 +1,4 @@
-## application/x-www-form-urlencoded 类型的请求
+## 1.application/x-www-form-urlencoded 类型的请求
 
 由 RequestParamMethodArgumentResolver 参数解析器解析
 
@@ -26,7 +26,7 @@ private HandlerMethodArgumentResolver getArgumentResolver(MethodParameter parame
 | @RequestParam |    ×    |  √   |  ×   |
 | @RequestBody  |    ×    |  ×   |  ×   |
 
-## spring、springMVC、springboot的区别
+## 2.spring、springMVC、springboot的区别
 
 `spring`是一个 IOC 容器，用来管理 Bean，使用依赖注入实现控制反转，可以方便的整合各种框架，提供 AOP 机制弥补 OOP 的代码重复问题，更方便地将不同类不同方法中的共同处理抽取成切面，自动注入给方法执行，比如日志、异常等。
 
@@ -38,7 +38,7 @@ private HandlerMethodArgumentResolver getArgumentResolver(MethodParameter parame
 
 `springboot`是`spring`提供的一个快速开发工具包，相当于`springMVC`的进阶版，让程序员能更方便、更快速的开发`spring+springMVC`应用，简化了配置（约定了默认配置，使用 class 代替 xml 配置文件），整合了一系列的解决方案（starter 机制）。
 
-## IOC
+## 3.IOC
 
 `IOC容器`，实际上就是个`map(key, value)`，里面存的是`各种对象`（在 xml 里配置的 bean 节点、@Repository、@Service、@Controller、@Component），在项目启动的时候会读取配置文件里面的 bean 节点，根据全限定类名使用反射创建对象放到 map 里。
 
@@ -58,23 +58,19 @@ private HandlerMethodArgumentResolver getArgumentResolver(MethodParameter parame
 
 获得依赖对象的过程由自身管理变成了由`IOC容器`主动注入，依赖注入是实现`IOC`的方法，就是由`IOC容器`在运行期间，动态地将某种依赖关系注入到对象之中。
 
-## 一个注解，优雅的实现循环重试功能
+## 4.一个注解，优雅的实现循环重试功能
 
 在实际工作中，重处理是一个非常常见的场景，比如：
 
-- 发送消息失败。
-- 调用远程服务失败。
-- 争抢锁失败。
+- 发送消息失败
+- 调用远程服务失败
+- 争抢锁失败
 
 这些错误可能是因为网络波动造成的，等待过后重处理就能成功。通常来说，会用`try/catch`，`while`循环之类的语法来进行重处理，但是这样的做法缺乏统一性，并且不是很方便，要多写很多代码。然而`spring-retry`却可以通过注解，在不入侵原有业务逻辑代码的方式下，优雅的实现重处理功能。
 
-### 1.@Retryable是什么？
-
 spring 系列的`spring-retry`是另一个实用程序模块，可以帮助我们以标准方式处理任何特定操作的重试。在`spring-retry`中，所有配置都是基于简单注释的。
 
-### 2.使用步骤
-
-#### POM依赖
+### 4.1 POM依赖
 
 ```xml
 <dependency>
@@ -83,7 +79,7 @@ spring 系列的`spring-retry`是另一个实用程序模块，可以帮助我�
 </dependency>
 ```
 
-#### 启用`@Retryable`
+### 4.2 启用`@Retryable`
 
 ```java
 @EnableRetry
@@ -95,7 +91,7 @@ public class HelloApplication {
 }
 ```
 
-#### 在方法上添加`@Retryable`
+### 4.3 在方法上添加`@Retryable`
 
 ```java
 @Service
@@ -104,8 +100,8 @@ public class TestRetryServiceImpl implements TestRetryService {
     @Override
     @Retryable(value = Exception.class, maxAttempts = 3, backoff = @Backoff(delay = 2000,multiplier = 1.5))
     public int test(int code) throws Exception{
-        System.out.println("test被调用,时间："+LocalTime.now());
-          if (code==0){
+        System.out.println("test被调用,时间：" + LocalTime.now());
+          if (code == 0){
               throw new Exception("情况不对头！");
           }
         System.out.println("test被调用,情况对头了！");
@@ -118,16 +114,16 @@ public class TestRetryServiceImpl implements TestRetryService {
 来简单解释一下注解中几个参数的含义：
 
 - `value`：抛出指定异常才会重试
-- `include`：和 value 一样，默认为空，当 exclude 也为空时，默认所有异常
+- `include`：和`value`一样，默认为空，当`exclude`也为空时，默认所有异常
 - `exclude`：指定不处理的异常
-- `maxAttempts`：最大重试次数，默认3次
-- `backoff`：重试等待策略，默认使用`@Backoff`，`@Backoff`的 value 默认为1000L，我们设置为2000L；`multiplier`（指定延迟倍数）默认为 0，表示固定暂停 1 秒后进行重试，如果把`multiplier`设置为1.5，则第一次重试为 2 秒，第二次为 3 秒，第三次为 4.5 秒。
+- `maxAttempts`：最大重试次数，默认 3 次
+- `backoff`：重试等待策略，默认使用`@Backoff`，`@Backoff`的 value 默认为1000L，我们设置为2000L；`multiplier`（指定延迟倍数）默认为 0，表示固定暂停 1 秒后进行重试，如果把`multiplier`设置为1.5，则第一次重试为失败后 2 秒后，第二次为 3 秒后，第三次为 4.5 秒后。
 
 **当重试耗尽时还是失败，会出现什么情况呢？**
 
 当重试耗尽时，`RetryOperations`可以将控制传递给另一个回调，即`RecoveryCallback`。`Spring-Retry`还提供了`@Recover`注解，用于 @Retryable 重试失败后处理方法。如果不需要回调方法，可以直接不写回调方法，那么实现的效果是，重试次数完了后，如果还是没成功没符合业务判断，就抛出异常。
 
-#### @Recover
+### 4.4 指定回调方法@Recover
 
 ```java
 @Recover
@@ -144,16 +140,16 @@ public int recover(Exception e, int code){
 - 方法的第一个参数，必须是 Throwable 类型的，建议是与`@Retryable`配置的异常一致，其他的参数，需要哪个参数，写进去就可以了（`@Recover`方法中有的）
 - 该回调方法与重试方法写在同一个实现类里面
 
-#### 注意事项
+### 4.5 注意事项
 
 - 由于是基于 AOP 实现，所以不支持类里自调用方法
 - 如果重试失败需要给`@Recover`注解的方法做后续处理，那这个重试的方法不能有返回值，只能是 void
 - 方法内不能使用`try catch`，只能往外抛异常
-- `@Recover`注解来开启重试失败后调用的方法(注意，需跟重处理方法在同一个类中)，此注解注释的方法参数一定要是`@Retryable`抛出的异常，否则无法识别，可以在该方法中进行日志处理。
+- `@Recover`注解来开启重试失败后调用的方法需跟重处理方法在同一个类中，此注解注释的方法参数一定要是`@Retryable`抛出的异常，否则无法识别，可以在该方法中进行日志处理
 
-## starter
+## 5.starter
 
-### 1.简介
+### 5.1 简介
 
 为了让开发者在开发 spring 生态下的企业级应用的时候，只需要关心业务逻辑，减少对配置和外部环境的依赖。
 
@@ -207,7 +203,7 @@ public int recover(Exception e, int code){
 > - 官方维护的 starter：spring-boot-starter-xxx
 > - 第三方维护的 starter：xxx-spring-boot-starter
 
-### 2.启动原理
+### 5.2 启动原理
 
 `starter -- autoconfigure -- spring-boot-starter`
 
@@ -215,7 +211,7 @@ autoconfigure 包中配置使用`META-INF/spring.factories`中`EnableAutoConfigu
 
 > 在 3.0 版本后发生了改变：在`META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`文件中配置。
 
-### 3.自定义starter
+### 5.3 自定义starter
 
 1. `youyi-zhao-spring-boot-starter-autoconfigure`：自动配置包
 
@@ -316,7 +312,7 @@ autoconfigure 包中配置使用`META-INF/spring.factories`中`EnableAutoConfigu
 
    构成如下：
 
-   <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220626204240534-8753ddc31363e4d3dde82a575d868621-c58c99.png" alt="image-20220626204240534" style="zoom:80%;" />
+   <img src="img/SpringBoot2知识点/image-20220626204240534-8753ddc31363e4d3dde82a575d868621-c58c99.png" alt="image-20220626204240534" style="zoom:80%;" />
 
 2. `youyi-zhao-spring-boot-starter`：启动器
 
@@ -361,25 +357,25 @@ autoconfigure 包中配置使用`META-INF/spring.factories`中`EnableAutoConfigu
 </dependency>
 ```
 
-### 4.配置元数据的应用
+### 5.4 配置元数据的应用
 
 在使用Spring Boot开发应用的时候，你是否有发现这样的情况：自定义属性是有高量背景的，鼠标放上去，有一个`Cannot resolve configuration property`的配置警告。
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/pasted-416-371e44563206b051351c6ac70fda9396-799edc.png" alt="img" style="zoom: 33%;" />
+<img src="img/SpringBoot2知识点/pasted-416-371e44563206b051351c6ac70fda9396-799edc.png" alt="img" style="zoom: 33%;" />
 
 如果不对于这个警告觉得烦，想要去掉，那么可以通过设置来去除：
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/pasted-417-490d99a60c44d9b9190b3815c8c70ea8-c7fe3c.png" alt="img" style="zoom: 33%;" />
+<img src="img/SpringBoot2知识点/pasted-417-490d99a60c44d9b9190b3815c8c70ea8-c7fe3c.png" alt="img" style="zoom: 33%;" />
 
 但是，我的建议是不要去掉，因为这个警告正好可以通过高亮来区分你的自定义配置以及框架配置，可以让你快速的分辨哪些是自定义的。
 
 如果你实在想去掉，那么也不建议用上面说的方法，而是建议通过完善配置元数据的方式来完成。所以，今天就来具体说说配置元数据的应用！
 
-#### 啥是配置元数据？
+#### 1.配置元数据
 
 我们不妨打开一个已经创建好的 Spring Boot 项目，查看一下它的 Spring Boot 依赖包，可以找到如下图的一个 json 文件：
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/pasted-418-576a784db9b54e15ba83f01bf55ac6fd-e8112d.png" alt="img" style="zoom: 33%;" />
+<img src="img/SpringBoot2知识点/pasted-418-576a784db9b54e15ba83f01bf55ac6fd-e8112d.png" alt="img" style="zoom: 33%;" />
 
 这里报错的就是配置的元数据信息。有没有发现这些`name`的值都很熟悉？其中`description`是不是也很熟悉？对，这些就是我们常用的 Spring Boot 原生配置的元数据信息。
 
@@ -387,7 +383,7 @@ autoconfigure 包中配置使用`META-INF/spring.factories`中`EnableAutoConfigu
 
 而我们自定义配置之所以会报警告，同时也没有提示信息，就是因为没有这个元数据的配置文件！
 
-#### 配置元数据的自动生成
+#### 2.配置元数据的自动生成
 
 既然知道了原理，那么接下来我们尝试用一下配置元数据试试！
 
@@ -420,17 +416,17 @@ public class DidiProperties {
 
 此时我们可以在工程target目录下找到元数据文件：
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/pasted-419-0bac7d2b4294ac0ad586cf0e71c65ab2-bbe30c.png" alt="img" style="zoom: 33%;" />
+<img src="img/SpringBoot2知识点/pasted-419-0bac7d2b4294ac0ad586cf0e71c65ab2-bbe30c.png" alt="img" style="zoom: 33%;" />
 
 同时，我们在配置文件中尝试编写这个自定义的配置项时，可以看到编译器给出了联想和提示：
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/pasted-420-c244f2fe484077daedd274207c09b51b-76694f.png" alt="img" style="zoom: 33%;" />
+<img src="img/SpringBoot2知识点/pasted-420-c244f2fe484077daedd274207c09b51b-76694f.png" alt="img" style="zoom: 33%;" />
 
 并且，编写完配置之后，也没有高亮警告了！
 
-## 定时任务
+## 6.定时任务
 
-### 1.简单定时任务
+### 6.1 简单定时任务
 
 对于一些比较简单的定时任务，比如固定时间间隔执行固定方法，在标准 Java 方法上注解`@Scheduled`即可
 
@@ -490,7 +486,7 @@ public class SpringBootDemoApplication {
 >
 > 对于`fixedDelay`来说，不管业务代码执行时间与定时任务间隔时间熟长熟短，定时任务都会等业务代码执行完成后再开启新一轮定时。
 
-### 2.corn表达式
+### 6.2 corn表达式
 
 corn 表达式格式：秒 分 时 日 月 星期 年（可选）
 
@@ -544,7 +540,7 @@ corn 表达式格式：秒 分 时 日 月 星期 年（可选）
 
 0 11,22,33 * * * ? 每小时11分、22分、33分触发
 
-### 3.配置定时任务
+### 6.3 配置定时任务
 
 对于上面那些简单的定时任务，定时任务的 corn 表达式写死在代码里，如果要改动表达式，需要修改代码，重新打包发布，比较麻烦。因此，我们可以把 corn 表达式配置在配置文件中，然后程序读取配置，当需要修改表达式时，只需要修改配置文件即可。
 
@@ -568,7 +564,7 @@ public class ScheduledTask {
 }
 ```
 
-### 4.动态修改定时任务
+### 6.4 动态修改定时任务
 
 对于有些情况，我们需要在代码中，通过方法动态修改定时任务corn表达式
 
@@ -615,7 +611,7 @@ public class ScheduledTaskV2 implements SchedulingConfigurer {
 }
 ```
 
-### 5.并发执行定时任务
+### 6.5 并发执行定时任务
 
 定时任务类添加注解`@EnableAsync`，需并发执行的定时任务方法添加注解`@Async`
 
@@ -658,7 +654,7 @@ public class ScheduledTaskV3 {
 }
 ```
 
-## 热部署
+## 7.热部署
 
 ```xml
 <dependency>
@@ -670,7 +666,7 @@ public class ScheduledTaskV3 {
 
 项目或者页面修改以后：`ctrl+F9`
 
-## 兼容Junit4及之前版本
+## 8.兼容Junit4及之前版本
 
 SpringBoot 2.2.0 版本开始后引入 Junit5 作为单元测试默认库，要想兼容 Junit4，需要引入一下依赖：
 
@@ -688,7 +684,7 @@ SpringBoot 2.2.0 版本开始后引入 Junit5 作为单元测试默认库，要�
 </dependency>
 ```
 
-## 读取Resources目录
+## 9.读取Resources目录
 
 这是一个公共方法，用来读取文件中的内容的方法。
 
@@ -732,9 +728,9 @@ public static void printFileContent(Object obj) throws IOException {
   }
   ```
 
-- `T.class..getResourceAsStream()`
+- `T.class.getResourceAsStream()`
 
-  此方法跟要读取的文件与当前.class 文件的位置有关。如果 test.properties 和 ResourceUtil 在同一个文件夹下，那么：`this.getClass().getResourceAsStream(“test.properties”)`，
+  此方法跟要读取的文件与当前 .class 文件的位置有关。如果 test.properties 和 ResourceUtil 在同一个文件夹下，那么：`this.getClass().getResourceAsStream(“test.properties”)`，
   如果 test.properties 和 ResourceUtil 不在同一个文件夹下，那么：`this.getClass().getResourceAsStream(“/config/test.properties”)`。
 
   ```java
@@ -790,7 +786,7 @@ public static void printFileContent(Object obj) throws IOException {
   ```
 
 
-## 异步执行
+## 10.异步执行
 
 - 在配置类上开启异步
 
@@ -880,7 +876,7 @@ public static void printFileContent(Object obj) throws IOException {
   pOJO2 = completableFuture2.get();
   ```
 
-## 跨域问题
+## 11.跨域问题
 
 **使用`WebMvcConfigurer`注册**
 
@@ -957,7 +953,7 @@ public class AccountController {
 }
 ```
 
-## 连接数
+## 12.连接数
 
 最大连接数为`max-connections`和`accept-count`的和，当再有连接进来时不会直接返回而是先等待，超过超时时间后返回超时错误
 
