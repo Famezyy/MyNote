@@ -274,13 +274,13 @@ MySQL官方网站窗口函数的网址为https://dev.mysql.com/doc/refman/8.0/en
 函数 OVER 窗口名 … WINDOW 窗口名 AS （[PARTITION BY 字段名 ORDER BY 字段名 ASC|DESC]）
 ```
 
-- OVER 关键字指定函数窗口的范围。
-  - 如果省略后面括号中的内容，则窗口会包含满足WHERE条件的所有记录，窗口函数会基于所有满足WHERE条件的记录进行计算。
-  - 如果OVER关键字后面的括号不为空，则可以使用如下语法设置窗口。
-- 窗口名：为窗口设置一个别名，用来标识窗口。
-- PARTITION BY子句：指定窗口函数按照哪些字段进行分组。分组后，窗口函数可以在每个分组中分别执行。
-- ORDER BY子句：指定窗口函数按照哪些字段进行排序。执行排序操作使窗口函数按照排序后的数据记录的顺序进行编号。
-- FRAME子句：为分区中的某个子集定义规则，可以用来作为滑动窗口使用。
+- `OVER`关键字指定函数窗口的范围
+  - 如果省略后面括号中的内容，则窗口会包含满足`WHERE`条件的所有记录，窗口函数会基于所有满足`WHERE`条件的记录进行计算
+  - 如果`OVER`关键字后面的括号不为空，则可以使用如下语法设置窗口
+- 窗口名：为窗口设置一个别名，用来标识窗口
+- `PARTITION BY`子句：指定窗口函数按照哪些字段进行分组。分组后，窗口函数可以在每个分组中分别执行
+- `ORDER BY`子句：指定窗口函数按照哪些字段进行排序。执行排序操作使窗口函数按照排序后的数据记录的顺序进行编号
+- `FRAME`子句：为分区中的某个子集定义规则，可以用来作为滑动窗口使用
 
 ### 2.4 分类讲解
 
@@ -324,7 +324,7 @@ VALUES
 
 **1．ROW_NUMBER()函数**
 
-ROW_NUMBER()函数能够对数据中的序号进行顺序显示。
+`ROW_NUMBER()`函数能够对数据中的序号进行顺序显示。
 
 举例：查询 goods 数据表中每个商品分类下价格降序排列的各个商品信息。
 
@@ -351,7 +351,7 @@ mysql> SELECT ROW_NUMBER() OVER(PARTITION BY category_id ORDER BY price DESC) AS
 12 rows in set (0.00 sec)
 ```
 
-举例：查询 goods 数据表中每个商品分类下价格最高的3种商品信息。
+举例：查询 goods 数据表中每个商品分类下价格最高的 3 种商品信息。
 
 ```mysql
 mysql> SELECT *
@@ -377,11 +377,11 @@ mysql> SELECT *
 
 **2．RANK()函数**
 
-使用RANK()函数能够对序号进行并列排序，并且会跳过重复的序号，比如序号为1、1、3。
+使用`RANK()`函数能够对序号进行并列排序，并且会跳过重复的序号，比如序号为 1、1、3。
 
-举例：使用RANK()函数获取 goods 数据表中各类别的价格从高到低排序的各商品信息。
+举例：使用`RANK()`函数获取 goods 数据表中各类别的价格从高到低排序的各商品信息。
 
-```
+```sql
 mysql> SELECT RANK() OVER(PARTITION BY category_id ORDER BY price DESC) AS row_num,
     -> id, category_id, category, NAME, price, stock
     -> FROM goods;
@@ -404,7 +404,7 @@ mysql> SELECT RANK() OVER(PARTITION BY category_id ORDER BY price DESC) AS row_n
 12 rows in set (0.00 sec)
 ```
 
-举例：使用RANK()函数获取 goods 数据表中类别为“女装/女士精品”的价格最高的4款商品信息。
+举例：使用`RANK()`函数获取 goods 数据表中类别为“女装/女士精品”的价格最高的4款商品信息。
 
 ```mysql
 mysql> SELECT *
