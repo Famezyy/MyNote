@@ -325,17 +325,17 @@ sudo timedatectl set-timezone Asia/Tokyo
 sudo ufw disable && sudo ufw status
 ```
 
-#### *5.禁用selinux
+#### 5.禁用selinux（CentOS）
 
-selinux 是 linux 系统下的一个安全服务，如果不关闭它，在安装集群中会产生各种各样的奇葩问题
+selinux 是 CentOS 系统下的一个安全服务，如果不关闭它，在安装集群中会产生各种各样的奇葩问题
 
-查看 selinux 状态
+**查看 selinux 状态**
 
 ```bash
-getenforce
+sestatus
 ```
 
-禁用
+**禁用**
 
 ```bash
 # 编辑 /etc/selinux/config 文件，修改 SELINUX 的值为 disable

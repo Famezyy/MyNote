@@ -3181,69 +3181,9 @@ Redis-Cluster 采用无中心结构，它的特点如下：
 
 ### 2.集群的搭建
 
-> 搭建结果：制作 6 个实例，6379,6380,6381
->
->  6389,6390,6391 上下对应主从
+https://www.bilibili.com/video/BV1aW4y1a7JW/?spm_id_from=333.788&vd_source=5b004fc5b31265edeacd61f026781ce2
 
-- 删除文件夹中的全部持久化文件 rdb 或者 aof
-
-- 新建六个配置文件，内容如下：(除了端口号不一样，其他都一样)
-
-  ```bash
-  include /myredis/redis.conf
-  pidfile "/var/run/redis_6391.pid"
-  port 6391
-  dbfilename "dump6391.rdb"
-  # 打开集群模式
-  cluster-enabled yes
-  # 设定节点配置文件名
-  cluster-config-file nodes-6391.conf
-  # 设定节点失联时间，超过该时间（毫秒），集群自动进行主从切换
-  cluster-node-timeout 15000
-  ```
-
-> `:%s/6379/6380` 是 vim 的替换命令
-
-- 启动6个服务
-
-  <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/10-839ab6bde63464f3f25e7adf10f63a46-4e94da" alt="img" style="zoom:80%;" />
-
-  要确保 nodes-xxxx.conf 生成。
-
-- 将六个节点合成一个集群
-
-  > 组合之前，请确保所有 redis 实例启动后，nodes-xxxx.conf 文件都生成正常
-
-  先到 redis 的 src 目录中（需要 ruby 环境）
-
-  ```bash
-  cd  /opt/redis-6.2.1/src
-  ```
-
-  运行集成集群命令
-
-  ```bash
-  redis-cli --cluster create --cluster-replicas 1 192.168.242.110:6379 192.168.242.110:6380 192.168.242.110:6381 192.168.242.110:6389 192.168.242.110:6390 192.168.242.110:6391
-  ```
-
-  说明：ip 一定要真实 ip，不能是 localhost 或者127.0.0.1
-
-   --replicas 1 配置集群，一台主机，一台从机，正好三组
-
-  <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/11-0fd3114dd0dd55fd2bcd74d6bc7ce79e-d780de" alt="image-20220122173502725" style="zoom:67%;" />
-
-- **查看是否集成成功**
-
-  ```bash
-  # 连接Redis
-  redis-cli -c -p 6379
-  # 查看集群信息
-  cluster nodes
-  ```
-
-  <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/12-17e7a6d7cd1f0db638de1d6547fcc4a4-f2bf21" alt="img" style="zoom:80%;" />
-
-### 3 集群操作和故障恢复
+### 3.集群操作和故障恢复
 
 #### 3.1 集群操作
 
@@ -3363,7 +3303,7 @@ public class JedisClusterTest {
 > spring.redis.cluster.nodes=192.168.159.129:7001,192.168.159.129:7002,192.168.159.129:7003,192.168.159.129:7004,192.168.159.129:7005,192.168.159.129:7006
 > ```
 
-### 4 Redis的好处与不足
+### 4.集群的好处与不足
 
 **好处**
 
@@ -3697,7 +3637,7 @@ public void testLockLua() {
 
     <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/0d0fd42952cf4553be17a1d6c7a7166f-4846b5a7947c27880eb2d5eb798f9d8a-a106a8.png" alt="img"  />
 
-### 2 IO多线程
+### 2.IO多线程
 
 > IO 多线程其实指**客户端交互部分**的**网络IO**交互处理模块**多线程**，而非**执行命令多线程**，Redis6 执行命令依然是单线程
 
@@ -3712,9 +3652,9 @@ public void testLockLua() {
 >
 > io-threads 4
 
-### 3 工具支持 Cluster
+### 3.工具支持Cluster
 
-​    之前老版 Redis 想要搭集群需要单独安装 ruby 环境，Redis 5 将 redis-trib.rb 的功能集成到 redis-cli 。另外官方 redis-benchmark 工具开始支持 cluster 模式了，通过多线程的方式对多个分片进行压测压。
+之前老版 Redis 想要搭集群需要单独安装 ruby 环境，Redis 5 将 redis-trib.rb 的功能集成到 redis-cli 。另外官方 redis-benchmark 工具开始支持 cluster 模式了，通过多线程的方式对多个分片进行压测压。
 
 ![img](https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQ1NDA4Mzkw,size_16,color_FFFFFF,-8e77f934bd4da0ffa59838205c62bf7e-d8465b)
 
