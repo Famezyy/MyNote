@@ -745,7 +745,7 @@ spring.redis.password=123456
     -v /tmp/apps/redis_node_${port}/data:/data \
     --net=host\
     redis redis-server /etc/redis/redis_${port}.conf
-  done
+    done
   ```
 
 **集群配置**

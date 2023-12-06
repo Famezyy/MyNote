@@ -685,7 +685,37 @@ $ docker exec -it alpine2 ip addr
 
 可以发现`eth0`消失了。
 
-#### 5.自定义网络
+#### 5.macvlan
+
+Macvlan 是一种网络驱动程序，允许你为 Docker 容器分配一个与物理网络相同的 MAC 地址，使容器可以直接与物理网络中的其他设备通信。Macvlan 网络允许 Docker 容器获得与主机相同的网络级别。
+
+以下是一些 Macvlan 网络的关键特点和用法：
+
+1. **直接连接到物理网络**
+
+    Macvlan 网络允许 Docker 容器直接连接到物理网络，使得容器可以像物理设备一样进行通信，而无需通过 NAT（Network Address Translation）。
+
+2. **与物理网络隔离** 
+
+   每个容器都被赋予一个唯一的 MAC 地址，并且容器之间以及与物理网络上的其他设备之间都是隔离的。
+
+3. **与容器通信**
+
+   Macvlan 网络允许容器之间直接通信，就像它们是同一网络中的物理设备一样。
+
+4. **支持多种模式**
+
+   Macvlan 网络支持不同的模式，包括 bridge、private 和 passthrough。这些模式允许你根据需求配置 Macvlan 网络，以满足特定的使用场景。
+
+在 Docker 中创建 Macvlan 网络的示例命令如下：
+
+```bash
+docker network create -d macvlan --subnet=192.168.1.0/24 --ip-range=192.168.1.0/24 --gateway=192.168.1.1 -o parent=ens33 mymacvlan
+```
+
+上述命令中，`--subnet`指定了子网的 IP 范围，`--ip-range`指定了可供容器使用的IP地址范围，`--gateway`指定了网关的 IP 地址，`-o parent`指定了物理网卡的名称。
+
+#### 6.自定义网络
 
 > `link`模式已过时
 
