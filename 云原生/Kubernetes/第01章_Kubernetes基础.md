@@ -253,7 +253,7 @@ https://kubernetes.io/zh-cn/docs/setup/production-environment/tools/kubeadm/inst
 | node01 | 172.16.19.201 | docker，kubectl，kubeadm，kubelet |
 | node02 | 172.16.19.202 | docker，kubectl，kubeadm，kubelet |
 
-本书示例中使用的操作系统、容器引擎、etcd及Kubernetes的相关版本如下：
+本书示例中使用的操作系统、容器引擎、etcd 及 Kubernetes 的相关版本如下：
 
 - 操作系统：Ubuntu 22.04 LTS 64bit
 - 容器运行时引擎：conotainerd
