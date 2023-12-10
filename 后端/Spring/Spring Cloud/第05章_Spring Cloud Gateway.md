@@ -654,5 +654,38 @@ spring:
           - Check=test
 ```
 
-## 6.全局过滤器配置
+### 5.6 全局过滤器配置
 
+`GlobalFilter`接口和`GatewayFilter`有一样的接口定义，但是`GlobalFilter`会作用于所有路由。
+
+<img src="img/第05章_Spring Cloud Gateway/image-20231210180105305.png" alt="image-20231210180105305" style="zoom:67%;" />
+
+**自定义全局过滤器**
+
+```java
+@Component
+public class LogFilter implements GlobalFilter {
+
+    Logger log = LoggerFactory.getLogger(this.getClass());
+
+    @Override
+    public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
+        log.info(exchange.getRequest().getPath().value());
+        return chain.filter(exchange);
+    }
+}
+```
+
+## 6.Reactor Netty访问日志（了解）
+
+需要在 VM 启动环境变量中添加：`-Dreactor.netty.http.server.accessLogEnabled=true`，开启后会默认打印请求访问日志。
+
+## 7.跨域配置
+
+**（1）通过 YAML 配置**
+
+https://docs.spring.io/spring-cloud-gateway/reference/spring-cloud-gateway/cors-configuration.html
+
+
+
+**（2）通过 JAVA 配置**

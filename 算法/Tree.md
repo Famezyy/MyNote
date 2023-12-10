@@ -243,15 +243,15 @@ class Sector {
 }
 ```
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220720004831315-aebc269660d82d44eaa6d5adf5354be8-01e0bb.png" alt="image-20220720004831315" style="zoom:80%;" />
+<img src="img/Tree/image-20220720004831315-aebc269660d82d44eaa6d5adf5354be8-01e0bb.png" alt="image-20220720004831315" style="zoom:80%;" />
 
 ### 1.查询树
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220720004903615-140d97bd941125d627ded6723880ff26-46b5f0.png" alt="image-20220720004903615" style="zoom:80%;" />
+<img src="img/Tree/image-20220720004903615-140d97bd941125d627ded6723880ff26-46b5f0.png" alt="image-20220720004903615" style="zoom:80%;" />
 
 ### 2.更新树
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220720004604270-7b8c002159ee19c9a85f3ffd8948a25e-f45289.png" alt="image-20220720004604270" style="zoom:80%;" />
+<img src="img/Tree/image-20220720004604270-7b8c002159ee19c9a85f3ffd8948a25e-f45289.png" alt="image-20220720004604270" style="zoom:80%;" />
 
 > 创建左右节点时将懒更新的值下推到子节点
 
