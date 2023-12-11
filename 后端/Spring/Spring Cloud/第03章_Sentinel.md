@@ -377,7 +377,7 @@ public class CustomizedExceptionHandler {
    
        @SentinelResource("handle")
        public String handle() {
-   	return "handle";
+   	    return "handle";
        }
    
    }
@@ -391,9 +391,9 @@ public class CustomizedExceptionHandler {
    >
    > ```yaml
    > spring:
-   > cloud:
-   >  sentinel:
-   >    web-context-unity: false
+   >   cloud:
+   >      sentinel:
+   >          web-context-unity: false
    > ```
    >
    > 同时因为此时使用了`@SentinelResource`，则`BlockExceptionHandler`就会失效，可以通过`@SentinelResource`注解的`blockHandler`属性设置流控处理，或者使用 SpringMVC 的全局异常处理（`@ControllerAdvice` + `@ExceptionHandler`或者`ResponseEntityExceptionHandler`）
@@ -694,10 +694,10 @@ Sentinel 1.4.0 开始引入了集群流控模块，主要包含以下几部分�
         }
     
         public static void main(String[] args) throws Exception {
-    	ClusterTokenServer tokenServer = new SentinelDefaultTokenServer();
-    	ClusterServerConfigManager
-    		.loadGlobalTransportConfig(new ServerTransportConfig().setIdleSeconds(600).setPort(10217));
-    	tokenServer.start();
+            ClusterTokenServer tokenServer = new SentinelDefaultTokenServer();
+            ClusterServerConfigManager
+                .loadGlobalTransportConfig(new ServerTransportConfig().setIdleSeconds(600).setPort(10217));
+            tokenServer.start();
         }
     
     }

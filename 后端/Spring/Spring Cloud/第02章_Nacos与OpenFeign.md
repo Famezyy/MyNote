@@ -411,6 +411,15 @@ Nacos Discovery Starter 可以将服务自动注册到 Nacos 服务端并且能�
 - Linux/Unix/Mac：`sh shutdown.sh`
 - Wubdiws：`shutdown.cmd`
 
+#### 5.调整日志输出级别
+
+```bash
+# 调整 naming 模块的 naming-raft.log 的级别为 error
+curl -X PUT '$nacos_server:8848/nacos/v1/ns/operator/log?logName=naming-raft&logLevel=error'
+# 调整 config 模块的 config-dump.log 的级别为 warn
+curl -X PUT '$nacos_server:8848/nacos/v1/cs/ops/log?logName=config-dump&logLevel=warn'
+```
+
 ### 2.3 Nacos Client部署
 
 改造 order 和 stock 两个微服务。
@@ -596,7 +605,7 @@ Nacos Discovery Starter 可以将服务自动注册到 Nacos 服务端并且能�
 
 - 创建 MySQL 容器并初始化数据库
 
-  创建容器参考【Docker部署】，创建表：[sql语句源文件](https://github.com/alibaba/nacos/blob/master/distribution/conf/mysql-schema.sql)
+  创建容器参考[Docker 部署 Mysql](../../../云原生/Docker/第03章_Docker部署.md#52-Mysql)，创建表：[sql语句源文件](https://github.com/alibaba/nacos/blob/master/distribution/conf/mysql-schema.sql)
 
   > **注意**
   >
@@ -879,7 +888,7 @@ services:
     networks:
       - my_net
     healthcheck:
-      test: [ "CMD", "curl", "-f", "nacos1:8848/nacos" ]
+      test: [ "CMD", "curl", "-f", "nacos2:8848/nacos" ]
       interval: 5s
       timeout: 10s
       retries: 10
@@ -899,7 +908,7 @@ services:
     networks:
       - my_net
     healthcheck:
-      test: [ "CMD", "curl", "-f", "nacos1:8848/nacos" ]
+      test: [ "CMD", "curl", "-f", "nacos3:8848/nacos" ]
       interval: 5s
       timeout: 10s
       retries: 10
@@ -1703,6 +1712,12 @@ Group  :    DEFAULT_GROUP
   	return env.getProperty("user.id") + env.getProperty("user.age");
       }
   }
+  ```
+
+- 通过注解获取
+
+  ```java
+  @NacosPropertySource(dataId = "pre-loan-provider-nacos",groupId = "pre-loan",autoRefreshed = true)
   ```
 
 ### 5.4 按环境获取配置

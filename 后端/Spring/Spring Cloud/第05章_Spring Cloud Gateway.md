@@ -682,10 +682,286 @@ public class LogFilter implements GlobalFilter {
 
 ## 7.跨域配置
 
+默认情况下浏览器会阻止跨域请求，例如对于下面的 ajax 请求网页：
+
+```html
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="http://apps.bdimg.com/libs/jquery/1.9.1/jquery.min.js"></script>
+</head>
+<body>
+    <div>
+        <table border="1">
+            <thead>
+              <tr>
+                  <th>id</th>
+                  <th>username</th>
+                  <th>age</th>
+              </tr>
+            </thead>
+            <tbody id="userlist"></tbody>
+        </table>
+    </div>
+    <input type=button value="list" onclick="getData()">
+    <script>
+        function getData() {
+            $.get('http://localhost:8088/order/add', function (data) {
+                alert(data)
+            })
+        }
+    </script>
+</body>
+</html>
+```
+
+在 IDEA 中用浏览器打开后运行在 63342 端口，此时由于域名与后端端口不同，如果点击按钮的话会出现如下错误：
+
+<img src="img/第05章_Spring Cloud Gateway/image-20231211195753900.png" alt="image-20231211195753900" style="zoom:67%;" />
+
 **（1）通过 YAML 配置**
 
 https://docs.spring.io/spring-cloud-gateway/reference/spring-cloud-gateway/cors-configuration.html
 
+```yaml
+spring:
+  cloud:
+    gateway:
+      globalcors:
+        cors-configurations:
+          '[/**]':                                             # 允许跨域访问的端点
+            allowedOrigins: "*"                                # 允许跨域访问的来源，"*"表示所有来源
+            allowedMethods:
+            - GET
+            - POST
+```
+
+在配置中心配置好，需要==**重启 Gateway 服务**==，再发起 Ajax 请求发现可以正常得到结果。
+
+**（2）通过 JAVA 配置类配置**
+
+```java
+@Configuration
+public class CorsConfig {
+    @Bean
+    public CorsWebFilter corsFilter() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.addAllowedMethod("*");
+        config.addAllowedOrigin("*");
+        config.addAllowedHeader("*");
+
+        // 在网关中添加时需要创建以下的类
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource(new PathPatternParser());
+        source.registerCorsConfiguration("/**", config);
+
+        return new CorsWebFilter(source);
+    }
+}
+```
+
+## 8.整合Sentinel流控降级
+
+### 8.1 环境配置
+
+1. 添加依赖
+
+   ```xml
+   <!-- spring cloud gateway 核心 -->
+   <dependency>
+       <groupId>org.springframework.cloud</groupId>
+       <artifactId>spring-cloud-starter-gateway</artifactId>
+   </dependency>
+   <!-- spring cloud gateway sentinel 适配器-->
+   <dependency>
+       <groupId>com.alibaba.csp</groupId>
+       <artifactId>sentinel-spring-cloud-gateway-adapter</artifactId>
+   </dependency>
+   <!-- spring cloud gateway sentinel连接控制台，发现服务 -->
+   <dependency>
+       <groupId>com.alibaba.csp</groupId>
+       <artifactId>sentinel-transport-simple-http</artifactId>
+   </dependency>
+   ```
+
+2. 添加配置类
+
+   ```java
+   @Configuration
+   public class GatewayConfiguration {
+   
+       private final List<ViewResolver> viewResolvers;
+       private final ServerCodecConfigurer serverCodecConfigurer;
+   
+       public GatewayConfiguration(ObjectProvider<List<ViewResolver>> viewResolversProvider,
+                                   ServerCodecConfigurer serverCodecConfigurer) {
+           this.viewResolvers = viewResolversProvider.getIfAvailable(Collections::emptyList);
+           this.serverCodecConfigurer = serverCodecConfigurer;
+       }
+   
+       @Bean
+       @Order(Ordered.HIGHEST_PRECEDENCE)
+       public SentinelGatewayBlockExceptionHandler sentinelGatewayBlockExceptionHandler() {
+           return new SentinelGatewayBlockExceptionHandler(viewResolvers, serverCodecConfigurer);
+       }
+   
+       @Bean
+       @Order(-1)
+       public GlobalFilter sentinelGatewayFilter() {
+           return new SentinelGatewayFilter();
+       }
+   }
+   ```
+
+3. 添加 VM 启动参数
+
+   ```bash
+   -Dcsp.sentinel.app.type=1 -Dcsp.sentinel.dashboard.server=localhost:8077 -Dproject.name=gateway-sentinel
+   ```
+
+通过 API 网关访问端口后会在控制台生成相应的链路。
+
+使用 SpringMVC 提供的处理异常方法
+
+### 8.2 配置流控降级规则
+
+#### 1.单个资源流控
 
 
-**（2）通过 JAVA 配置**
+
+<img src="img/第05章_Spring Cloud Gateway/image-20231211215550605.png" alt="image-20231211215550605" style="zoom:67%;" />
+
+- 针对请求属性：可以针对 IP、host、header、URL 参数、cookie 来进行流控
+- QPS 间隔：表示监测多长时间内 QPS 的阈值
+
+#### 2.API分组流控
+
+也可以新建一个 API 分组统一进行流控：
+
+<img src="img/第05章_Spring Cloud Gateway/image-20231211221844619.png" alt="image-20231211221844619" style="zoom:67%;" />
+
+之后在流控规则中选择 API 分组：
+
+<img src="img/第05章_Spring Cloud Gateway/image-20231211222004899.png" alt="image-20231211222004899" style="zoom:67%;" />
+
+### 8.3 自定义异常
+
+#### 1.通过代码配置
+
+```java
+@Configuration
+public class GatewayConfiguration {
+    @PostConstruct
+    public void init() {
+        BlockRequestHandler blockRequestHandler = new BlockRequestHandler() {
+            @Override
+            public Mono<ServerResponse> handleRequest(ServerWebExchange exchange, Throwable ex) {
+                return ServerResponse.status(HttpStatus.OK)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(BodyInserters.fromValue(Error.from(100, "服务忙")));
+            }
+        };
+        GatewayCallbackManager.setBlockHandler(blockRequestHandler);
+    }
+}
+```
+
+#### 2.通过YAML配置
+
+```Yaml
+spring:
+  cloud:
+    sentinel:
+      scg:
+        fallback:
+          mode: response
+          response-body="{code:"", message:""}"
+```
+
+### 8.4 代码方式加载网关规则（了解）
+
+```java
+@PostConstruct
+public void doInit() {
+    
+    // 初始化自定义的 API
+    initCustomizedApis();
+    // 初始化网关规则
+    initGatewayRules();
+    // 设置自定义异常处理器
+    initBlockRequestHandler();
+}
+    
+private void initCustomizedApis() {
+    Set<ApiDefinition> definitions = new HashSet<>();
+    ApiDefinition api1 = new ApiDefinition("customized_api")
+            .setPredicateItems(new HashSet<ApiPredicateItem>() {{
+                add(new ApiPathPredicateItem().setPattern("/api/**")
+                        .setMatchStrategy(SentinelGatewayConstants.URL_MATCH_STRATEGY_PREFIX));
+            }});
+
+    ApiDefinition api2 = new ApiDefinition("book_content_api")
+            .setPredicateItems(new HashSet<ApiPredicateItem>() {{
+                add(new ApiPathPredicateItem().setPattern("/api/book/queryBookContent**")
+                        .setMatchStrategy(SentinelGatewayConstants.URL_MATCH_STRATEGY_PREFIX));
+            }});
+    definitions.add(api1);
+    definitions.add(api2);
+    GatewayApiDefinitionManager.loadApiDefinitions(definitions);
+
+}
+
+/**
+ * 自定义网关限流规则
+ * 1.对所有api接口通过IP进行限流,每个IP，2秒钟内请求数量大于10，即视为爬虫
+ * 2.对小说内容接口访问进行限流，每个IP，1秒钟请求数量大于1，则视为爬虫
+ * */
+
+private void initGatewayRules() {
+    Set<GatewayFlowRule> rules = new HashSet<>();
+    // resource：资源名称，可以是网关中的 route 名称或者自定义的 API 分组
+    // count：限流阈值
+    // intervalSec：统计时间窗口，默认 1 秒
+    rules.add(new GatewayFlowRule("customized_api")
+            .setResourceMode(SentinelGatewayConstants.RESOURCE_MODE_CUSTOM_API_NAME)
+            .setCount(10)
+            .setIntervalSec(2)
+            .setParamItem(new GatewayParamFlowItem()
+                    .setParseStrategy(SentinelGatewayConstants.PARAM_PARSE_STRATEGY_CLIENT_IP)
+            )
+    );
+
+    rules.add(new GatewayFlowRule("book_content_api")
+            .setResourceMode(SentinelGatewayConstants.RESOURCE_MODE_CUSTOM_API_NAME)
+            .setCount(1)
+            .setIntervalSec(1)
+            .setParamItem(new GatewayParamFlowItem()
+                    .setParseStrategy(SentinelGatewayConstants.PARAM_PARSE_STRATEGY_CLIENT_IP)
+            )
+    );
+    // 加载网关规则
+    GatewayRuleManager.loadRules(rules);
+}
+
+private void initBlockRequestHandler() {
+    BlockRequestHandler blockRequestHandler = new BlockRequestHandler() {
+        @Override
+        public Mono<ServerResponse> handleRequest(ServerWebExchange exchange, Throwable ex) {
+            Map<String, String> result = new HashMap<>();
+            result.put("code", String.valueOf(HttpStatus.TOO_MANY_REQUESTS.value()));
+            result.put("msg", HttpStatis.TOO_MANY_REQUESTS.getReasonPhrase());
+            return ServerResponse.status(HttpStatus.OK)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(BodyInserters.fromValue(result));
+        }
+    };
+    GatewayCallbackManager.setBlockHandler(blockRequestHandler);
+}
+}
+```
+
+验证降级、验证 YAML 错误响应，验证错误响应是否适用于降级
+
+## 9.网关高可用
+
+可以同时启动多个 Gateway 实例，使用 LVS 或者 Nginx 进行负载。

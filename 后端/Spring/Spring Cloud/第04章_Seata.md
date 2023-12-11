@@ -377,7 +377,7 @@ seata-server 支持以下环境变量：
 
 - **SERVER_NODE**
 
-  可选, 用于指定 seata-server 节点 ID, 如 `1`,`2`,`3`..., 默认为`根据ip生成`。
+  可选, 用于指定 seata-server 节点 ID, 如 `1`,`2`,`3`..., 默认为**根据 ip 生成**。
 
 - **SEATA_ENV**
 
