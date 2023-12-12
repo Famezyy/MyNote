@@ -148,4 +148,4 @@ static class ThreadLocalMap {
 但是此时只有`key`被回收了，`Entry`对象中的`value`却永远被保存下来了，这就是内存泄漏的问题。设想如果这发生在**线程池**中：一个线程被使用并创建了`ThreadLocal`变量，但是发生了内存泄露并返回给了线程池。甚者`key`也没有被回收并回到了线程池中。
 所以线程池在回收线程后，会首先清理`threadLocals`。
 
-> 调用 get() 方法和 set() 方法都会重复利用 key 为 null 的 Entry。
+> 调用`get()`方法和`set()`方法都会重复利用 key 为 null 的 Entry。

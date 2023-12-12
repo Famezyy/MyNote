@@ -101,7 +101,7 @@ Spring Cloud Gateway 是 Spring Cloud 官方推出的响应式的 API 网关，�
 
 ## 3.集成Nacos
 
-### 3.1 继承注册中心
+### 3.1 集成注册中心
 
 1. **引入依赖**
 
@@ -821,9 +821,9 @@ public class CorsConfig {
 
 通过 API 网关访问端口后会在控制台生成相应的链路。
 
-使用 SpringMVC 提供的处理异常方法
-
 ### 8.2 配置流控降级规则
+
+spring cloud Gateway 中使用 sentinel 时的降级规则不适用于 4xx 和 5xx 错误。
 
 #### 1.单个资源流控
 
@@ -856,26 +856,17 @@ public class GatewayConfiguration {
         BlockRequestHandler blockRequestHandler = new BlockRequestHandler() {
             @Override
             public Mono<ServerResponse> handleRequest(ServerWebExchange exchange, Throwable ex) {
+               Map<String, String> result = new HashMap<>();
+                result.put("code", String.valueOf(HttpStatus.TOO_MANY_REQUESTS.value()));
+                result.put("msg", HttpStatus.TOO_MANY_REQUESTS.getReasonPhrase());
                 return ServerResponse.status(HttpStatus.OK)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(BodyInserters.fromValue(Error.from(100, "服务忙")));
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(BodyInserters.fromValue(result));
             }
         };
         GatewayCallbackManager.setBlockHandler(blockRequestHandler);
     }
 }
-```
-
-#### 2.通过YAML配置
-
-```Yaml
-spring:
-  cloud:
-    sentinel:
-      scg:
-        fallback:
-          mode: response
-          response-body="{code:"", message:""}"
 ```
 
 ### 8.4 代码方式加载网关规则（了解）
@@ -948,19 +939,17 @@ private void initBlockRequestHandler() {
         @Override
         public Mono<ServerResponse> handleRequest(ServerWebExchange exchange, Throwable ex) {
             Map<String, String> result = new HashMap<>();
-            result.put("code", String.valueOf(HttpStatus.TOO_MANY_REQUESTS.value()));
-            result.put("msg", HttpStatis.TOO_MANY_REQUESTS.getReasonPhrase());
-            return ServerResponse.status(HttpStatus.OK)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(BodyInserters.fromValue(result));
+                result.put("code", String.valueOf(HttpStatus.TOO_MANY_REQUESTS.value()));
+                result.put("msg", HttpStatus.TOO_MANY_REQUESTS.getReasonPhrase());
+                return ServerResponse.status(HttpStatus.OK)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(BodyInserters.fromValue(result));
         }
     };
     GatewayCallbackManager.setBlockHandler(blockRequestHandler);
 }
 }
 ```
-
-验证降级、验证 YAML 错误响应，验证错误响应是否适用于降级
 
 ## 9.网关高可用
 

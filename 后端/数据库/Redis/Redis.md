@@ -104,10 +104,10 @@
 
 1. 前台启动(不推荐使用)
 
-```
-cd /usr/local/bin
-redis-server
-```
+   ```bash
+   cd /usr/local/bin
+   redis-server
+   ```
 
 2. 后台启动
 

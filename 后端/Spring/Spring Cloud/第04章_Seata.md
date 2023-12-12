@@ -226,7 +226,7 @@ Server 端存储模式（store.mode）现有 file、db、redis 三种（后续�
 
 #### 1.JAR包启动
 
-##### 步骤一：启动包
+##### 步骤一：下载包
 
 [点击下载](https://github.com/seata/seata/releases)
 
@@ -234,13 +234,29 @@ Server 端存储模式（store.mode）现有 file、db、redis 三种（后续�
 
 [建表语句](https://github.com/seata/seata/tree/master/script/server/db)
 
-全局事务会话信息由3块内容构成，全局事务-->分支事务-->全局锁，对应表 global_table、branch_table、lock_table
+全局事务会话信息由 3 块内容构成，全局事务-->分支事务-->全局锁，对应表 global_table、branch_table、lock_table
 
 ##### 步骤三：修改 store.mode
 
-- 启动包：seata-->conf-->application.yml，修改 store.mode="db 或者 redis"
+- 启动包：seata-->conf-->application.example.yml 中附带额外配置，将其 db|redis 相关配置复制至 application.yml，进行修改 store.db 或 store.redis 相关属性
+- 源码：根目录-->seata-server-->resources-->application.example.yml 中附带额外配置，将其 db|redis 相关配置复制至 application.yml，进行修改 store.db 或 store.redis 相关属性
 
-- 源码：根目录-->seata-server-->resources-->application.yml，修改 store.mode="db 或者 redis"
+```yml
+store:
+    mode: redis
+    redis:
+      mode: single
+      type: lua
+      database: 0
+      min-conn: 10
+      max-conn: 100
+      password:
+      max-total: 100
+      query-limit: 1000
+      single:
+        host: 192.168.11.100
+        port: 6379
+```
 
 1.5.0 以下版本:
 
@@ -248,28 +264,40 @@ Server 端存储模式（store.mode）现有 file、db、redis 三种（后续�
 
 - 源码：根目录-->seata-server-->resources-->file.conf，修改 store.mode="db 或者 redis"
 
-同时还要修改数据库 URL 和用户名密码。
+##### 步骤四：修改注册中心和配置中心
 
-##### 步骤四：修改数据库连接|redis 属性配置
-
-- 启动包：seata-->conf-->application.example.yml 中附带额外配置，将其 db|redis 相关配置复制至 application.yml，进行修改 store.db 或 store.redis 相关属性。
-
-- 源码：根目录-->seata-server-->resources-->application.example.yml 中附带额外配置，将其 db|redis 相关配置复制至 application.yml，进行修改 store.db 或 store.redis 相关属性。
-
-1.5.0 以下版本:
-
-- 启动包：seata-->conf-->file.conf，修改 store.db 或 store.redis 相关属性。
-- 源码：根目录-->seata-server-->resources-->file.conf，修改 store.db 或 store.redis 相关属性。
+```yaml
+config:
+    # support: nacos, consul, apollo, zk, etcd3
+    type: nacos
+    nacos:
+      server-addr: 192.168.11.100:8848
+      namespace: public
+      group: SEATA_GROUP
+      username: nacos
+      password: nacos
+  registry:
+    # support: nacos, eureka, redis, zk, consul, etcd3, sofa
+    type: nacos
+    nacos:
+      application: seata-server
+      server-addr: 192.168.11.100:8848
+      namespace: public
+      group: SEATA_GROUP
+      cluster: default
+      username: nacos
+      password: nacos
+```
 
 ##### 步骤五：启动
 
 - 源码启动: 执行`ServerApplication.java`的`main`方法
-- 命令启动: [seata-server.sh](http://seata-server.sh/) -h 127.0.0.1 -p 8091 -m db
+- 命令启动: `seata-server.sh`
 
 1.5.0 以下版本
 
 - 源码启动: 执行`Server.java`的`main`方法
-- 命令启动: [seata-server.sh](http://seata-server.sh/) -h 127.0.0.1 -p 8091 -m db -n 1 -e test
+- 命令启动: `seata-server.sh -h 127.0.0.1 -p 8091 -m db -n 1 -e test`
 
 ```bash
 -h: 注册到注册中心的 ip
@@ -281,7 +309,7 @@ Server 端存储模式（store.mode）现有 file、db、redis 三种（后续�
 
 注: 堆内存建议分配 2G，堆外内存 1G
 
-#### 2.docker启动
+#### 2.docker启动（不推荐）
 
 [docker部署](https://seata.io/zh-cn/docs/ops/deploy-by-docker.html)
 
@@ -322,7 +350,7 @@ docker cp seata-serve:/seata-server/resources /youyi/seata/config
 
 拷出后可以，可以选择修改 application.yml 再 cp 进容器，或者 rm 临时容器，然后重新创建，并做好映射路径设置。
 
-修改配置文件
+**修改配置文件**
 
 ```yaml
 store:
@@ -343,6 +371,26 @@ store:
       distributed-lock-table: distributed_lock
       query-limit: 100
       max-wait: 5000
+config:
+    # support: nacos, consul, apollo, zk, etcd3
+    type: nacos
+    nacos:
+      server-addr: 192.168.11.100:8848
+      namespace: public
+      group: SEATA_GROUP
+      username: nacos
+      password: nacos
+registry:
+# support: nacos, eureka, redis, zk, consul, etcd3, sofa
+  type: nacos
+  nacos:
+    application: seata-server
+    server-addr: 192.168.11.100:8848
+    namespace: public
+    group: SEATA_GROUP
+    cluster: default
+    username: nacos
+    password: nacos
 ```
 
 ##### 2.5 指定application.yml
@@ -462,47 +510,17 @@ MYSQL_PASSWORD=seata
 docker compose up -d
 ```
 
-#### 3.配置Nacos
+#### 3.配置Seata
 
-- 在 application.yml 中修改 Nacos 注册中心和配置中心地址
+上传配置到 Nacos，参考：http://seata.io/zh-cn/docs/user/configuration/nacos.html
 
-  ```yaml
-  seata:
-    config:
-      type: nacos
-      nacos:
-        server-addr: 192.168.11.100:8848
-        group : SEATA_GROUP
-        namespace: public
-        username: nacos
-        password: nacos
-        data-id: seataServer.properties
-    registry:
-      type: nacos
-      nacos:
-        application: seata-server
-        server-addr: 192.168.11.100:8848
-        group : SEATA_GROUP
-        namespace: public
-        username: nacos
-        password: nacos
-  ```
+在 Nacos 新建配置，此处 dataId 为 seataServer.properties，配置内容参考 https://github.com/seata/seata/tree/develop/script/config-center 的 config.txt，并修改或删除（seata 服务中已经配置过了） store 相关配置
 
-- 上传配置到 Nacos，参考：http://seata.io/zh-cn/docs/user/configuration/nacos.html
+#### 4.启动Seata
 
-  在 Nacos 新建配置，此处 dataId 为 seataServer.properties，配置内容参考 https://github.com/seata/seata/tree/develop/script/config-center 的 config.txt 并按需修改保存
+#### 5.高可用部署
 
-  ```properties
-  store.mode=db
-  
-  #删除store.file相关配置
-  
-  store.db.url=jdbc:mysql://192.168.11.100:3307/seata?rewriteBatchedStatements=true
-  store.db.user=seata
-  store.db.password=seata
-  ```
-
-- 启动 seata
+参考：https://seata.io/zh-cn/docs/ops/deploy-ha，配置好注册中心和配置中心后只需启动多台即可
 
 
 ### 3.2 配置Seata Client
@@ -540,15 +558,15 @@ docker compose up -d
    ```properties
    # 配置事务分组，要与 seataServer.properties 中一致
    seata.tx-service-group=default_tx_group
-   # 配置 nacos 注册中心
+   seata.registry.nacos.group=SEATA_GROUP
+   seata.registry.nacos.application=seata-server
+   
+   # 配置 seata 的注册中心
    seata.registry.type=nacos
    seata.registry.nacos.server-addr=192.168.11.100:8848
    seata.registry.nacos.username=nacos
    seata.registry.nacos.password=nacos
-   # 以下为默认值，不配置也可
-   seata.registry.nacos.group=SEATA_GROUP
-   seata.registry.nacos.application=seata-server
-   # 配置 nacos 配置中心
+   # 配置 seata 的配置中心
    seata.config.type=nacos
    seata.config.nacos.server-addr=192.168.11.100:8848
    seata.config.nacos.username=nacos

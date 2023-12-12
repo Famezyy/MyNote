@@ -316,12 +316,16 @@ Nacos Discovery Starter 可以将服务自动注册到 Nacos 服务端并且能�
   ```bash
   git clone https://github.com/alibaba/nacos.git
   cd nacos/
-  mvn -Prelease-nacos -Dmaven.test.skip=true clean install -U  
+  mvn -Prelease-nacos -Dmaven.test.skip=true clean install -U
   ls -al distribution/target/
   
   # change the $version to your actual path
   cd distribution/target/nacos-server-$version/nacos/bin
   ```
+
+  > **提示**
+  >
+  > 需要提前安装`java`和`maven`。
 
 - 下载编译后压缩包方式
 
@@ -411,7 +415,53 @@ Nacos Discovery Starter 可以将服务自动注册到 Nacos 服务端并且能�
 - Linux/Unix/Mac：`sh shutdown.sh`
 - Wubdiws：`shutdown.cmd`
 
-#### 5.调整日志输出级别
+#### 5.集群启动
+
+集群启动需要数据源，可以使用 mySQL。
+
+**（1）配置集群配置文件**
+
+在 nacos 的解压目录的 conf 目录下，有配置文件 cluster.conf，请每行配置成 ip:port。（请配置 3 个或 3 个以上节点）
+
+```plain
+# ip:port
+200.8.9.16:8848
+200.8.9.17:8848
+200.8.9.18:8848
+```
+
+**（2）初始化 MySQL 数据库**
+
+[sql语句源文件](https://github.com/alibaba/nacos/blob/master/distribution/conf/mysql-schema.sql)
+
+nacos 2.2.0 之前：https://raw.githubusercontent.com/alibaba/nacos/1.0.0-RC3/distribution/conf/nacos-mysql.sql
+
+在 mysql 中执行：
+
+```sql
+create database nacos_config;
+use nacos_config;
+source /tmp/nacos-mysql.sql;
+```
+
+创建 nacos 用户：
+
+```sql
+CREATE USER 'nacos'@'%' IDENTIFIED BY 'nacos';
+grant all privileges on nacos_config.* to 'nacos'@'%';
+# 8.0 下执行
+# ALTER USER 'nacos'@'%' IDENTIFIED WITH mysql_native_password BY 'nacos';
+```
+
+**（3）application.properties 配置**
+
+修改数据库连接 url，用户名和密码可使用`nacos`。参考：[application.properties配置文件](https://github.com/alibaba/nacos/blob/master/distribution/conf/application.properties)
+
+**（4）启动**
+
+实际生产中可配合 keepalived + LVS 进行使用。
+
+#### 6.调整日志输出级别
 
 ```bash
 # 调整 naming 模块的 naming-raft.log 的级别为 error

@@ -44,10 +44,15 @@
 
 ### 1.6 Maven 的获取和安装
 
-> - 确定 JAVA_HOME 指定 JDK 的安装目录
-> - 下载 Maven，并放在特定目录中（不要含中文和空格）
-> - 把 Maven 目录下的 bin 目录添加到 path 中（或添加一个M2_HOME）
-> - 测试安装：mvn -v
+安装`maven`：https://maven.apache.org/download.cgi
+
+```bash
+wget https://dlcdn.apache.org/maven/maven-3/3.9.6/binaries/apache-maven-3.9.6-bin.tar.gz
+tar -zxvf apache-maven-3.8.4-bin.tar.gz
+export PATH=/path/to/apache-maven/bin:$PATH
+source ~/.bashrc
+mvn -v
+```
 
 ### 1.7 Maven 的目录结构
 
@@ -425,3 +430,6 @@
 >    ```
 >
 > 3. 子工程中没有 relativePath
+
+
+

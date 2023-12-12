@@ -391,8 +391,8 @@ public class CustomizedExceptionHandler {
    >
    > ```yaml
    > spring:
-   >   cloud:
-   >      sentinel:
+   >     cloud:
+   >        sentinel:
    >          web-context-unity: false
    > ```
    >
@@ -583,7 +583,7 @@ public class CustomizedExceptionHandler {
   <dependency>
         <groupId>com.alibaba.csp</groupId>
         <artifactId>sentinel-datasource-nacos</artifactId>
-    </dependency>
+  </dependency>
   ```
 
 - 在 nacos 中配置流控规则
@@ -627,11 +627,13 @@ public class CustomizedExceptionHandler {
         datasource: # 配置流控规则数据源
           flow-rule: # 可以自定义名称
             nacos:
-              server-addr: 192.168.11.100:8848
+              server-addr: 192.168.11.100:8848  # nacos 地址
               username: nacos
               password: nacos
               dataId: order-service-flow
               ruleType: flow
+            # namespace:
+            # group:
   ```
 
 启动服务就可以发现在 nacos 中启用了流控规则。
@@ -640,9 +642,15 @@ public class CustomizedExceptionHandler {
 
 <a href = "https://github.com/alibaba/Sentinel/wiki/集群流控">参考</a>
 
-对于多实例节点的限流控制，需要有一个专门的实例（TokenServer）对每个服务实例节点进行数据统计。
+对于集群微服务流控，往往我们希望可以为整个集群的每秒处理请求数进行设置，而不管有多少个微服务节点。此时就需要有一个专门的实例（TokenServer）对每个服务实例节点进行数据统计。
 
-Sentinel 1.4.0 开始引入了集群流控模块，主要包含以下几部分：
+> **注意**
+>
+> 使用网关的话不需要使用集群流控。
+
+<img src="img/第03章_Sentinel/image-20231212185052021.png" alt="image-20231212185052021" style="zoom:67%;" />
+
+Sentinel 1.4.0 开始引入了集群流控模块，引入`spring-cloud-starter-alibaba-sentinel`后会自动引入以下几部分：
 
 - `sentinel-cluster-common-default`：公共模块，包含公共接口和实体
 - `sentinel-cluster-client-default`：默认集群流控 client 模块，使用 Netty 进行通信，提供接口方便序列化协议扩展
@@ -705,6 +713,6 @@ Sentinel 1.4.0 开始引入了集群流控模块，主要包含以下几部分�
 
   - 在服务资源的“集群流控”中添加`Token Server`
 
-    指定`Token server`的 IP，选择所有的 client（负载服务节点）。
+    指定外部机器`Token server`的 IP 及 端口`10217`，选择所有的 client（负载服务节点）。
 
   - 在服务资源的流控中选择集群模式
