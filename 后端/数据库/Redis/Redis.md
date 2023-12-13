@@ -160,6 +160,41 @@
   redis-cli shutdown
   ```
 
+- /etc/init.d/redis 下新建 redis 启动脚本
+
+  ```bash
+  #! /bin/bash
+  #chkconfig:2345 80 90
+  #description:redis
+  #processname:redis
+  
+  REDIS=/app/redis
+  case $1 in
+  start) $REDIS/bin/redis-server $REDIS/redis.conf;;
+  stop) $REDIS/bin/redis-cli shutdown;;
+  *) echo "require start|stop";;
+  esac
+  ```
+
+  把脚本注册为 Service
+
+  ```bash
+  chkconfig --add redis
+  chkconfig --list
+  ```
+
+  增加权限
+
+  ```bash
+  chmod +x /etc/init.d/redis
+  ```
+
+  启动
+
+  ```bash
+  service redis start
+  ```
+
 ---
 
 ## 2.相关知识介绍

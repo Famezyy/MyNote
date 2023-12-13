@@ -234,6 +234,8 @@ private void initDegradeRule() {
 
 - 配置
 
+  可配置在 nacos 中
+  
   ```yaml
   spring:
     cloud:
@@ -592,7 +594,7 @@ public class CustomizedExceptionHandler {
   [
       {
           // 资源名
-          "resource": "getById",
+          "resource": "/order/add",
           // 流量控制效果
           "controlBehavior": 0,
           // 限流阈值
@@ -607,19 +609,11 @@ public class CustomizedExceptionHandler {
   ]
   ```
 
-- 在服务的 application 配置文件中配置数据源
+- 在 nacos 中配置数据源
 
   ```yaml
   spring:
-    application:
-      name: order-service
     cloud:
-      nacos:
-        server-addr: 192.168.11.100:8848
-        discovery:
-          username: nacos
-          password: nacos
-          namespace: public
       sentinel:
         transport:
           dashboard: 192.168.11.100:8080
@@ -627,16 +621,110 @@ public class CustomizedExceptionHandler {
         datasource: # 配置流控规则数据源
           flow-rule: # 可以自定义名称
             nacos:
-              server-addr: 192.168.11.100:8848  # nacos 地址
-              username: nacos
-              password: nacos
+              serverAddr: 192.168.11.100:8848  # nacos 地址
               dataId: order-service-flow
+              groupId: SENTINEL_GROUP
               ruleType: flow
-            # namespace:
-            # group:
+              dataType: json
+              # namespace:
+              # username: nacos
+              # password: nacos
   ```
 
 启动服务就可以发现在 nacos 中启用了流控规则。
+
+> **注意**
+>
+> 经测试，默认情况下只能从 nacos 同步到 sentinel，而sentinel 修改的规则无法同步到 nacos。
+
+### 5.6 持久化改进
+
+#### 1.修改服务端
+
+1. 注释掉`sentinel-dashboard`的`POM`文件中`sentinel-datasource-nacos`的`scope`
+
+   ```xml
+   <!-- for Nacos rule publisher sample -->
+           <dependency>
+               <groupId>com.alibaba.csp</groupId>
+               <artifactId>sentinel-datasource-nacos</artifactId>
+               <!--<scope>test</scope>-->
+           </dependency>
+   ```
+
+2. 将`test`包下 Nacos 的所有规则移动到`main`的`rule`下
+
+   nacos 包中的 4 个类：
+
+   - FlowRuleNacosProvider：动态获取 Nacos 配置中心流控规则，读取流控规则
+   - FlowRuleNacosPublisher：publish 上传流控规则到 Nacos 配置中心，写入流控规则
+   - NacosConfig：Nacos 配置
+   - NacosConfigUtils：流控规则在 nacos 中配置文件的一些细节：后缀、组别等
+
+   > **注意**
+   >
+   > 在获取 nacos 中的流控规则的时候，nacos中流控配置文件，加了后缀，组也给了特定的，我们不用改源码，后面我们在 nacos 中添加配置文件的时候按他给的名字来就行：
+   >
+   > ```java
+   > // 读取
+   > String rules = configService.getConfig(appName + NacosConfigUtil.FLOW_DATA_ID_POSTFIX, NacosConfigUtil.GROUP_ID, 3000);
+   > // 写入
+   > configService.publishConfig(app + NacosConfigUtil.FLOW_DATA_ID_POSTFIX, NacosConfigUtil.GROUP_ID, converter.convert(rules));
+   > ```
+
+3. 配置 Nacos 连接地址
+
+   默认声明了`localhost`，将其改为动态从 JVM 环境变量中获取：
+
+   ```java
+   @Bean
+   public ConfigService nacosConfigService() throws Exception {
+       Properties properties = new Properties();
+       properties.put(PropertyKeyConst.SERVER_ADDR, System.getProperty(PropertyKeyConst.SERVER_ADDR));
+       properties.put(PropertyKeyConst.NAMESPACE, System.getProperty(PropertyKeyConst.NAMESPACE));
+       // 配置了 nacos 无认证的话不需要用户名和密码
+       // properties.put(PropertyKeyConst.USERNAME, System.getProperty(PropertyKeyConst.USERNAME));
+       // properties.put(PropertyKeyConst.PASSWORD, System.getProperty(PropertyKeyConst.PASSWORD));
+       return ConfigFactory.createConfigService(properties);
+   }
+   ```
+
+4. 配置中添加 nacos 接口并修改地址
+
+   1. 修改`Controller`使其调用 Nacos 的规则
+
+      ```java
+      @Autowired
+      @Qualifier("flowRuleNacosProvider")
+      private DynamicRuleProvider<List<FlowRuleEntity>> ruleProvider;
+      @Autowired
+      @Qualifier("flowRuleNacosPublisher")
+      private DynamicRulePublisher<List<FlowRuleEntity>> rulePublisher;
+      ```
+
+   2. 修改`src/main/webapp/resources/app/scripts/controllers/identity.js`
+
+      - 第 4 行为`FlowServiceV2`
+      - 第 98 行为`let url = '/dashboard/v2/flow/' + $scope.app;`
+
+5. 修改页面中的路由地址
+
+   - 修改`src/main/webapp/resources/app/scripts/directives/sidebar/sidebar.html`
+     - 直接搜`dashboard.flowV1`定位 57 行去掉 V1
+
+6. 注释掉"回到单机"按钮
+
+   修改`src/main/webapp/resources/app/views/flow_v2.html`，注释掉`回到单机页面`的`a`标签
+
+启动服务端时需要执行：`java -jar -DserverAddr=192.168.11.100:8848 -Dnamespace="ecfde7c9-59b3-4372-a3ca-bc50de309447" sentinel-dashboard.jar `，注意 `namespace`需要哈希值，`public`默认没有该值，因此需要自己新建一个命名空间，否则就在 code 中指定为 null。
+
+#### 2.修改客户端
+
+引入`sentinel-datasource-nacos`包后，在服务的配置文件中修改`dataId`（以`-flow-rules`结尾）和`groupId`（`SENTINEL_GROUP`）
+
+> **提示**
+>
+> 其他规则如`DegradeController2`可以仿照`FlowControllerV1`和`FlowControllerV2`的区别来写。
 
 ## 6.集群
 

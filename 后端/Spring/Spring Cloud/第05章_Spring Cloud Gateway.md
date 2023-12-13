@@ -135,6 +135,11 @@ Spring Cloud Gateway 是 Spring Cloud 官方推出的响应式的 API 网关，�
      application:
        name: api‐gateway
      cloud:
+       nacos:
+         discovery:
+           server‐addr: 192.168.11.100:8848
+           username: nacos
+           password: nacos
        gateway:
          routes:
            - id: order_route
@@ -143,11 +148,6 @@ Spring Cloud Gateway 是 Spring Cloud 官方推出的响应式的 API 网关，�
                - Path=/order-serv/**
              filters:
                - StripPrefix=1
-       nacos:
-         discovery:
-           server‐addr: 192.168.11.100:8848
-           username: nacos
-           password: nacos
    ```
 
    访问`http://localhost:8080/order-serv/order/add`时会路由到`http://localhost:8081/order/add`。
@@ -772,51 +772,33 @@ public class CorsConfig {
        <groupId>org.springframework.cloud</groupId>
        <artifactId>spring-cloud-starter-gateway</artifactId>
    </dependency>
-   <!-- spring cloud gateway sentinel 适配器-->
+   <!-- 引入sentinel进行服务降级熔断 -->
    <dependency>
-       <groupId>com.alibaba.csp</groupId>
-       <artifactId>sentinel-spring-cloud-gateway-adapter</artifactId>
+       <groupId>com.alibaba.cloud</groupId>
+       <artifactId>spring-cloud-starter-alibaba-sentinel</artifactId>
    </dependency>
-   <!-- spring cloud gateway sentinel连接控制台，发现服务 -->
+   <!-- gateway网关整合sentinel进行限流降级 -->
    <dependency>
-       <groupId>com.alibaba.csp</groupId>
-       <artifactId>sentinel-transport-simple-http</artifactId>
+       <groupId>com.alibaba.cloud</groupId>
+       <artifactId>spring-cloud-alibaba-sentinel-gateway</artifactId>
    </dependency>
    ```
 
-2. 添加配置类
+2. properties 文件或 nacos 配置中心中配置 sentinel dashboard 地址
 
-   ```java
-   @Configuration
-   public class GatewayConfiguration {
-   
-       private final List<ViewResolver> viewResolvers;
-       private final ServerCodecConfigurer serverCodecConfigurer;
-   
-       public GatewayConfiguration(ObjectProvider<List<ViewResolver>> viewResolversProvider,
-                                   ServerCodecConfigurer serverCodecConfigurer) {
-           this.viewResolvers = viewResolversProvider.getIfAvailable(Collections::emptyList);
-           this.serverCodecConfigurer = serverCodecConfigurer;
-       }
-   
-       @Bean
-       @Order(Ordered.HIGHEST_PRECEDENCE)
-       public SentinelGatewayBlockExceptionHandler sentinelGatewayBlockExceptionHandler() {
-           return new SentinelGatewayBlockExceptionHandler(viewResolvers, serverCodecConfigurer);
-       }
-   
-       @Bean
-       @Order(-1)
-       public GlobalFilter sentinelGatewayFilter() {
-           return new SentinelGatewayFilter();
-       }
-   }
+   ```yaml
+   spring:
+     cloud:
+       sentinel:
+         eager: true
+         transport:
+           dashboard: localhost:8080
    ```
 
 3. 添加 VM 启动参数
 
    ```bash
-   -Dcsp.sentinel.app.type=1 -Dcsp.sentinel.dashboard.server=localhost:8077 -Dproject.name=gateway-sentinel
+   -Dcsp.sentinel.app.type=1
    ```
 
 通过 API 网关访问端口后会在控制台生成相应的链路。
@@ -867,6 +849,25 @@ public class GatewayConfiguration {
         GatewayCallbackManager.setBlockHandler(blockRequestHandler);
     }
 }
+```
+
+#### 2.通过配置文件
+
+可声明在 nacos 中。
+
+```yaml
+spring:
+  cloud:
+    sentinel:
+      #配置限流之后的响应内容
+      scg:  
+        fallback:
+          # 两种模式：一种是response返回文字提示信息，一种是redirect，重定向跳转，需要同时配置redirect(跳转的uri)
+          mode: response
+          # 响应的状态
+          response-status: 426
+          # 响应体
+          response-body: '{"code": 426,"message": "限流了，稍后重试！"}'
 ```
 
 ### 8.4 代码方式加载网关规则（了解）
@@ -950,6 +951,17 @@ private void initBlockRequestHandler() {
 }
 }
 ```
+
+### 8.5 网关规则持久化
+
+gateway 整合 sentinel 的时候，不像在微服务中那样（在微服务中，sentinel 可以直接识别到 url 粒度的资源，然后在这些 url 资源上添加规则，nacos 只需要处理规则），有 2 个地方需要自己改动：
+
+- 自定义的 api 资源组，需要和 nacos 交互
+- 针对以上资源做的规则（也包括路由维度的资源），需要和 nacos 交互
+
+#### 1. sentinel-board后台源码修改
+
+
 
 ## 9.网关高可用
 

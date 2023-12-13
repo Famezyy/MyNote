@@ -511,9 +511,10 @@ curl -X PUT '$nacos_server:8848/nacos/v1/cs/ops/log?logName=config-dump&logLevel
       nacos:
         server-addr: 192.168.11.100:8848 # 注册中心地址
         discovery:
-          username: nacos
-          password: nacos
-          namespace: public # 命名空间，用来隔离环境
+          # 配置了 nacos 的 nacos.core.auth.enabled=false 则可以不需要用户名和密码
+          # username: nacos
+          # password: nacos
+          # namespace: public 命名空间，默认 public，不是 public 时需要指定 hash ID 而不是名称
   ```
 
   通过 Spring Cloud 原生注解`@EnableDiscoveryClient`开启服务注册发现功能
@@ -562,14 +563,14 @@ curl -X PUT '$nacos_server:8848/nacos/v1/cs/ops/log?logName=config-dump&logLevel
     port: 8080
   spring:
     application:
-      name: order-service # 服务名称
+      name: order-service
     cloud:
       nacos:
-        server-addr: 192.168.11.100:8848 # 注册中心地址
+        server-addr: 192.168.11.100:8848
         discovery:
-          username: nacos
-          password: nacos
-          namespace: public # 命名空间，用来隔离环境
+          # username: nacos
+          # password: nacos
+          namespace: public
   ```
 
   通过 Spring Cloud 原生注解`@EnableDiscoveryClient`开启服务注册发现功能，通过`@LoadBalanced`开启负载均衡功能
@@ -1673,7 +1674,7 @@ nacos.core.auth.enabled=true
 
 > **注意**
 >
-> 数据库的表结构要与 nacos 版本一致。
+> 使用集群时，数据库的表结构要与 nacos 版本一致。
 
 - “配置列表” - “新建配置”
 - 选择命名空间，最好按环境进行分配
@@ -1737,15 +1738,15 @@ Group  :    DEFAULT_GROUP
     cloud:
       nacos:
         server-addr: 192.168.11.100:8848
-        username: nacos
-        password: nacos
+        # username: nacos
+        # password: nacos
         conf:
         # file-extension: properties 默认 properties，可指定为 yaml
   ```
 
   > **注意**
   >
-  > 此时会默认查找服务名`nacos-config`和服务名 + yaml 结尾的`nacos-config.yaml`配置文件。
+  > 此时会默认查找服务名`nacos-config`和服务名 + yaml 结尾的`nacos-config.yaml`配置文件。其他普通配置都可放在 nacos 中（例如数据库配置）。
 
 - 通过`env.getProperties()`获取
 
@@ -1852,7 +1853,7 @@ spring:
 
 > **注意**
 >
-> 配置`spring.cloud.nacos.config.namespace`必须放在 bootstrap.properties 文件中。此外`spring.cloud.nacos.config.namespace`的值是 namespace 对应的 id，id 值可以在 Nacos 的控制台获取。并且在添加配置时注意不要选择其他的 namespace，否则将会导致读取不到正确的配置。
+> 配置`spring.cloud.nacos.config.namespace`必须放在 bootstrap.properties 文件中。默认使用 public 作为命名空间，指定`spring.cloud.nacos.config.namespace`的值时必须==**是 namespace 对应的 id**==，id 值可以在 Nacos 的控制台获取。并且在添加配置时注意不要选择其他的 namespace，否则将会导致读取不到正确的配置。
 
 ### 5.6 按Group获取配置
 
@@ -1970,24 +1971,16 @@ spring:
   cloud:
     nacos:
       server-addr: 192.168.11.100:8848
-      username: nacos # 开启了权限验证就需要用户名密码
-      password: nacos
+      # username: nacos
+      # password: nacos
       config:
         namespace: 40ae7c47-648d-4082-b7d1-eb85ddc0222f
         # file-extension: yaml
         extension-configs:
         - data-id: customized-id.yaml
           refresh: true
-```
-
-将注册中心的配置放在`Application.yaml`中
-
-```yaml
-spring:
-  cloud:
-    nacos:
       discovery:
-        namespace: public
+        namespace: 40ae7c47-648d-4082-b7d1-eb85ddc0222f
 ```
 
 此时会拉取以下三个`dataId`的配置文件，优先级依次递减
