@@ -483,7 +483,7 @@ public class CustomizedExceptionHandler {
       name: order-service
     cloud:
       nacos:
-        server-addr: 192.168.11.100:8848
+        serverAddr: 192.168.11.100:8848
         discovery:
           username: nacos
           password: nacos
@@ -626,16 +626,18 @@ public class CustomizedExceptionHandler {
               groupId: SENTINEL_GROUP
               ruleType: flow
               dataType: json
+              # 配置了 nacos 的认证则需要用户名和密码
+              username: nacos
+              password: nacos
               # namespace:
-              # username: nacos
-              # password: nacos
   ```
 
 启动服务就可以发现在 nacos 中启用了流控规则。
 
 > **注意**
 >
-> 经测试，默认情况下只能从 nacos 同步到 sentinel，而sentinel 修改的规则无法同步到 nacos。
+> - 定义在配置中心的`datasource`不支持热更新，每次必须重启
+> - 经测试，默认情况下只能从 nacos 同步到 sentinel，而sentinel 修改的规则无法同步到 nacos
 
 ### 5.6 持久化改进
 
@@ -666,9 +668,9 @@ public class CustomizedExceptionHandler {
    > 在获取 nacos 中的流控规则的时候，nacos中流控配置文件，加了后缀，组也给了特定的，我们不用改源码，后面我们在 nacos 中添加配置文件的时候按他给的名字来就行：
    >
    > ```java
-   > // 读取
+   > // 读取时拼接了后缀 -flow-rules
    > String rules = configService.getConfig(appName + NacosConfigUtil.FLOW_DATA_ID_POSTFIX, NacosConfigUtil.GROUP_ID, 3000);
-   > // 写入
+   > // 写入时拼接了后缀 -flow-rules
    > configService.publishConfig(app + NacosConfigUtil.FLOW_DATA_ID_POSTFIX, NacosConfigUtil.GROUP_ID, converter.convert(rules));
    > ```
 
@@ -680,6 +682,7 @@ public class CustomizedExceptionHandler {
    @Bean
    public ConfigService nacosConfigService() throws Exception {
        Properties properties = new Properties();
+       // Nacos server
        properties.put(PropertyKeyConst.SERVER_ADDR, System.getProperty(PropertyKeyConst.SERVER_ADDR));
        properties.put(PropertyKeyConst.NAMESPACE, System.getProperty(PropertyKeyConst.NAMESPACE));
        // 配置了 nacos 无认证的话不需要用户名和密码
@@ -720,7 +723,7 @@ public class CustomizedExceptionHandler {
 
 #### 2.修改客户端
 
-引入`sentinel-datasource-nacos`包后，在服务的配置文件中修改`dataId`（以`-flow-rules`结尾）和`groupId`（`SENTINEL_GROUP`）
+引入`sentinel-datasource-nacos`包后，在服务的配置文件中修改`dataId`（`${spring.application.name}-flow-rules`）和`groupId`（`SENTINEL_GROUP`）
 
 > **提示**
 >

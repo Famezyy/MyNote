@@ -247,7 +247,11 @@ Spring Cloud Gateway 是 Spring Cloud 官方推出的响应式的 API 网关，�
            password: nacos
    ```
 
-4. 访问即可发现路由配置生效，并且修改配置发布后也能动态感知
+4. 访问即可发现路由配置生效，并且修改配置发布后也能动态感知。
+
+   > **注意**
+   >
+   > 新的 route 规则不支持热更新，只有修改已有规则的断言或者过滤才支持热更新。
 
 ## 4.路由断言工厂配置
 
@@ -853,7 +857,7 @@ public class GatewayConfiguration {
 
 #### 2.通过配置文件
 
-可声明在 nacos 中。
+可声明在 nacos 中，支持动态更新。
 
 ```yaml
 spring:
@@ -954,15 +958,484 @@ private void initBlockRequestHandler() {
 
 ### 8.5 网关规则持久化
 
-gateway 整合 sentinel 的时候，不像在微服务中那样（在微服务中，sentinel 可以直接识别到 url 粒度的资源，然后在这些 url 资源上添加规则，nacos 只需要处理规则），有 2 个地方需要自己改动：
+#### 1.注释掉`POM`中的`datasource-nacos`依赖的`scope`
 
-- 自定义的 api 资源组，需要和 nacos 交互
-- 针对以上资源做的规则（也包括路由维度的资源），需要和 nacos 交互
+```xml
+<dependency>
+    <groupId>com.alibaba.csp</groupId>
+    <artifactId>sentinel-datasource-nacos</artifactId>
+    <!--<scope>test</scope>-->
+</dependency>
+```
 
-#### 1. sentinel-board后台源码修改
+#### 2.在配置文件中添加配置
+
+```properties
+nacos.serverAddr=192.168.11.100:8848
+# 如果有单独的命名空间添加此配置, 没有就不设置
+# nacos.namespace=
+# 如果开启了 nacos 的权限认证则需要用户名和密码，不需要再微服务中再指定
+# nacos.username=nacos
+# nacos.password=nacos
+```
+
+#### 3.修改`Nacos`配置类
+
+在 src/main/java/com/alibaba/csp/sentinel/dashboard/rule 下新建`nacos`包，并创建三个子包：
+
+```bash
+rule
+  --nacos
+      --gateway
+          --api
+          --flow
+      --config
+```
+
+复制 src/test/java/com/alibaba/csp/sentinel/dashboard/rule/nacos 下的`NacosConfig`、`NacosConfigUtil`类到`nacos/config`包。
+
+然后修改`NacosConfig`：
+
+```java
+@Configuration
+public class NacosConfig {
+	
+	@Value("${nacos.serverAddr:192.168.11.100:8848}")
+	private String serverAddr;
+	
+	@Value("${nacos.namespace:}")
+	private String namespace;
+	
+	@Value("${nacos.username:nacos}")
+	private String username;
+	
+	@Value("${nacos.password:nacos}")
+	private String password;
+	
+	
+	/**
+	 * 流控规则
+	 * 
+	 */
+    @Bean
+    public Converter<List<FlowRuleEntity>, String> flowRuleEntityEncoder() {
+        return JSON::toJSONString;
+    }
+
+    @Bean
+    public Converter<String, List<FlowRuleEntity>> flowRuleEntityDecoder() {
+        return s -> JSON.parseArray(s, FlowRuleEntity.class);
+    }
+    
+    /**
+     * 授权规则
+     *
+     */
+    @Bean
+    public Converter<List<AuthorityRuleEntity>, String> authorRuleEntityEncoder() {
+        return JSON::toJSONString;
+    }
+
+    @Bean
+    public Converter<String, List<AuthorityRuleEntity>> authorRuleEntityDecoder() {
+        return s -> JSON.parseArray(s, AuthorityRuleEntity.class);
+    }
+    
+    /**
+     * 降级规则
+     *
+     */
+    @Bean
+    public Converter<List<DegradeRuleEntity>, String> degradeRuleEntityEncoder() {
+        return JSON::toJSONString;
+    }
+
+    @Bean
+    public Converter<String, List<DegradeRuleEntity>> degradeRuleEntityDecoder() {
+        return s -> JSON.parseArray(s, DegradeRuleEntity.class);
+    }
+    
+    /**
+     * 热点规则
+     *
+     */
+    @Bean
+    public Converter<List<ParamFlowRuleEntity>, String> paramRuleEntityEncoder() {
+        return JSON::toJSONString;
+    }
+
+    @Bean
+    public Converter<String, List<ParamFlowRuleEntity>> paramRuleEntityDecoder() {
+        return s -> JSON.parseArray(s, ParamFlowRuleEntity.class);
+    }
+
+    /**
+     * 系统规则
+     *
+     */
+    @Bean
+    public Converter<List<SystemRuleEntity>, String> systemRuleEntityEncoder() {
+        return JSON::toJSONString;
+    }
+
+    @Bean
+    public Converter<String, List<SystemRuleEntity>> systemRuleEntityDecoder() {
+        return s -> JSON.parseArray(s, SystemRuleEntity.class);
+    }
+    
+    /**
+     * 网关API分组管理规则
+     *
+     */
+    @Bean
+    public Converter<List<ApiDefinitionEntity>, String> apiDefinitionEntityEncoder() {
+        return JSON::toJSONString;
+    }
+
+    @Bean
+    public Converter<String, List<ApiDefinitionEntity>> apiDefinitionEntityDecoder() {
+        return s -> JSON.parseArray(s, ApiDefinitionEntity.class);
+    }
+
+    /**
+     * 网关流控规则
+     *
+     */
+    @Bean
+    public Converter<List<GatewayFlowRuleEntity>, String> gatewayFlowRuleEntityEncoder() {
+        return JSON::toJSONString;
+    }
+
+    @Bean
+    public Converter<String, List<GatewayFlowRuleEntity>> gatewayFlowRuleEntityDecoder() {
+        return s -> JSON.parseArray(s, GatewayFlowRuleEntity.class);
+    }
+
+    @Bean
+    public ConfigService nacosConfigService() throws Exception {
+    	Properties properties = new Properties();
+        properties.put(PropertyKeyConst.SERVER_ADDR, serverAddr);
+        if (StringUtils.isNotBlank(namespace)){
+          properties.put(PropertyKeyConst.NAMESPACE, namespace);
+        }
+        properties.put(PropertyKeyConst.USERNAME, username);
+        properties.put(PropertyKeyConst.PASSWORD, password);
+        return ConfigFactory.createConfigService(properties);
+    }
+}
+```
+
+修改`NacosConfigUtil`类：
+
+```java
+/** 流控规则，已经有了 */
+public static final String FLOW_DATA_ID_POSTFIX = "-flow-rules";
+/** 降级规则 */
+public static final String DEGRADE_DATA_ID_POSTFIX = "-degrade-rules";
+/** 系统保护规则 */
+public static final String SYSTEM_DATA_ID_POSTFIX = "-system-rules";
+/** 访问控制规则 */
+public static final String AUTHORITY_DATA_ID_POSTFIX = "-authority-rules";
+/** 网关流控规则 */
+public static final String GATEWAY_FLOW_DATA_ID_POSTFIX = "-gw-flow-rules";
+/** 网关API分组管理规则 */
+public static final String GATEWAY_API_DATA_ID_POSTFIX = "-gw-api-group-rules";
+```
+
+#### 4.创建Provider和Publisher
+
+仿照`test`包下的`FlowRuleNacosProvider`和`FlowRuleNacosPublisher`，在`nacos/gateway/api`包下创建`GatewayApiRuleNacosProvider`和`GatewayApiRuleNacosPublisher`，仅需更改==**类名**==、==**泛型类型**==和==**后缀 Constant**==。
+
+```java
+/**
+ * 拉取Nacos中存储的网关分组管理规则配置信息
+ *
+ */
+@Component("gatewayApiRuleNacosProvider")
+public class GatewayApiRuleNacosProvider implements DynamicRuleProvider<List<ApiDefinitionEntity>> {
+
+    @Autowired
+    private ConfigService configService;
+    @Autowired
+    private Converter<String, List<ApiDefinitionEntity>> converter;
+
+    @Override
+    public List<ApiDefinitionEntity> getRules(String appName) throws Exception {
+        String rules = configService.getConfig(appName + NacosConfigUtil.GATEWAY_API_DATA_ID_POSTFIX,
+            NacosConfigUtil.GROUP_ID, 3000);
+        if (StringUtil.isEmpty(rules)) {
+            return new ArrayList<>();
+        }
+        return converter.convert(rules);
+    }
+}
+```
+
+```java
+@Component("gatewayApiRuleNacosPublisher")
+public class GatewayApiRuleNacosPublisher implements DynamicRulePublisher<List<ApiDefinitionEntity>> {
+
+    @Autowired
+    private ConfigService configService;
+    @Autowired
+    private Converter<List<ApiDefinitionEntity>, String> converter;
+
+    @Override
+    public void publish(String app, List<ApiDefinitionEntity> rules) throws Exception {
+        AssertUtil.notEmpty(app, "app name cannot be empty");
+        if (rules == null) {
+            return;
+        }
+        configService.publishConfig(app + NacosConfigUtil.GATEWAY_API_DATA_ID_POSTFIX,
+            NacosConfigUtil.GROUP_ID, converter.convert(rules));
+    }
+}
+```
+
+同样的，在`nacos/gateway/flow`包下创建`GatewayFlowRuleNacosProvider`和`GatewayFlowRuleNacosPublisher`。
+
+#### 5.修改`GatewayApiController`接口
+
+仿照`controller.v2.FlowControllerV2`修改 src/main/java/com/alibaba/csp/sentinel/dashboard/controller/gateway 下的`GatewayApiController`：
+
+```java
+/*
+ * 添加 ruleProvider 和 rulePublisher
+ * @Autowired private SentinelApiClient sentinelApiClient;
+ */
+
+@Autowired
+@Qualifier("gatewayApiRuleNacosProvider")
+private DynamicRuleProvider<List<ApiDefinitionEntity>> ruleProvider;
+
+@Autowired
+@Qualifier("gatewayApiRuleNacosPublisher")
+private DynamicRulePublisher<List<ApiDefinitionEntity>> rulePublisher;
+
+...
+
+@GetMapping("/list.json")
+@AuthAction(AuthService.PrivilegeType.READ_RULE)
+public Result<List<ApiDefinitionEntity>> queryApis(String app, String ip, Integer port) {
+    ...
+    try {
+        // 获得 rules
+        List<ApiDefinitionEntity> rules = ruleProvider.getRules(app);
+        if (!CollectionUtils.isEmpty(rules)) {
+            for (ApiDefinitionEntity entity : rules) {
+                entity.setApp(app);
+                entity.setIp(ip);
+                entity.setPort(port);
+            }
+        }
+        rules = repository.saveAll(rules);
+        return Result.ofSuccess(rules);
+    } catch (Throwable throwable) {
+        logger.error("Error when querying flow rules", throwable);
+        return Result.ofThrowable(-1, throwable);
+    }
+}
+
+
+@PostMapping("/new.json")
+@AuthAction(AuthService.PrivilegeType.WRITE_RULE)
+public Result<ApiDefinitionEntity> addApi(HttpServletRequest request, @RequestBody AddApiReqVo reqVo) {
+    try {
+        entity = repository.save(entity);
+        // 发布规则
+        publishRules(app);
+    } catch (Throwable throwable) {
+        logger.error("add gateway api error:", throwable);
+        return Result.ofThrowable(-1, throwable);
+    }
+    /*
+     * if (!publishApis(app, ip, port)) {
+     * logger.warn("publish gateway apis fail after add"); }
+     */
+
+    return Result.ofSuccess(entity);
+}
+
+@PostMapping("/save.json")
+@AuthAction(AuthService.PrivilegeType.WRITE_RULE)
+public Result<ApiDefinitionEntity> updateApi(@RequestBody UpdateApiReqVo reqVo) {
+    ...
+    try {
+        entity = repository.save(entity);
+        // 发布规则
+        publishRules(app);
+    } catch (Throwable throwable) {
+        logger.error("update gateway api error:", throwable);
+        return Result.ofThrowable(-1, throwable);
+    }
+
+    /*
+     * if (!publishApis(app, entity.getIp(), entity.getPort())) {
+     * logger.warn("publish gateway apis fail after update"); }
+     */
+
+    return Result.ofSuccess(entity);
+}
+
+@PostMapping("/delete.json")
+@AuthAction(AuthService.PrivilegeType.DELETE_RULE)
+public Result<Long> deleteApi(Long id) {
+    ...
+    try {
+        repository.delete(id);
+        // 发布规则
+        publishRules(oldEntity.getApp());
+    } catch (Throwable throwable) {
+        logger.error("delete gateway api error:", throwable);
+        return Result.ofThrowable(-1, throwable);
+    }
+
+    /*
+     * if (!publishApis(oldEntity.getApp(), oldEntity.getIp(), oldEntity.getPort()))
+     * { logger.warn("publish gateway apis fail after delete"); }
+     */
+
+    return Result.ofSuccess(id);
+}
+```
+
+- 类似的，仿照`GatewayApiController`修改`GatewayFlowRuleController`
+
+#### 6.修改客户端配置
+
+- 添加`sentinel-datasource-nacos`依赖
+
+- 在 nacos 中配置 gateway-config 的配置文件
+
+  ```yaml
+  server:
+    port: 8011
+  spring:
+    cloud:
+      gateway:
+        routes:
+        - id: order_route
+          uri: lb://order-server
+          predicates:
+          - Path=/order/add,/simpleError,/getError
+      sentinel:
+        eager: true
+        transport:
+          dashboard: localhost:8080
+          port: 8720
+        scg:
+          fallback:
+            mode: response
+            response-status: 426
+            response-body: '{"code": 426,"message": "！"}'
+        # 配置 datasource，用于客户端连接 nacos 确认规则
+        datasource:
+          flow-rule:
+            nacos:
+              serverAddr: 192.168.11.100:8848
+              dataId: ${spring.application.name}-gw-flow-rules
+              ruleType: flow
+              username: nacos
+              password: nacos
+  ```
+
+### 8.6 其他规则持久化
+
+#### 1.创建其他规则目录类
+
+```bash
+rule
+  --nacos
+      --authority
+          --AuthorityRuleNacosProvider
+          --AuthorityRuleNacosPublisher
+      --degrade
+          --DegradeRuleNacosProvider
+          --DegradeRuleNacosPublisher
+      --flow
+          --FlowRuleNacosProvider
+          --FlowRuleNacosPublisher
+      --param
+          --ParameRuleNacosProvider
+          --ParameRuleNacosPublisher
+      --system
+          --SystemRuleNacosProvider
+          --SystemRuleNacosPublisher
+      --gateway
+          --api
+              --GatewayApiRuleNacosProvider
+              --GatewayApiRuleNacosPublisher
+          --flow
+              --GatewayFlowRuleNacosProvider
+              --GatewayFlowRuleNacosPublisher
+      --config
+          --NacosConfig
+          --NacosConfigUtil
+```
+
+#### 2.创建Provider和Publisher
+
+仿照`test`包下的`FlowRuleNacosProvider`和`FlowRuleNacosPublisher`，为所有规则创建相应的 Provider 和 Publisher。
+
+#### 3.修改Controller
+
+修改`AuthorityRuleController`、`DegradeController`、`FlowControllerV1`、`ParamFlowRuleController`、`SystemController`。
+
+#### 4.修改客户端配置
+
+在客户端的配置中添加相应的规则`datasource`。
+
+## 9.功能扩展
+
+### 9.1 扩展整合Sentinel熔断
+
+正常情况下，熔断不能作用于 4XX、5XX 响应码，可以在 gateway 中添加一个`WebFilter`来实现错误响应码熔断：
+
+```java
+@Component
+class MyGatewayFilter implements WebFilter {
+
+    Logger logger = LoggerFactory.getLogger(this.getClass());
+
+    @Override
+    public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
+        ServerHttpResponse response = exchange.getResponse();
+        ServerHttpResponseDecorator newResponse = new ServerHttpResponseDecorator(response) {
+            @Override
+            public Mono<Void> writeWith(Publisher<? extends DataBuffer> body) {
+                // get match route id
+                Route route = (Route) exchange.getAttributes().get(ServerWebExchangeUtils.GATEWAY_ROUTE_ATTR);
+                String id = route.getId();
+                Integer statusCode = response.getRawStatusCode();
+                int lowCode = HttpStatus.BAD_REQUEST.value();
+                int highCode = HttpStatus.NETWORK_AUTHENTICATION_REQUIRED.value();
+                if (null != statusCode
+                        && 0 != lowCode
+                        && statusCode >= lowCode
+                        && statusCode <= highCode) {
+                    Entry entry = null;
+                    try {
+                        entry = SphU.entry(id, EntryType.OUT, 0);
+                        Tracer.trace(new Exception("error"));
+                    } catch (BlockException e) {
+                        logger.error("an error occurs: {}", e.getCause().getMessage());
+                    } finally {
+                        if (entry != null)
+                            entry.close();
+                    }
+                }
+                return super.writeWith(body);
+            }
+        };
+        return chain.filter(exchange.mutate().response(newResponse).build());
+    }
+}
+```
+
+### 9.2 扩展整合Sentinel
 
 
 
-## 9.网关高可用
+## 10.网关高可用
 
 可以同时启动多个 Gateway 实例，使用 LVS 或者 Nginx 进行负载。
