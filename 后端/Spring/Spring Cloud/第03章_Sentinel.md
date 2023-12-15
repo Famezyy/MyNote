@@ -152,7 +152,7 @@ String fallbackHandler(String id, Throwable e) {
 }
 ```
 
-若 blockHandler 和 fallback 都进行了配置，则被限流降级而抛出`BlockException`时只会进入`blockHandler`处理逻辑。若未配置`blockHandler`、`fallback`和`defaultFallback`，则被限流降级时会将`BlockException`直接抛出。
+若 blockHandler 和 fallback 都进行了配置，则被限流降级而抛出`BlockException`时只会进入`blockHandler`处理逻辑。若未配置`blockHandler`、`fallback`和`defaultFallback`，则被限流降级时会将`BlockException`直接抛出，最终被`DefaultBlockExceptionHandler`捕获。
 
 ## 3.降级规则
 
@@ -240,6 +240,7 @@ private void initDegradeRule() {
   spring:
     cloud:
       sentinel:
+        eager: true
         transport:
           dashboard: 192.168.11.100:8080
           port: 8720
@@ -251,7 +252,7 @@ private void initDegradeRule() {
 
 “簇点链路” - 选择相应的服务 - “流控”
 
-#### 1.流控规则
+#### 1.处理异常
 
 默认会转移到 sentinel 默认的错误界面，要想返回指定的信息需要使用`@SentinelResource(value = "${resourece}", blockHandler = "${blockHandler}")`指定`blockHandler()`。
 
@@ -273,13 +274,11 @@ public class OrderController {
 }
 ```
 
-或者全局异常处理`BlockException`，Alibaba 提供了处理该异常的处理器接口`BlockExceptionHandler`，可以实现该接口注册到容器中（有 bug 不建议，见下文）。
+或者全局异常处理`BlockException`，Alibaba 提供了处理该异常的处理器接口`BlockExceptionHandler`，可以实现该接口注册到容器中。
 
 ```java
 @Component
 public class MyBlockExceptionHandler implements BlockExceptionHandler {
-
-    Logger logger = Logger.getLogger(this.getClass().toString());
 
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response, BlockException e) throws Exception {
@@ -306,30 +305,37 @@ public class MyBlockExceptionHandler implements BlockExceptionHandler {
 }
 ```
 
-更建议使用 SpringMVC 提供的处理异常方法
+只有当==**使用了`@SentinelResource`注解时**==才可以用下面的`@RestControllerAdvice`进行捕获！
 
 ```java
 @RestControllerAdvice
 public class CustomizedExceptionHandler {
 
-    @ExceptionHandler
-    public ResponseEntity<String> BlockExceptionHandler(BlockException e) throws JsonProcessingException {
-        System.out.println(e.getRule());
-        ErrorResponse error = null;
+ @ExceptionHandler
+ public ResponseEntity<String> BlockExceptionHandler(BlockException e) throws JsonProcessingException {
+     System.out.println(e.getRule());
+     ErrorResponse error = null;
 
-        if (e instanceof FlowException)
-            error = new ErrorResponse(100, "限流了");
-        else if (e instanceof DegradeException)
-            error = new ErrorResponse(200, "降级了");
-        else if (e instanceof ParamFlowException)
-            error = new ErrorResponse(300, "热点参数限流了");
-        else if (e instanceof SystemBlockException)
-            error = new ErrorResponse(301, "系统保护了");
-        else if (e instanceof AuthorityException)
-            error = new ErrorResponse(302, "授权不通过");
+     if (e instanceof FlowException)
+         error = new ErrorResponse(100, "限流了");
+     else if (e instanceof DegradeException)
+         error = new ErrorResponse(200, "降级了");
+     else if (e instanceof ParamFlowException)
+         error = new ErrorResponse(300, "热点参数限流了");
+     else if (e instanceof SystemBlockException)
+         error = new ErrorResponse(301, "系统保护了");
+     else if (e instanceof AuthorityException)
+         error = new ErrorResponse(302, "授权不通过");
 
-        return new ResponseEntity<>(new ObjectMapper().writeValueAsString(error), HttpStatus.BAD_REQUEST);
-    }
+     return new ResponseEntity<>(new ObjectMapper().writeValueAsString(error), HttpStatus.BAD_REQUEST);
+ }
+
+ @Data
+ @AllArgsConstructor
+ static class ErrorResponse{
+     int code;
+     String msg;
+ }
 
 }
 ```
@@ -350,7 +356,7 @@ public class CustomizedExceptionHandler {
 
 3. **链路**
 
-   当当前资源超过阈值后，对设置的入口资源进行流控，入口资源必须调用当前资源。
+   当有两个以上的端口调用同一资源时，设置链路流控后，但如果该资源的访问条件超过阈值后，对设置的入口资源进行流控，入口资源必须在内部调用当前资源，且不能是同一方法中。
 
    ```java
    @RestController
@@ -377,6 +383,7 @@ public class CustomizedExceptionHandler {
    @Service
    public class OrderService {
    
+       // 注意一定要在被调用资源上添加 @SentinelResource，且不能是 GetMapping 之类的注解标注的方法
        @SentinelResource("handle")
        public String handle() {
    	    return "handle";
@@ -384,21 +391,22 @@ public class CustomizedExceptionHandler {
    
    }
    ```
-
+   
    对 handle 资源设置流控，入口资源为 test1，则当 handle 资源超过阈值时，test1 被流控限制。
-
+   
    > **注意**
    >
    > 在`2021.0.4.0`版本中默认收起了链路，链路流控无效，需要配置：
    >
    > ```yaml
    > spring:
-   >     cloud:
-   >        sentinel:
-   >          web-context-unity: false
+   >  cloud:
+   >     sentinel:
+   >       web-context-unify: false
    > ```
    >
-   > 同时因为此时使用了`@SentinelResource`，则`BlockExceptionHandler`就会失效，可以通过`@SentinelResource`注解的`blockHandler`属性设置流控处理，或者使用 SpringMVC 的全局异常处理（`@ControllerAdvice` + `@ExceptionHandler`或者`ResponseEntityExceptionHandler`）
+   > 同时因为此时使用了`@SentinelResource`，则`BlockExceptionHandler`就会失效，"链路流控"会返回 500 错误，其他流控可以正常被`DefaultBlockExceptionHandler`捕获。可以通过`@SentinelResource`注解的`blockHandler`属性设置流控处理，或者使用 SpringMVC 的全局异常处理（`@ControllerAdvice` + `@ExceptionHandler`或者`ResponseEntityExceptionHandler`）。
+   >
 
 #### 3.流控效果
 
@@ -417,6 +425,8 @@ public class CustomizedExceptionHandler {
    针对脉冲流量，超过阈值的请求进入队列等待，充分利用脉冲流量的空闲时间段，超过**超时时间**还未处理的请求会触发流控。
 
 ### 5.2 熔断降级
+
+**==只有使用了`@SentinelResource`时才会自动统计业务异常。==**
 
 对弱依赖服务（次重要的服务）调用进行熔断降级，暂时切断不稳定调用，可以避免不稳定因素导致整体的雪崩，通常在调用端进行配置。
 
@@ -489,6 +499,7 @@ public class CustomizedExceptionHandler {
           password: nacos
           namespace: public
       sentinel:
+        eager: true
         transport:
           dashboard: 192.168.11.100:8080
           port: 8720
@@ -544,6 +555,7 @@ public class CustomizedExceptionHandler {
 
   ```java
   @GetMapping("/order/{id}")
+  // 必须使用 @SentinelResource 注解
   @SentinelResource("getById")
   public String getById(@PathVariable("id") Integer id) {
   	return "success";
@@ -552,7 +564,7 @@ public class CustomizedExceptionHandler {
 
 - 在控制台新增热点规则
 
-  配置适用于所有参数值的规则。
+  只对`@SentinelResource`声明的**资源**有效，本例中为`getById`资源。配置适用于所有参数值的规则：
 
   - 参数索引：指定流控的参数是第几个
   - 单机阈值：单位时间内最大访问量
@@ -560,6 +572,10 @@ public class CustomizedExceptionHandler {
 - 编辑热点规则
 
   打开高级选项，指定参数类型，指定热点的参数值，指定限流阈值。
+
+> **注意**
+>
+> 和"链路流控"相同，由于使用了`@SentinelResource`注解，此时出发流控后会返回 500 响应码，需要捕获全局异常。
 
 ### 5.4 系统保护规则
 
@@ -615,6 +631,7 @@ public class CustomizedExceptionHandler {
   spring:
     cloud:
       sentinel:
+        eager: true
         transport:
           dashboard: 192.168.11.100:8080
           port: 8720

@@ -178,6 +178,7 @@
   			<artifactId>spring-boot-starter-test</artifactId>
   			<scope>test</scope>
   		</dependency>
+          
   	</dependencies>
   	
   	<dependencyManagement>
@@ -210,7 +211,7 @@
   
   </project>
   ```
-
+  
   > **提示**
   >
   > 也可使用官方脚手架：`https://start.aliyun.com`
@@ -1437,6 +1438,8 @@ Feign 是 Netflix 开发的声明式、模版化的 HTTP 客户端，可以像�
 
 Spring Cloud openfeign 是对 Feign 进行的增强，支持 Spring MVC 的原生注解，自动集成 Spring Cloud 的负载均衡。
 
+==使用 Feign 时需要引入`LoadBalancer`的依赖！==
+
 ### 4.1 环境配置
 
 - 引入依赖
@@ -1701,33 +1704,35 @@ Group  :    DEFAULT_GROUP
             user.age=90
 ```
 
+#### 1.使用bootStrap.properties
+
 - 添加依赖`spring-cloud-starter-alibaba-nacos-config`
 
-```xml
- <dependencies>
-  	<dependency>
-        <groupId>org.springframework.cloud</groupId>
-        <artifactId>spring-cloud-starter-openfeign</artifactId>
-    </dependency>
-  	<dependency>
-     	<groupId>org.springframework.cloud</groupId>
-     	<artifactId>spring-cloud-starter-loadbalancer</artifactId>
+  ```xml
+   <dependencies>
+    	<dependency>
+          <groupId>org.springframework.cloud</groupId>
+          <artifactId>spring-cloud-starter-openfeign</artifactId>
+      </dependency>
+    	<dependency>
+       	<groupId>org.springframework.cloud</groupId>
+       	<artifactId>spring-cloud-starter-loadbalancer</artifactId>
+    	</dependency>
+    	<dependency>
+        	<groupId>com.alibaba.cloud</groupId>
+        	<artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
+    	</dependency>
+    	<dependency>
+        	<groupId>com.alibaba.cloud</groupId>
+        	<artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
+    	</dependency>
+      <!-- 在SpringCloud 2020.* 版本把加载 bootstrap 的功能禁用了，导致在读取文件的时候读取不到而报错，所以我们只要把bootstrap从新导入进来就会生效了 -->
+      <dependency>
+  	    <groupId>org.springframework.cloud</groupId>
+  	    <artifactId>spring-cloud-starter-bootstrap</artifactId>
   	</dependency>
-  	<dependency>
-      	<groupId>com.alibaba.cloud</groupId>
-      	<artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
-  	</dependency>
-  	<dependency>
-      	<groupId>com.alibaba.cloud</groupId>
-      	<artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
-  	</dependency>
-    <!-- 在SpringCloud 2020.* 版本把加载 bootstrap 的功能禁用了，导致在读取文件的时候读取不到而报错，所以我们只要把bootstrap从新导入进来就会生效了 -->
-    <dependency>
-	    <groupId>org.springframework.cloud</groupId>
-	    <artifactId>spring-cloud-starter-bootstrap</artifactId>
-	</dependency>
-</dependencies>
-```
+  </dependencies>
+  ```
 
 - 使用`bootstrap.yaml`配置文件来配置 conf，例如：
 
@@ -1741,37 +1746,57 @@ Group  :    DEFAULT_GROUP
         # username: nacos
         # password: nacos
         conf:
-        # file-extension: properties 默认 properties，可指定为 yaml
+        # file-extension: properties 默认 properties，使用其他格式时必须指定，例如 yaml
   ```
 
   > **注意**
   >
   > 此时会默认查找服务名`nacos-config`和服务名 + yaml 结尾的`nacos-config.yaml`配置文件。其他普通配置都可放在 nacos 中（例如数据库配置）。
 
-- 通过`env.getProperties()`获取
 
-  ```java
-  @RestController
-  @RequestMapping("/order")
-  public class OrderController {
-  
-      @Autowired
-      Environment env;
-  
-      @GetMapping("/add")
-      public String add() {
-  	return env.getProperty("user.id") + env.getProperty("user.age");
-      }
-  }
-  ```
+#### 2.使用application.properties（推荐）
 
-- 通过注解获取
+也可以在中使用`spring.config.import`加载配置文件：
 
-  ```java
-  @NacosPropertySource(dataId = "pre-loan-provider-nacos",groupId = "pre-loan",autoRefreshed = true)
-  ```
+```properties
+spring.application.name=order-server
+spring.cloud.nacos.server-addr=192.168.11.100:8848
+spring.cloud.nacos.username=nacos
+spring.cloud.nacos.password=nacos
+# 可以使用${}来读取 JVM 参数来区分环境
+spring.config.import=nacos:order-server-${env}
+```
 
-### 5.4 按环境获取配置
+- 添加多个配置文件时用`,`隔开，前面的会覆盖后面的配置，如`nacos:order-${env},nacos:common-prop`
+
+- 此时同样可以按 namespace、Group、DataId 获取配置。但是==不能和[自定义获取配置](#5.4-自定义DataId获取配置)配合使用==
+
+### 5.4 获取配置
+
+通过`env.getProperties()`获取
+
+```java
+@RestController
+@RequestMapping("/order")
+public class OrderController {
+
+    @Autowired
+    Environment env;
+
+    @GetMapping("/add")
+    public String add() {
+	return env.getProperty("user.id") + env.getProperty("user.age");
+    }
+}
+```
+
+通过注解获取
+
+```java
+@NacosPropertySource(dataId = "pre-loan-provider-nacos",groupId = "pre-loan",autoRefreshed = true)
+```
+
+#### 1.按环境获取配置
 
 此时只能使用`spring.application.name`作为文件名来获取，不能使用上节的方式。
 
@@ -1833,7 +1858,7 @@ Group  :        DEFAULT_GROUP
 >
 > 此案例中我们通过`spring.profiles.active=<profilename>`的方式写死在配置文件中，而在真正的项目实施过程中这个变量的值是需要不同环境而有不同的值。这个时候通常的做法是通过`-Dspring.profiles.active=<profile>`参数指定其配置来达到环境间灵活的切换。
 
-### 5.5 按namespace获取配置
+#### 2.按namespace获取配置
 
 实际更多使用的是**命名空间**来区分。
 
@@ -1855,7 +1880,7 @@ spring:
 >
 > 配置`spring.cloud.nacos.config.namespace`必须放在 bootstrap.properties 文件中。默认使用 public 作为命名空间，指定`spring.cloud.nacos.config.namespace`的值时必须==**是 namespace 对应的 id**==，id 值可以在 Nacos 的控制台获取。并且在添加配置时注意不要选择其他的 namespace，否则将会导致读取不到正确的配置。
 
-### 5.6 按Group获取配置
+#### 3.按Group获取配置
 
 在没有明确指定`${spring.cloud.nacos.config.group}`配置的情况下， 默认使用的是 DEFAULT_GROUP。如果需要自定义自己的 Group，可以通过以下配置来实现：
 
@@ -1871,9 +1896,9 @@ spring:
 >
 > 该配置必须放在 bootstrap.properties 文件中。并且在添加配置时 Group 的值一定要和`spring.cloud.nacos.config.group`的配置值一致。
 
-### 5.7 自定义DataId获取配置
+### 5.4 自定义DataId获取配置
 
-使用自定义 DataId 时，`file-extension`、`group`仅适用于`${spring.application.name}`的配置文件，不适用于自定义；`namespace`也适用于自定义。
+`file-extension`、`group`仅适用于`${spring.application.name}`和`${spring.config.import}`的配置文件，不适用于自定义；`namespace`也适用于自定义。
 
 #### 1.shared-configs
 
@@ -1904,7 +1929,7 @@ spring:
       config:
         shared-configs:
         - data-id: customized-id.yaml
-          refresh: true
+          refresh: true # 默认 false
         # group: 默认组
 ```
 
@@ -1947,7 +1972,7 @@ spring:
         # group: 默认组
 ```
 
-### 5.9 配置的优先级
+### 5.5 配置的优先级
 
 1. 如果配置了 profile，则 profile > 默认配置文件，如果在 profile 未读取到则会继续读取默认配置文件
 
@@ -1960,7 +1985,7 @@ spring:
 
 一般来讲，shared 用于公共的，默认用于各个服务的，extension 用于临时修改公共配置。
 
-### 5.10 与注册中心结合
+### 5.6 与注册中心结合
 
 可以将配置中心的配置放在`bootstrap.yaml`中，`$spring.application.name`一定要放在`bootstrap.yaml`中。
 
@@ -1989,7 +2014,7 @@ spring:
 - `dataId=order-service`
 - `dataId=customized-id.yaml`
 
-### 5.11 @RefreshScope
+### 5.7 @RefreshScope
 
 `@value`无法动态感知变更，需要在类上标注`@RefreshScope`
 

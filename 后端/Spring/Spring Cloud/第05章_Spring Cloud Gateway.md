@@ -71,7 +71,21 @@ Spring Cloud Gateway 是 Spring Cloud 官方推出的响应式的 API 网关，�
 
    > **注意**
    >
-   > `gateway`依赖会和`spring-webmvc`的依赖冲突，需要在父 POM 中将`spring-boot-starter-web`放入`dependencyManagement`中；或者在配置文件中添加`spring.main.web-application-type=reactive`。
+   > `gateway`依赖会和`spring-webmvc`的依赖冲突，需要在父 POM 中将`spring-boot-starter-web`放入`dependencyManagement`中：
+   >
+   > 1. 将`spring-boot-starter-web`放到`DependencyManagement`中，并声明 version 和`spring-boot-starter-parent`一致
+   >
+   >    ```xml
+   >    <dependency>
+   >        <groupId>org.springframework.boot</groupId>
+   >        <artifactId>spring-boot-starter-web</artifactId>
+   >        <version>${spring-boot-start-web.version}</version>
+   >    </dependency>
+   >    ```
+   >
+   > 2. 在其他微服务中添加`spring-boot-starter-web`
+   >
+   > 或者在配置文件中添加`spring.main.web-application-type=reactive`（推荐）。
 
 2. **配置文件**
 
@@ -143,7 +157,7 @@ Spring Cloud Gateway 是 Spring Cloud 官方推出的响应式的 API 网关，�
        gateway:
          routes:
            - id: order_route
-             uri: lb://order-server # lb 表示从 nacos 中寻找服务，遵循负载均衡策略
+             uri: lb://order-server # lb 表示从 nacos 中寻找服务，遵循负载均衡策略，需要导入 LoadBalancer 依赖！
              predicates:
                - Path=/order-serv/**
              filters:
@@ -222,10 +236,8 @@ Spring Cloud Gateway 是 Spring Cloud 官方推出的响应式的 API 网关，�
          server-addr: 192.168.11.100:8848
          username: nacos
          password: nacos
-         config:
-           file-extension: yaml
    ```
-
+   
 3. 在 NACOS 配置中心新增`Data ID`为 gateway-config 的配置
 
    ```yaml
@@ -251,7 +263,7 @@ Spring Cloud Gateway 是 Spring Cloud 官方推出的响应式的 API 网关，�
 
    > **注意**
    >
-   > 新的 route 规则不支持热更新，只有修改已有规则的断言或者过滤才支持热更新。
+   > `routes`下新添加规则不支持热更新，只能修改已有规则的断言或者过滤才支持热更新。
 
 ## 4.路由断言工厂配置
 
@@ -857,7 +869,7 @@ public class GatewayConfiguration {
 
 #### 2.通过配置文件
 
-可声明在 nacos 中，支持动态更新。
+可声明在 nacos 中，支持动态更新响应体和响应状态，会覆盖代码配置。
 
 ```yaml
 spring:
@@ -866,7 +878,7 @@ spring:
       #配置限流之后的响应内容
       scg:  
         fallback:
-          # 两种模式：一种是response返回文字提示信息，一种是redirect，重定向跳转，需要同时配置redirect(跳转的uri)
+          # 两种模式：一种是response返回文字提示信息，一种是redirect，重定向跳转，需要同时配置redirect（跳转的 uri）
           mode: response
           # 响应的状态
           response-status: 426
@@ -952,7 +964,6 @@ private void initBlockRequestHandler() {
         }
     };
     GatewayCallbackManager.setBlockHandler(blockRequestHandler);
-}
 }
 ```
 
@@ -1301,7 +1312,15 @@ public Result<Long> deleteApi(Long id) {
 
 - 类似的，仿照`GatewayApiController`修改`GatewayFlowRuleController`
 
-#### 6.修改客户端配置
+#### 6.修改控制台页面
+
+修改`src/main/webapp/resources/gulpfile.js`：
+
+```html
+open('http://localhost:8080/index_dev.htm') -> open('http://localhost:8080/index.htm')
+```
+
+#### 7.修改客户端配置
 
 - 添加`sentinel-datasource-nacos`依赖
 
@@ -1385,11 +1404,9 @@ rule
 
 在客户端的配置中添加相应的规则`datasource`。
 
-## 9.功能扩展
+### 8.7 扩展整合Sentinel熔断
 
-### 9.1 扩展整合Sentinel熔断
-
-正常情况下，熔断不能作用于 4XX、5XX 响应码，可以在 gateway 中添加一个`WebFilter`来实现错误响应码熔断：
+即使在服务中添加`@Sentinel`也无法被 gateway 感知到，此时可以在 gateway 中添加一个`WebFilter`来实现错误响应码熔断：
 
 ```java
 @Component
@@ -1416,6 +1433,7 @@ class MyGatewayFilter implements WebFilter {
                     Entry entry = null;
                     try {
                         entry = SphU.entry(id, EntryType.OUT, 0);
+                        // 统计发生错误的次数
                         Tracer.trace(new Exception("error"));
                     } catch (BlockException e) {
                         logger.error("an error occurs: {}", e.getCause().getMessage());
@@ -1432,10 +1450,197 @@ class MyGatewayFilter implements WebFilter {
 }
 ```
 
-### 9.2 扩展整合Sentinel
-
-
+> **注意**
+>
+> API 网管页面中没有继承"热点"和"授权"，这两个规则需要针对单个服务进行[设置](第03章_Sentinel.md#5.3-热点参数流控)。
 
 ## 10.网关高可用
 
 可以同时启动多个 Gateway 实例，使用 LVS 或者 Nginx 进行负载。
+
+## 11.附录
+
+### 11.1 网关相关环境
+
+最终网关的配置文件如下：
+
+`application.yaml`
+
+```yaml
+spring:
+  application:
+    name: gateway-config
+  main:
+    web-application-type: reactive
+  cloud:
+    nacos:
+      server-addr: 192.168.11.100:8848
+      username: nacos
+      password: nacos
+      config:
+        file-extension: yaml
+  config:
+    import: nacos:${spring.application.name}
+```
+
+配置中心
+
+```yaml
+server:
+  port: 8011
+spring:
+  cloud:
+    gateway:
+      routes:
+      - id: gateway
+        uri: lb://order-server
+        predicates:
+        - Path=/order/add,/simpleError,/normal
+      - id: error
+        uri: lb://order-server
+        predicates:
+        - Path=/getError
+    sentinel:
+      eager: true
+      transport:
+        dashboard: localhost:8080
+        port: 8720
+      scg:  
+        fallback:
+          mode: response
+          responseStatus: 427
+          responseBody: '{"code": 426,"message": "限流了，稍后重试！"}'
+      datasource: 
+        flow-rule:
+          nacos:
+            groupId: SENTINEL_GROUP
+            serverAddr: 192.168.11.100:8848
+            dataId: ${spring.application.name}-gw-flow-rules
+            ruleType: flow
+            username: nacos
+            password: nacos
+        degrade-rule:
+           nacos:
+            groupId: SENTINEL_GROUP
+            serverAddr: 192.168.11.100:8848
+            dataId: ${spring.application.name}-degrade-rules
+            ruleType: degrade
+            username: nacos
+            password: nacos
+```
+
+网关需要引入的依赖有：
+
+```xml
+<dependencies>
+    <!-- spring cloud gateway 核心 -->
+    <dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-starter-gateway</artifactId>
+    </dependency>
+    
+    <!-- 引入sentinel进行服务降级熔断 -->
+    <dependency>
+        <groupId>com.alibaba.cloud</groupId>
+        <artifactId>spring-cloud-starter-alibaba-sentinel</artifactId>
+    </dependency>
+    <!-- gateway网关整合sentinel进行限流降级 -->
+    <dependency>
+        <groupId>com.alibaba.cloud</groupId>
+        <artifactId>spring-cloud-alibaba-sentinel-gateway</artifactId>
+    </dependency>
+
+    <!-- Nacos 依赖 -->
+    <dependency>
+        <groupId>com.alibaba.cloud</groupId>
+        <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>com.alibaba.cloud</groupId>
+        <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-starter-loadbalancer</artifactId>
+    </dependency>
+    <!-- 规则持久化依赖 -->
+    <dependency>
+        <groupId>com.alibaba.csp</groupId>
+        <artifactId>sentinel-datasource-nacos</artifactId>
+    </dependency>
+    
+</dependencies>
+```
+
+### 11.2 服务相关环境
+
+服务的配置文件如下：
+
+`application.yaml`
+
+```yaml
+spring:
+  config:
+    import: nacos:order-${env},nacos:common-prop
+  application:
+    name: order-server
+  cloud:
+    nacos:
+      config:
+        group: my_GROUP
+        file-extension: yaml
+      username: nacos
+      password: nacos
+      server-addr: 192.168.11.100:8848
+```
+
+配置中心
+
+```yaml
+server:
+  port: 8081
+spring:
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    username: root
+    password: root
+    url: jdbc:mysql://192.168.11.100:3306/dev?rewriteBatchedStatements=true
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+```
+
+有网关的情况下服务不需要引入 Sentinel 的依赖。仅需引入以下重要组件：
+
+```xml
+<!-- Mybatis 组件 -->
+<dependency>
+    <groupId>org.mybatis.spring.boot</groupId>
+    <artifactId>mybatis-spring-boot-starter</artifactId>
+</dependency>
+<!-- openFeign 相关组件 -->
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-openfeign</artifactId>
+</dependency>
+<!-- Nacos 注册中心和配置中心组件 -->
+<dependency>
+    <groupId>com.alibaba.cloud</groupId>
+    <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
+</dependency>
+<dependency>
+    <groupId>com.alibaba.cloud</groupId>
+    <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-loadbalancer</artifactId>
+</dependency>
+<!-- 其他组件，例如 senta 的组件 -->
+<dependency>
+	<groupId>com.alibaba.cloud</groupId>
+	<artifactId>spring‐cloud‐starter‐alibaba‐seata</artifactId>
+</dependency>
+```
+
