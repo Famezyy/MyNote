@@ -70,7 +70,7 @@ OpenResty 的原始启动命令为 nginx，其参数有`-v`、`-t`、`-p`、`-c`
   $ nginx -p ./ -c nginx-debug.conf
   ```
 
-  `-p ./`表示将当前目录作为前缀路径，及 nginx-debug.conf 配置文件中所用到的相对路径都加上这个前缀。
+  `-p ./`表示将当前目录作为前缀路径，需要指定 nginx 的根目录。即 nginx-debug.conf 配置文件中所用到的相对路径都加上这个前缀。
 
 - `-s`：给 Nginx 进程发送信号，包含`stop`、`reload`、`quit`。
   
@@ -200,6 +200,13 @@ sudo yum install -y openresty-resty
 
 ```bash
 sudo yum --disablerepo="*" --enablerepo="openresty" list available
+```
+
+#### 3. 将Nginx设置为服务
+
+```bash
+PATH=/usr/local/openresty/nginx/sbin:$PATH
+export PATH
 ```
 
 ### 2.3 包管理器安装普通Nginx

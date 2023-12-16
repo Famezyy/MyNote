@@ -1,10 +1,10 @@
-## 二叉树
+# Tree
 
+## 1.二叉树
 
+### 1.1 前序遍历（中左右）
 
-### 前序遍历（中左右）
-
-#### 递归
+#### 1.递归
 
 ```java
 class Solution {
@@ -25,7 +25,7 @@ class Solution {
 }
 ```
 
-#### 非递归
+#### 2.非递归
 
 ```java
 class Solution {
@@ -47,9 +47,9 @@ class Solution {
 }
 ```
 
-### 中序遍历（左中右）
+### 1.2 中序遍历（左中右）
 
-#### 递归
+#### 1.递归
 
 ```java
 class Solution {
@@ -70,7 +70,7 @@ class Solution {
 }
 ```
 
-#### 非递归
+#### 2.非递归
 
 ```java
 class Solution {
@@ -93,9 +93,9 @@ class Solution {
 }
 ```
 
-### 后序遍历（左右中）
+### 1.3 后序遍历（左右中）
 
-#### 递归
+#### 1.递归
 
 ```java
 class Solution {
@@ -116,7 +116,7 @@ class Solution {
 }
 ```
 
-#### 非递归
+#### 2.非递归
 
 ```java
 class Solution {
@@ -149,7 +149,7 @@ class Solution {
 }
 ```
 
-## 线段树
+## 2.线段树
 
 多用于以线段为单位的统计计算，例如给定一个数组，每次更新区间时判断是否有区间重合。
 
@@ -245,11 +245,11 @@ class Sector {
 
 <img src="img/Tree/image-20220720004831315-aebc269660d82d44eaa6d5adf5354be8-01e0bb.png" alt="image-20220720004831315" style="zoom:80%;" />
 
-### 1.查询树
+### 2.1 查询树
 
 <img src="img/Tree/image-20220720004903615-140d97bd941125d627ded6723880ff26-46b5f0.png" alt="image-20220720004903615" style="zoom:80%;" />
 
-### 2.更新树
+### 2.2 更新树
 
 <img src="img/Tree/image-20220720004604270-7b8c002159ee19c9a85f3ffd8948a25e-f45289.png" alt="image-20220720004604270" style="zoom:80%;" />
 

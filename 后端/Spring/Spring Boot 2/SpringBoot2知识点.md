@@ -684,7 +684,7 @@ SpringBoot 2.2.0 版本开始后引入 Junit5 作为单元测试默认库，要�
 </dependency>
 ```
 
-## 9.读取Resources目录
+## 9.读取目录
 
 这是一个公共方法，用来读取文件中的内容的方法。
 
@@ -784,6 +784,10 @@ public static void printFileContent(Object obj) throws IOException {
       }
   }
   ```
+  
+- `System.getProperties("user.dir")`
+
+  读取项目根目录。
 
 
 ## 10.异步执行
@@ -973,4 +977,4 @@ server:
 
 默认值保存在`spring-configuration-metadata.json`中。
 
-同时需要注意[配置](../../../读书笔记/Java高并发核心编程（卷1）/第09章_高并发HTTP通信核心原理.md#2内嵌部署tomcat配置) linux 的最大文件句柄数。
+同时需要注意配置 linux 的最大文件句柄数。

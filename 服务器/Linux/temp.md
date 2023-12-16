@@ -79,8 +79,26 @@
 
 而 `chmod 755` 则是直接将文件或目录设置为一组特定的权限：所有者有读、写、执行权限；组用户和其他用户有读、执行权限，但没有写权限。
 
+## 最大打开文件句柄数
 
+使用 `ulimit -n` 查看单进程允许打开的的最大文件句柄数，使用`ulimit -n 65536`来临时修改，或修改`/etc/security/limits.conf`配置文件来永久修改：
 
-## 单进程最大打开文件句柄数进行修改
+```bash
+*     soft    nofile   65536
+*     hard    nofile   65536
+```
 
-使用`ulimit -n`查看当前允许打开的的最大文件句柄数。可在`/etc/sysctl.conf`中添加`fs.file-max=65535`，然后执行`sysctl -p`。
+还有一个系统允许的最大文件句柄数，通过`cat /proc/sys/fs/file-max`查看设置，在`/etc/sysctl.conf`中添加`fs.file-max=65536`，然后执行`sysctl -p`修改系统允许的最大文件句柄数。
+
+## 环境参数
+
+**Bash**：
+
+- 对于个别用户，编辑 `~/.bashrc` 文件
+- 对于所有用户，可以编辑 `/etc/bash.bashrc` 文件（需要 root 权限）
+
+```
+export PATH=$PATH:/your/new/path
+```
+
+运行 `source ~/.bashrc`（或对应的配置文件）来立即使更改生效。
