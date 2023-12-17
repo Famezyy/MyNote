@@ -1458,20 +1458,316 @@ class MyGatewayFilter implements WebFilter {
 
 可以同时启动多个 Gateway 实例，使用 LVS 或者 Nginx 进行负载。
 
-## 11.附录
+## 11.动态加载网关路由
 
-### 11.1 网关相关环境
+1. **Nacos 连接配置类**
+
+   ```java
+   @Component
+   public class GatewayNacosProperties {
+   
+       public static String namespace;
+   
+       public static String serverAddr;
+   
+       public static String nacosRouteDataId;
+   
+       public static String nacosRouteGroup;
+   
+       public static String username;
+   
+       public static String password;
+   
+       public static final long DEFAULT_TIMEOUT = 30000;
+   
+   
+   
+       @Value("${spring.cloud.nacos.namespace:}")
+       public  void setNamespace(String namespace) {
+           GatewayNacosProperties.namespace = namespace;
+       }
+   
+   
+       @Value("${spring.cloud.nacos.server-addr}")
+       public void setServerAddr(String serverAddr) {
+           GatewayNacosProperties.serverAddr = serverAddr;
+       }
+   
+   
+       @Value("${spring.cloud.nacos.customConfig.data-id}")
+       public  void setNacosRouteDataId(String nacosRouteDataId) {
+           GatewayNacosProperties.nacosRouteDataId = nacosRouteDataId;
+       }
+   
+   
+       @Value("${spring.cloud.nacos.customConfig.group:DEFAULT_GROUP}")
+       public  void setNacosRouteGroup(String nacosRouteGroup) {
+           GatewayNacosProperties.nacosRouteGroup = nacosRouteGroup;
+       }
+   
+       @Value("${spring.cloud.nacos.username}")
+       public  void setUsername(String username) {
+           GatewayNacosProperties.username = username;
+       }
+   
+   
+       @Value("${spring.cloud.nacos.password}")
+       public void setPassword(String password) {
+           GatewayNacosProperties.password = password;
+       }
+   }
+   ```
+
+2. **配置文件中配置信息**
+
+   ```yaml
+   spring:
+     application:
+       name: gateway-config
+     cloud:
+       nacos:
+         server-addr: 192.168.11.100:8848
+         username: nacos
+         password: nacos
+         config:
+           file-extension: yaml
+         # 自定义配置信息
+         customConfig:
+           data-id: gate-way-route
+           # group:
+     config:
+       import: nacos:${spring.application.name}
+     main:
+       web-application-type: reactive
+   ```
+
+3. **Nacos 中配置路由信息**
+
+   ```json
+   [
+       {
+           "id": "gateway",
+           "uri": "lb://order-server",
+           "order": 0,
+           "predicates": [
+               {
+                   "args": {
+                       "pattern1": "/normal",
+                       "pattern2": "/simpleError"
+                   },
+                   "name": "Path"
+               }
+           ]
+       }
+   ]
+   ```
+
+4. **Nacos 连接监听类**
+
+   ```java
+   @Slf4j
+   @Component
+   @DependsOn({"gatewayNacosProperties"})
+   public class GatewayRouteNaocsConnector {
+   
+       // nacos 配置服务
+       private ConfigService configService;
+   
+       @Autowired
+       DynamicRouterPublisher dynamicRouterPublisher;
+   
+       @PostConstruct
+       public void init() {
+           log.info("gateway route init...");
+   
+           try {
+               configService=initConfigService();
+               if (null  == configService){
+                   log.error("init config service fail");
+                   return;
+               }
+               //通过 Nacos Config 并指定路由配置路径去获取路由配置
+               String config = configService.getConfig(
+                       GatewayNacosProperties.nacosRouteDataId,
+                       GatewayNacosProperties.nacosRouteGroup,
+                       GatewayNacosProperties.DEFAULT_TIMEOUT
+               );
+   
+               log.info("get current gateway config from NACOS :[{}]",config);
+               List<RouteDefinition> definitionList = JSON.parseArray(config, RouteDefinition.class);
+   
+               if (CollectionUtils.isNotEmpty(definitionList)){
+                   for (RouteDefinition routeDefinition : definitionList) {
+                       log.info("init gateWay config :[{}]",routeDefinition.toString());
+                       dynamicRouterPublisher.addRouteDefinition(routeDefinition);
+                   }
+               }
+           } catch (Exception e) {
+               log.error("gateway route has some error:[{}]",e.getMessage(),e);
+           }
+   
+           //设置监听器
+           dynamicRouteByNacosListener(GatewayNacosProperties.nacosRouteDataId,
+                   GatewayNacosProperties.nacosRouteGroup);
+       }
+   
+       /**
+        * 连接 nacos
+        */
+       private ConfigService initConfigService() {
+           Properties properties = new Properties();
+           properties.setProperty("serverAddr", GatewayNacosProperties.serverAddr);
+           if (StringUtils.isNotBlank(GatewayNacosProperties.namespace)) {
+               properties.setProperty("namespace", GatewayNacosProperties.namespace);
+           }
+           properties.setProperty("username", GatewayNacosProperties.username);
+           properties.setProperty("password", GatewayNacosProperties.password);
+   
+           try {
+               return configService = NacosFactory.createConfigService(properties);
+           } catch (NacosException e) {
+               log.error("init gateway nacos config error:[{}]", e.getMessage(), e);
+               return null;
+           }
+       }
+   
+       /**
+        * 监听 Nacos下发的动态路由配置
+        *
+        */
+       private void dynamicRouteByNacosListener(String dataId, String group) {
+           try {
+               configService.addListener(dataId, group, new Listener() {
+                   //可以自定义线程池来操作
+                   @Override
+                   public Executor getExecutor() {
+                       return null;
+                   }
+   
+                   //此时传过来的 s 就是 Nacos 中最新的配置
+                   @Override
+                   public void receiveConfigInfo(String s) {
+                       log.info("start to update config:[{}]", s);
+                       List<RouteDefinition> definitionList = JSON.parseArray(s, RouteDefinition.class);
+                       log.info("update route :[{}]", definitionList.toString());
+                       dynamicRouterPublisher.updateList(definitionList);
+                   }
+               });
+           } catch (NacosException e) {
+               log.error("dynamic update gateway config error:[{}]", e.getMessage(), e);
+           }
+       }
+   }
+   ```
+
+5. **更新路由类**
+
+   ```java
+   @RequiredArgsConstructor
+   @Service
+   @Slf4j
+   public class DynamicRouterPublisher implements ApplicationEventPublisherAware {
+   
+       private final RouteDefinitionWriter routeDefinitionWriter;
+       private final RouteDefinitionLocator routeDefinitionLocator;
+   
+       //事件发布
+       private ApplicationEventPublisher publisher;
+   
+   
+       @Override
+       public void setApplicationEventPublisher(ApplicationEventPublisher applicationEventPublisher) {
+           //完成事件推送句柄的初始化
+           this.publisher = applicationEventPublisher;
+       }
+   
+       /**
+        * 新增路由
+        */
+       public String addRouteDefinition(RouteDefinition definition) {
+           log.info("gateway add route : [{}]", definition);
+           //保存路由配置并发布
+           routeDefinitionWriter.save(Mono.just(definition)).subscribe();
+           //发布事件通知给Gateway,同步新增的路由定义
+           this.publisher.publishEvent(new RefreshRoutesEvent(this));
+   
+           return "add success";
+       }
+   
+       /**
+        * 删除路由
+        */
+       public String deleteRouteById(String id) {
+           try {
+               log.info("gateway delete route id:[{}]", id);
+               routeDefinitionWriter.delete(Mono.just(id)).subscribe();
+               //发布事件通知给GateWay,同步更新路由定义
+               this.publisher.publishEvent(new RefreshRoutesEvent(this));
+               return "delete success";
+   
+           } catch (Exception ex) {
+               log.error("gateway delete route fail:[{}]", ex.getMessage(), ex);
+               return "delete fail";
+           }
+       }
+   
+       /**
+        * 更新路由：删除 + 新增 = 更新
+        */
+       public String updateByRouteDefinition(RouteDefinition definition) {
+   
+           try {
+               log.info("gateway update route:[{}]", definition);
+               //只是删除不要去发布
+               this.routeDefinitionWriter.delete(Mono.just(definition.getId()));
+           } catch (Exception e) {
+               return "update fail,not find route routeId" + definition.getId();
+           }
+           try {
+               //现在可以发布了
+               this.routeDefinitionWriter.save(Mono.just(definition)).subscribe();
+               this.publisher.publishEvent(new RefreshRoutesEvent(this));
+               return "success";
+           } catch (Exception e) {
+               return "update route fail";
+           }
+       }
+   
+       /**
+        * 批量更新
+        */
+       public String updateList(List<RouteDefinition> definitions) {
+   
+           log.info("gateway update route:[{}]", definitions);
+           //先拿到当前 gateway 中存储的路由定义
+           List<RouteDefinition> routeDefinitions = routeDefinitionLocator.getRouteDefinitions().buffer().blockFirst();
+           if (!CollectionUtils.isEmpty(routeDefinitions)) {
+               //如果 gateway 中存在旧的路由定义，那么要清除掉
+               routeDefinitions.forEach(rd -> {
+                   log.info("delete route definition:[{}]", rd);
+                   deleteRouteById(rd.getId());
+               });
+           }
+           //把更新的路由定义同步到 gateway 中
+           definitions.forEach(this::updateByRouteDefinition);
+           return "success";
+       }
+   
+   }
+   ```
+
+## 12.附录
+
+### 12.1 网关相关环境
 
 最终网关的配置文件如下：
 
-`application.yaml`
+**`application.yaml`**
 
 ```yaml
 spring:
   application:
     name: gateway-config
-  main:
-    web-application-type: reactive
   cloud:
     nacos:
       server-addr: 192.168.11.100:8848
@@ -1479,27 +1775,23 @@ spring:
       password: nacos
       config:
         file-extension: yaml
+      customConfig:
+        data-id: gate-way-route
   config:
     import: nacos:${spring.application.name}
+  main:
+    web-application-type: reactive
 ```
 
-配置中心
+**配置中心**
+
+gateway-config
 
 ```yaml
 server:
   port: 8011
 spring:
   cloud:
-    gateway:
-      routes:
-      - id: gateway
-        uri: lb://order-server
-        predicates:
-        - Path=/order/add,/simpleError,/normal
-      - id: error
-        uri: lb://order-server
-        predicates:
-        - Path=/getError
     sentinel:
       eager: true
       transport:
@@ -1508,8 +1800,8 @@ spring:
       scg:  
         fallback:
           mode: response
-          responseStatus: 427
-          responseBody: '{"code": 426,"message": "限流了，稍后重试！"}'
+          response-status: 427
+          response-body: '{"code": 426,"message": "限流了，稍后重试！"}'
       datasource: 
         flow-rule:
           nacos:
@@ -1527,6 +1819,27 @@ spring:
             ruleType: degrade
             username: nacos
             password: nacos
+```
+
+gate-way-route
+
+```json
+[
+    {
+        "id": "gateway",
+        "uri": "lb://order-server",
+        "order": 0,
+        "predicates": [
+            {
+                "args": {
+                    "pattern1": "/normal",
+                    "pattern2": "/simpleError"
+                },
+                "name": "Path"
+            }
+        ]
+    }
+]
 ```
 
 网关需要引入的依赖有：
@@ -1572,7 +1885,7 @@ spring:
 </dependencies>
 ```
 
-### 11.2 服务相关环境
+### 12.2 服务相关环境
 
 服务的配置文件如下：
 

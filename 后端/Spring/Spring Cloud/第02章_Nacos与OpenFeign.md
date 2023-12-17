@@ -1878,7 +1878,7 @@ spring:
 
 > **注意**
 >
-> 配置`spring.cloud.nacos.config.namespace`必须放在 bootstrap.properties 文件中。默认使用 public 作为命名空间，指定`spring.cloud.nacos.config.namespace`的值时必须==**是 namespace 对应的 id**==，id 值可以在 Nacos 的控制台获取。并且在添加配置时注意不要选择其他的 namespace，否则将会导致读取不到正确的配置。
+> 默认使用 public 作为命名空间，指定`spring.cloud.nacos.config.namespace`的值时必须==**是 namespace 对应的 id**==，id 值可以在 Nacos 的控制台获取。并且在添加配置时注意不要选择其他的 namespace，否则将会导致读取不到正确的配置。
 
 #### 3.按Group获取配置
 
@@ -1891,10 +1891,6 @@ spring:
       config:
         group: DEVELOP_GROUP
 ```
-
-> **注意**
->
-> 该配置必须放在 bootstrap.properties 文件中。并且在添加配置时 Group 的值一定要和`spring.cloud.nacos.config.group`的配置值一致。
 
 ### 5.4 自定义DataId获取配置
 
