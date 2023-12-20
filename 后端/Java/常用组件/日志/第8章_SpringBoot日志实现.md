@@ -56,23 +56,31 @@ logging.file.path=D:/test/springbootlog
 使用 log4j2 时，需要将 logback 的依赖去除，引入`spring-boot-starter-log4j2`依赖，该依赖继承了`log4j-slf4j-impl`和`log4j-core`。
 
 ```xml
-<!-- 添加 log4j2 依赖 -->
-<dependency>
+<parent>
     <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-log4j2</artifactId>
-</dependency>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>2.6.11</version>
+</parent>
 
-<dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-web</artifactId>
-    <exclusions>
-        <!-- 排除掉原始依赖 -->
-        <exclusion>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-logging</artifactId>
-        </exclusion>
-    </exclusions>
-</dependency>
+<!-- 添加 log4j2 依赖 -->
+<dependencies>
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-log4j2</artifactId>
+    </dependency>
+
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-web</artifactId>
+        <exclusions>
+            <!-- 排除掉原始依赖 -->
+            <exclusion>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-logging</artifactId>
+            </exclusion>
+        </exclusions>
+    </dependency>
+</dependencies>
 ```
 
 同时加入 log4j2.xml 配置文件
@@ -94,7 +102,7 @@ logging.file.path=D:/test/springbootlog
 
     <Loggers>
         <Logger name="com.youyi" level="info" additivity="false">
-            <AppenderRef ref="console"></AppenderRef>
+            <AppenderRef ref="console"/>
         </Logger>
         <Root level="error">
             <AppenderRef ref="console"/>

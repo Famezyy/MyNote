@@ -102,3 +102,44 @@ export PATH=$PATH:/your/new/path
 ```
 
 运行 `source ~/.bashrc`（或对应的配置文件）来立即使更改生效。
+
+## 开放端口
+
+**开启防火墙**
+
+```bash
+systemctl start firewalld
+```
+
+**重启防火墙**
+
+```bash
+systemctl restart firewalld
+```
+
+**指定端口和ip访问**
+
+```Bash
+firewall-cmd --permanent --add-rich-rule="rule family="ipv4" source address="192.168.11.101" port protocol="tcp" port="8080" accept"
+```
+
+**重载规则**
+
+```bash
+firewall-cmd --reload
+```
+
+**查看已配置规则**
+
+```Bash
+firewall-cmd --list-all
+```
+
+此时外网已经无法访问`192.168.11.103:8080`，只能通过`Nginx`反向代理服务器访问。这时`Nginx`服务器就是一台**网关服务器**，可以管理`动静分离`、`URL rewrite`、`负载均衡`、`反向代理`等功能。
+
+**移除规则**
+
+```Bash
+firewall-cmd --permanent --remove-rich-rule="rule family="ipv4" source address="192.168.44.101" port port="8080" protocol="tcp" accept"
+```
+

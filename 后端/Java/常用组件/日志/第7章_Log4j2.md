@@ -608,7 +608,7 @@ log4j2.xml 文件
 </Properties>
 ```
 
-### 8.2 程序中读取
+### 8.2 使用线程上下文
 
 使用`${ctx:属性名}`读取。
 
@@ -630,5 +630,82 @@ log4j2.xml 文件
     <!-- 配置输出格式 -->
     <Property name="pattern" value="${ctx:SLN} [%d{yyyy-MM-dd HH:mm:ss.SSS}] [%-5level] [%t] [%c#%M-%L] %m%n"/>
 </Properties>
+```
+
+## 9.开启父线程数据共享
+
+log4j 的 `ThreadContext` 默认使用 `ThreadLocal` 实现，其无法共享父线程的数据；需要开启共享时需要在 `resources` 下新建 `log4j2.component.properties`，添加以下配置：
+
+```properties
+isThreadContextMapInheritable=true
+```
+
+此时会使用 `InheritableThreadLocal` 作为 `ThreadContext`。
+
+> **扩展：底层原理**
+>
+> 其实现逻辑在 `DefaultThreadContextMap` 中：
+>
+> ```java 
+> static ThreadLocal<Map<String, String>> createThreadLocalMap(final boolean isMapEnabled) {
+>     return (ThreadLocal)(inheritableMap ? new InheritableThreadLocal<Map<String, String>>() {
+>         protected Map<String, String> childValue(final Map<String, String> parentValue) {
+>             return parentValue != null && isMapEnabled ? Collections.unmodifiableMap(new HashMap(parentValue)) : null;
+>         }
+>     } : new ThreadLocal());
+> }
+> 
+> static void init() {
+>     inheritableMap = PropertiesUtil.getProperties().getBooleanProperty("isThreadContextMapInheritable");
+> }
+> 
+> static {
+>     init();
+> }
+> ```
+>
+> 
+
+此时开启新的线程就能获取父线程的数据了：
+
+```java
+Logger logger = LoggerFactory.getLogger(Demo4ApplicationTests.class);
+@Test
+void contextLoads() {
+    ThreadContext.put("traceId", UUID.randomUUID().toString());
+    new Thread(() -> {
+        logger.info(ThreadContext.get("traceId"));
+    }).start();
+}
+```
+
+## 10.MDC链路追踪
+
+底层实现是`ThreadContext`。
+
+在代码中使用 `MDC` 放入 trace 信息：
+
+```java
+Logger logger = LoggerFactory.getLogger(Demo4ApplicationTests.class);
+@Test
+void contextLoads() {
+    MDC.put("traceId", UUID.randomUUID().toString());
+    MDC.put("ts", String.valueOf(new Date().getTime()));
+    logger.info("test");
+}
+```
+
+在 `log4j2.xml` 配置文件的 `pattern` 中使用 `X{}` 获取 `MDC` 中的数据：
+
+```xml
+<Properties>
+    <Property name="pattern" value="[%d{yyyy-MM-dd HH:mm:ss.SSS}] [%-5level, %X{traceId}, %X{ts}] [%t] [%c#%M-%L] %m%n"/>
+</Properties>
+```
+
+输出：
+
+```bash
+[2023-12-20 20:48:39.386] [INFO , 489aff74-d4b5-45e6-a6fe-7bb3faef4e28, 1703072919385] [main] [com.example.demo.Demo4ApplicationTests#contextLoads-21] test
 ```
 
