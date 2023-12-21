@@ -3052,7 +3052,7 @@ void transfer(Entry[] newTable, boolean rehash) {
 
 假设 map 中初始元素是
 
-```java
+```bash
 原始链表，格式：[下标] (key,next)
 [1] (1,35)->(35,16)->(16,null)
  
@@ -3973,5 +3973,5 @@ class MyCache{
 
 ### Contended注解方式
 
-在 JDK1.8 中，新增了一种注解`@sun.misc.Contended`，来使各个变量在 Cache line 中分隔开。注意，jvm 需要添加参数`-XX:-RestrictContended`才能开启此功能。例如ConcurrentHashMap`的保存 long 型的数据结构`CounterCell`上就有这个注释。
+在 JDK1.8 中，新增了一种注解 `@sun.misc.Contended`，来使各个变量在 Cache line 中分隔开。注意，jvm 需要添加参数 `-XX:-RestrictContended` 才能开启此功能。例如 `ConcurrentHashMap`的保存 long 型的数据结构 `CounterCell` 上就有这个注释。
 
