@@ -2,9 +2,11 @@
 
 ## 1.二叉树
 
-### 1.1 前序遍历（中左右）
+### 1.1 遍历
 
-#### 1.递归
+#### 1.前序遍历（中左右）
+
+##### 1.1 递归
 
 ```java
 class Solution {
@@ -25,11 +27,12 @@ class Solution {
 }
 ```
 
-#### 2.非递归
+##### 1.2 非递归
 
 ```java
 class Solution {
     public List<Integer> preorderTraversal(TreeNode root) {
+        // 用于存放父节点
         Deque<TreeNode> stack = new LinkedList<>();
         List<Integer> result = new ArrayList<>();
         TreeNode cur = root;
@@ -37,8 +40,10 @@ class Solution {
             if (cur != null) {
                 result.add(cur.val);
                 stack.push(cur);
+                // 先遍历左节点
                 cur = cur.left;
             } else {
+                // 左节点为空则遍历右节点
                 cur = stack.pop().right;
             }
         }
@@ -47,9 +52,9 @@ class Solution {
 }
 ```
 
-### 1.2 中序遍历（左中右）
+#### 2.中序遍历（左中右）
 
-#### 1.递归
+##### 2.1 递归
 
 ```java
 class Solution {
@@ -70,7 +75,7 @@ class Solution {
 }
 ```
 
-#### 2.非递归
+##### 2.2 非递归
 
 ```java
 class Solution {
@@ -93,9 +98,9 @@ class Solution {
 }
 ```
 
-### 1.3 后序遍历（左右中）
+#### 3.后序遍历（左右中）
 
-#### 1.递归
+##### 3.1 递归
 
 ```java
 class Solution {
@@ -116,7 +121,7 @@ class Solution {
 }
 ```
 
-#### 2.非递归
+##### 3.2 非递归
 
 ```java
 class Solution {
@@ -146,6 +151,60 @@ class Solution {
         }
         return result;
     }
+}
+```
+
+### 1.2 大顶堆小顶堆
+
+[源码解析](https://zhuanlan.zhihu.com/p/630992857)
+
+大顶堆（Max Heap）和小顶堆（Min Heap）是两种特殊的二叉堆，它们都是一种完全二叉树（或近似完全二叉树），并且满足堆的性质。
+
+1. **大顶堆（Max Heap）：**
+
+   ```bash
+          9
+         / \
+        7   5
+       / \ / \
+      6  2 4  3
+   ```
+
+   - 在大顶堆中，每个节点的值都大于或等于其子节点的值
+   - 对于任意节点 `i`，其值大于等于节点 `2i` 和 `2i+1` 的值
+   - 大顶堆的根节点是整个堆中的最大值
+
+2. **小顶堆（Min Heap）：**
+
+   ```bash
+          2
+         / \
+        4   3
+       / \ / \
+      6  7 5  9
+   ```
+
+   - 在小顶堆中，每个节点的值都小于或等于其子节点的值
+   - 对于任意节点 `i`，其值小于等于节点 `2i` 和 `2i+1` 的值
+   - 小顶堆的根节点是整个堆中的最小值
+
+在Java中，`PriorityQueue` 类是一个实现了小顶堆（Min Heap）的优先队列。默认情况下，`PriorityQueue` 使用自然顺序（元素的自然顺序，或者通过实现 `Comparable` 接口）来维护小顶堆的性质，即队头元素是最小的。
+
+以下是一个简单的示例，演示如何使用 `PriorityQueue` 来创建一个小顶堆：
+
+```java
+// 创建一个小顶堆
+PriorityQueue<Integer> minHeap = new PriorityQueue<>();
+// 输出小顶堆的元素（按照升序）
+while (!minHeap.isEmpty()) {
+    System.out.print(minHeap.poll() + " ");
+}
+
+// 创建一个大顶堆，需要通过自定义比较器（Comparator）来实现
+PriorityQueue<Integer> maxHeap = new PriorityQueue<>(Collections.reverseOrder());
+// 输出大顶堆的元素（按照降序）
+while (!maxHeap.isEmpty()) {
+    System.out.print(maxHeap.poll() + " ");
 }
 ```
 
@@ -254,4 +313,3 @@ class Sector {
 <img src="img/Tree/image-20220720004604270-7b8c002159ee19c9a85f3ffd8948a25e-f45289.png" alt="image-20220720004604270" style="zoom:80%;" />
 
 > 创建左右节点时将懒更新的值下推到子节点
-
