@@ -141,3 +141,77 @@ public class HelloController {
 }
 ```
 
+## 5.根据Swagger生成Model
+
+导入以下依赖和 plugin
+
+```xml
+<dependencies>
+	<dependency>
+        <groupId>io.swagger.core.v3</groupId>
+        <artifactId>swagger-annotations</artifactId>
+        <version>2.2.19</version>
+    </dependency>
+    <dependency>
+        <groupId>org.openapitools</groupId>
+        <artifactId>jackson-databind-nullable</artifactId>
+        <version>0.2.6</version>
+    </dependency>
+    <dependency>
+        <groupId>javax.validation</groupId>
+        <artifactId>validation-api</artifactId>
+        <version>2.0.1.Final</version>
+    </dependency>
+</dependencies>
+
+<build>
+    <plugins>
+        <plugin>
+            <groupId>org.openapitools</groupId>
+            <artifactId>openapi-generator-maven-plugin</artifactId>
+            <version>7.2.0</version>
+            <executions>
+                <execution>
+                    <id>api-call-jal-jmbSwagger</id>
+                    <goals>
+                        <goal>generate</goal>
+                    </goals>
+                    <configuration>
+                        <inputSpec>${basedir}/src/main/resources/swagger.yaml</inputSpec>
+                        <generatorName>spring</generatorName>
+                        <addCompileSourceRoot>false</addCompileSourceRoot>
+                        <configOptions>
+                            <sourceFolder>src/main/java</sourceFolder>
+                            <!-- java 版本 -->
+                            <dateLibrary>java17</dateLibrary>
+                            <hideGenerationTimestamp>true</hideGenerationTimestamp>
+                            <recursiveBeanValidation>true</recursiveBeanValidation>
+                            <useBeanValidation>true</useBeanValidation>
+                            <serializableModel>true</serializableModel>
+                            <delegatePattern>true</delegatePattern>
+                            <interfaceOnly>true</interfaceOnly>
+                            <objectMapper />
+                        </configOptions>
+                        <output>${project.basedir}</output>
+                        <!-- 生成的 model 路径 -->
+                        <modelPackage>jp.co.jal.jmb.performance.info.model.jmb</modelPackage>
+                        <additionalProperties>
+                            <java17>true</java17>
+                            <additionalProperty>jackson=true</additionalProperty>
+                        </additionalProperties>
+                        <generateApis>false</generateApis>
+                        <generateApiDocumentation>false</generateApiDocumentation>
+                        <generateApiTests>false</generateApiTests>
+                        <generateModelDocumentation>false</generateModelDocumentation>
+                        <generateSupportingFiles>false</generateSupportingFiles>
+                        <generateModelDocumentation>false</generateModelDocumentation>
+                        <!-- 是否跳过 -->
+                        <skip>false</skip>
+                    </configuration>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+</build>
+```
+

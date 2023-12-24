@@ -137,7 +137,7 @@ public class DemoConfig {
 
 #### 1.2 热更新properties
 
-热更新需要引入[spring-cloud-kubernetes-configuration-watcher](https://docs.spring.io/spring-cloud-kubernetes/reference/spring-cloud-kubernetes-configuration-watcher.html)，而后在 `Deployment` 中添加环境变量：
+热更新需要引入[spring-cloud-kubernetes-configuration-watcher](https://docs.spring.io/spring-cloud-kubernetes/reference/spring-cloud-kubernetes-configuration-watcher.html)，注意修改版本！而后在 `Deployment` 中添加环境变量：
 
 ```yaml
 env:
@@ -272,10 +272,16 @@ spec:
 > @RefreshScope
 > public class TestController {
 > 
->  @Value("${my.config.test}")
->  String test;
->  ...
+> @Value("${my.config.test}")
+> String test;
+> ...
 > }
+> ```
+>
+> 当服务名和 ConfigMap 名不同时需要在 ConfigMap 中添加以下 annotation：
+>
+> ```yaml
+> spring.cloud.kubernetes.configmap.apps: service_name
 > ```
 
 ### 2.非挂载方式
@@ -284,16 +290,21 @@ spec:
 
 ```yaml
 spring:
-  config:
-    import: "kubernetes:"
   application:
     name: cloud-k8s-app
+  config:
+    # 使用 kubernetes
+    import: "kubernetes:"
+  # 配置 configMap 名称和命名空间
   cloud:
     kubernetes:
       config:
         enabled: true
         name: ${spring.application.name}
         namespace: default
+        # sources:
+        # - name:
+        #   namespace:
 management:
   endpoint:
     refresh:
@@ -358,53 +369,184 @@ spec:
 
 其他与[热更新properties](#1.2-热更新properties)一致。
 
-> **notice**
+> **简化配置文件**
 >
-> 本地配置文件 `application.yaml` 中只需配置以下选项：
+> 暴露端口相关配置可以放在 ConfigMap 中，本地配置文件 `application.yaml` 中只需配置以下选项：
 >
 > ```yaml
 > spring:
->    config:
->         import: "kubernetes:"
-> application:
+>   config:
+> 	import: "kubernetes:"
+>   application:
 >     name: cloud-k8s-app
+>   cloud:
+>     kubernetes:
+>       config:
+>         enabled: true
+>         name: ${spring.application.name}
+>         namespace: default
 > ```
 >
-> 其余写在 ConfigMap 中即可：
+> **ConfigMap**
 >
 > ```yaml
 > apiVersion: v1
 > kind: ConfigMap
 > metadata:
->    name: cloud-k8s-app
->    namespace: default
-> labels:
->     # 必须
+>   name: cloud-k8s-app
+>   namespace: default
+>   labels:
 >     spring.cloud.kubernetes.config: "true"
->     # 会减少 apiServer 和 watcher 的压力
 >     spring.cloud.kubernetes.config.informer.enabled: "true"
 > data:
->    cloud-k8s-app.yaml: |-
->      spring:
->        cloud:
->          kubernetes:
->            config:
->              enabled: true
->              name: ${spring.application.name}
->              namespace: default
->      management:
->        endpoint:
->          refresh:
->            enabled: true
->          restart:
->            enabled: true
->        endpoints:
->          web:
->            exposure:
->              include:
->                   - "refresh"
->                   - "restart"
->         my:
->           config:
->             test: "updated value"
+>   cloud-k8s-app.yaml: |-
+>     management:
+>       endpoint:
+>         refresh:
+>           enabled: true
+>         restart:
+>           enabled: true
+>       endpoints:
+>         web:
+>           exposure:
+>             include:
+>               - "refresh"
+>               - "restart"
 > ```
+
+## 2.挂载Secret
+
+### 2.1 环境变量方式
+
+**application.yaml**
+
+```yaml
+spring:
+  config:
+    import: "kubernetes:"
+  application:
+    name: cloud-k8s-app
+  cloud:
+    kubernetes:
+      config:
+        enabled: true
+        name: ${spring.application.name}
+        namespace: default
+      secrets:
+        enabled: true
+        namespace: default
+        sources:
+          - name: mysql-root-authn
+```
+
+**secrets.yaml**
+
+```yaml
+apiVersion: v1
+data:
+  db.password: dGVtcFBhc3N3b3Jk
+  db.username: cm9vdA==
+kind: Secret
+metadata:
+  annotations:
+    spring.cloud.kubernetes.secret.apps: cloud-k8s-app
+  labels:
+    spring.cloud.kubernetes.secret: "true"
+    spring.cloud.kubernetes.secret.informer.enabled: "true"
+  name: mysql-root-authn
+  namespace: default
+type: Opaque
+```
+
+**Deployment & Service**
+
+```yaml
+spec:
+  containers:
+  - name: cloud-k8s-app
+    image: openjdk:17
+    command: ["java", "-jar", "/app/app.jar"]
+    volumeMounts:
+    - name: app-volume
+      mountPath: /app/app.jar
+    # 添加环境变量
+    env:
+    - name: db.username
+      valueFrom:
+        secretKeyRef:
+          name: cloud-k8s-app
+          key: db.username
+  volumes:
+  - name: app-volume
+    hostPath:
+      path: /root/app/app.jar
+  serviceAccountName: user
+```
+
+该方法不支持动态更新。
+
+### 2.2 非映射方式
+
+**application.yaml**
+
+```yaml
+spring:
+  config:
+    import: "kubernetes:"
+  application:
+    name: cloud-k8s-app
+  cloud:
+    kubernetes:
+      config:
+        enabled: true
+        name: ${spring.application.name}
+        namespace: default
+      secrets:
+        enabled: true
+        namespace: default
+        sources:
+          - name: mysql-root-authn
+        # 默认为 false，表示只能通过环境变量绑定
+        enable-api: true
+```
+
+**secret.yaml**
+
+```yaml
+apiVersion: v1
+data:
+  db.password: dGVtcFBhc3N3b3Jk
+  db.username: ZGVtbw==
+kind: Secret
+metadata:
+  annotations:
+    # 发生变更时需要通知的服务名
+    spring.cloud.kubernetes.secret.apps: cloud-k8s-app
+  labels:
+    spring.cloud.kubernetes.secret: "true"
+    spring.cloud.kubernetes.secret.informer.enabled: "true"
+  name: mysql-root-authn
+  namespace: default
+type: Opaque
+```
+
+**Deployment & Service**
+
+移除 `env`
+
+```yaml
+spec:
+  containers:
+  - name: cloud-k8s-app
+    image: openjdk:17
+    command: ["java", "-jar", "/app/app.jar"]
+    volumeMounts:
+    - name: app-volume
+      mountPath: /app/app.jar
+  volumes:
+  - name: app-volume
+    hostPath:
+      path: /root/app/app.jar
+  serviceAccountName: user
+```
+
