@@ -771,7 +771,7 @@ ping: bad address 'alpine1'
 **新建自定义网络**
 
 ```bash
-$docker network create my_net
+$ docker network create my_net
 24e287841354b6f99a13ef4606956550fab5f740a8ff0f5d8e658712c7ad3afd
 $ docker network ls
 NETWORK ID     NAME      DRIVER    SCOPE

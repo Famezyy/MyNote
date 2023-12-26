@@ -139,7 +139,7 @@ System.out.println(Character.isSurrogate(s2.charAt(5))); // true
 
 在**编译期**，java 编译器要求字符串字面量的长度小于`Poll.MAX_STRING_LENGTH = 2^16-1 = 65535`，也就是最大`65534`。
 
-在**运行期**，字符串是以`char[]`形式存在，而数组长度是 int 类型，`Integer.MAX_VALUE = 2^31-1 = 2147483647`，约为 21 亿，一个 char 占用两个字节，共需要大约 4G 存储空间。
+在**运行期**，字符串是以`char[]`形式存在，而数组长度是 int 类型，`Integer.MAX_VALUE = 2^31-1 = 2147483647`，约为 21 亿，一个 char 占用两个字节，共需要大约 2×(2^31^−1) ÷ (1024×1024×1024)≈3.73GB 存储空间。
 
 ## MessageFormat
 

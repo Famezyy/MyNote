@@ -1775,6 +1775,7 @@ spring:
       password: nacos
       config:
         file-extension: yaml
+      # 动态加载网关配置
       customConfig:
         data-id: gate-way-route
   config:

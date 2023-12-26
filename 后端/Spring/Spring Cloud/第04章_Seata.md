@@ -525,7 +525,7 @@ docker compose up -d
 
 ### 3.2 配置Seata Client
 
-前提：存在一个 order 服务和 stock 服务和 order 表、stock 表，order 服务会调用 stock 服务减库存。使用一般的`@Transactional`时当 order 服务调用完 stock 服务后发生错误时，只有 order 表回滚了 stock 表不会回滚。接下来使用 Seata 分布式事务解决这个问题。
+前提：存在一个 order 服务和 stock 服务和 order 表、stock 表，order 服务会调用 stock 服务减库存。使用一般的 `@Transactional` 时当 order 服务调用完 stock 服务后发生错误时，只有 order 表回滚了 stock 表不会回滚。接下来使用 Seata 分布式事务解决这个问题。
 
 1. 在 order 和 stock 服务中添加依赖
 

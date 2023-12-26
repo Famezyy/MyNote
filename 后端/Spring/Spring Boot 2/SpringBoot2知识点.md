@@ -566,7 +566,7 @@ public class ScheduledTask {
 
 ### 6.4 动态修改定时任务
 
-对于有些情况，我们需要在代码中，通过方法动态修改定时任务corn表达式
+对于有些情况，我们需要在代码中，通过方法动态修改定时任务 corn 表达式
 
 application.yml 配置
 
@@ -613,7 +613,7 @@ public class ScheduledTaskV2 implements SchedulingConfigurer {
 
 ### 6.5 并发执行定时任务
 
-定时任务类添加注解`@EnableAsync`，需并发执行的定时任务方法添加注解`@Async`
+定时任务类添加注解 `@EnableAsync`，需并发执行的定时任务方法添加注解 `@Async`
 
 ```java
 @Component

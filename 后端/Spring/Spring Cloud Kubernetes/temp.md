@@ -2,6 +2,34 @@
 
 [参考](https://docs.spring.io/spring-cloud-kubernetes/reference/property-source-config/configmap-propertysource.html)
 
+读取配置规则：
+
+- if you have a *single* entry in the configmap (like in your second example that works), we will not care about anything: we will simply parse that yaml into properties
+-  If you have *multiple* entries *and* they end in `yaml/yml/properties`, we will only take it for further parsing if it matches your `${spring.application.name}` or this name with profiles (if it’s not present, by `application.yaml/properties`)
+- Apply as a properties file the content of the above name + each active profile
+
+An example should make a lot more sense. Let’s suppose that `spring.application.name=my-app` and that we have a single active profile called `k8s`. For a configuration as below:
+
+```
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: my-app
+data:
+  my-app.yaml: |-
+    ...
+  my-app-k8s.yaml: |-
+    ..
+  my-app-dev.yaml: |-
+   ..
+```
+
+These is what we will end-up loading:
+
+- `my-app.yaml` treated as a file
+- `my-app-k8s.yaml` treated as a file
+- `my-app-dev.yaml` *ignored*, since `dev` is *not* an active profile
+
 ### 1.挂载configmap
 
 #### 1.1 读取properties
