@@ -578,3 +578,28 @@ spec:
   serviceAccountName: user
 ```
 
+## 3.监听配置变化
+
+与 NACOS 相同，都是借助 Spring Cloud 默认的实现，当环境发生变化时 `ContextRefresher` 会调用 `refreshEnvironment()` 方法发布 `EnvironmentChangeEvent` 时间，可以创建监听类监听该事件：
+
+```java
+@Component
+public class MyListener implements ApplicationListener<EnvironmentChangeEvent> {
+
+    private Environment environment;
+
+    public MyListener(Environment environment) {
+        this.environment = environment;
+    }
+
+    @Override
+    public void onApplicationEvent(EnvironmentChangeEvent event) {
+        Set<String> keys = event.getKeys();
+        keys.forEach(key -> {
+            System.out.println(key);
+            System.out.println(environment.getProperty(key));
+        });
+    }
+}
+```
+

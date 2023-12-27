@@ -56,11 +56,9 @@
 
 #### 1.3 RPC
 
-**什么叫RPC**
+RPC【Remote Procedure Call】是指远程过程调用，是一种进程间通信方式，他是一种技术的思想，而不是规范。它允许程序调用另一个地址空间（通常是共享网络的另一台机器上）的过程或函数，而不用程序员显式编码这个远程调用的细节。即程序员无论是调用本地的还是远程的函数，本质上编写的调用代码基本相同。
 
-> ​    RPC【Remote Procedure Call】是指远程过程调用，是一种进程间通信方式，他是一种技术的思想，而不是规范。它允许程序调用另一个地址空间（通常是共享网络的另一台机器上）的过程或函数，而不用程序员显式编码这个远程调用的细节。即程序员无论是调用本地的还是远程的函数，本质上编写的调用代码基本相同。
-
-#### RPC 基本原理
+#### 1.4 RPC 基本原理
 
 <img src="img\image-20220129231653103.png" alt="image-20220129231653103"  />
 
@@ -75,7 +73,7 @@ RPC 两个核心模块：
 
 #### 2.1 简介
 
-Apache Dubbo (incubating) |ˈdʌbəʊ| 是一款高性能、轻量级的开源 Java RPC 框架，它提供了三大核心能力：面向接口的远程方法调用，智能容错和负载均衡，以及服务自动注册和发现。
+Apache Dubbo 是一款高性能、轻量级的开源 Java RPC 框架，它提供了三大核心能力：面向接口的远程方法调用，智能容错和负载均衡，以及服务自动注册和发现。
 
 官网：http://dubbo.apache.org/
 
@@ -478,7 +476,7 @@ dubbo 本身并不是一个服务软件。它其实就是一个 jar 包能够帮
 >     public static void main(String[] args) throws IOException {
 >         ClassPathXmlApplicationContext context = 
 >             new ClassPathXmlApplicationContext("classpath:spring-beans.xml");
->                 
+>                   
 >         System.in.read(); 
 >     }
 >     ```
@@ -1361,19 +1359,46 @@ methodConfig.setLoadbalance();
 
 <img src="img\image-20220129235414821.png" alt="image-20220129235414821"  />
 
-> 一次完整的 RPC 调用流程（同步调用，异步另说）如下：
->
-> - **服务消费方（client）调用以本地调用方式调用服务**
-> - client stub 接收到调用后负责将方法、参数等组装成能够进行网络传输的消息体
-> - client stub 找到服务地址，并将消息发送到服务端
-> - server stub 收到消息后进行解码
-> - server stub 根据解码结果调用本地的服务
-> - 本地服务执行并将结果返回给 server stub
-> - server stub 将返回结果打包成消息并发送至消费方
-> - client stub 接收到消息，并进行解码
-> - **服务消费方得到最终结果**
->
-> RPC框架的目标就是要2~8这些步骤都封装起来，这些细节对用户来说是透明的，不可见的。
+一次完整的 RPC 调用流程（同步调用，异步另说）如下：
+
+- **服务消费方（client）调用以本地调用方式调用服务**
+
+- client stub 接收到调用后负责将接口名、方法、参数、返回值、`version`（用来确定调用哪一个实现类）等组装成能够进行网络传输的消息体
+
+- client stub 从注册中心找到服务端地址，并将消息发送到服务端
+
+  > **提示**
+  >
+  > 在 ZooKeeper 上，Dubbo 通常会创建一个根节点，例如 `/dubbo`，然后在该节点下创建服务接口的节点，每个节点包含了提供者和消费者的信息。
+  >
+  > 例如：
+  >
+  > ```bash
+  > bashCopy code/dubbo
+  > └── com.example.api.SomeService
+  >     ├── providers
+  >     │   └── provider-1.0.0
+  >     │       └── 192.168.1.100:20880
+  >     └── consumers
+  >         └── consumer-1.0.0
+  >             └── 192.168.1.101:20881
+  > ```
+  >
+  > 其中，`com.example.api.SomeService` 是服务接口的全限定名，`provider-1.0.0` 和 `consumer-1.0.0` 是服务的版本号，`192.168.1.100:20880` 和 `192.168.1.101:20881` 是提供者和消费者的地址。
+
+- server stub 收到消息后进行解码
+
+- server stub 根据解码结果反射生成相应的 class，进而调用相应的方法
+
+- 本地服务执行并将结果返回给 server stub
+
+- server stub 注册中心找到消费端地址，将返回结果打包成消息并发送至消费方
+
+- client stub 接收到消息，并进行解码
+
+- **服务消费方得到最终结果**
+
+RPC框架的目标就是要2~8这些步骤都封装起来，这些细节对用户来说是透明的，不可见的。
 
 ### 2.netty 通信原理
 

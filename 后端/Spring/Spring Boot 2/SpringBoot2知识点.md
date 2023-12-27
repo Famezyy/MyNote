@@ -916,22 +916,21 @@ public class RequestFilter implements Filter {
     }    
 }
 
-// 2.使用FilterRegistrationBean
+//2.使用FilterRegistrationBean
 @Configuration
 public class MyConfiguration {
- 
     @Bean
-    public FilterRegistrationBean corsFilter() {
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        CorsConfiguration config = new CorsConfiguration();
-        config.setAllowCredentials(true);
-        config.addAllowedOrigin("http://domain1.com");
-        config.addAllowedHeader("*");
-        config.addAllowedMethod("*");
-        source.registerCorsConfiguration("/**", config);
-        FilterRegistrationBean bean = new FilterRegistrationBean(new CorsFilter(source));
-        bean.setOrder(Ordered.HIGHEST_PRECEDENCE);
-        return bean;
+    FilterRegistrationBean<CorsFilter> corsFilter() {
+	UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+	CorsConfiguration config = new CorsConfiguration();
+	config.setAllowCredentials(true);
+	config.addAllowedOrigin("http://domain1.com");
+	config.addAllowedHeader("*");
+	config.addAllowedMethod("*");
+	source.registerCorsConfiguration("/**", config);
+	FilterRegistrationBean<CorsFilter> bean = new FilterRegistrationBean<>(new CorsFilter(source));
+	bean.setOrder(Ordered.HIGHEST_PRECEDENCE);
+	return bean;
     }
 }
 ```

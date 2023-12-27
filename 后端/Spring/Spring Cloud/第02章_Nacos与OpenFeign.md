@@ -2029,3 +2029,30 @@ public class OrderController {
     }
 }
 ```
+
+### 5.6 监听配置变化
+
+环境发生变化时 `ContextRefresher` 会调用 `refreshEnvironment()` 方法发布 `EnvironmentChangeEvent` 时间，可以创建监听类监听该事件：
+
+```java
+@Component
+@Slf4j
+public class MyListener implements ApplicationListener<EnvironmentChangeEvent> {
+
+    private Environment environment;
+
+    public MyListener(Environment environment) {
+        this.environment = environment;
+    }
+
+    @Override
+    public void onApplicationEvent(EnvironmentChangeEvent event) {
+        Set<String> keys = event.getKeys();
+        keys.forEach(key -> {
+            log.info(key);
+            log.info(environment.getProperty(key));
+        });
+    }
+}
+```
+

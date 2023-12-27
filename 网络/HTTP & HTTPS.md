@@ -1,7 +1,3 @@
----
-typora-copy-images-to: ./img/HTTP & HTTPS
----
-
 # HTTP & HTTPS
 
 ## 1.HTTP

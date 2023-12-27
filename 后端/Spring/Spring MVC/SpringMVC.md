@@ -1,6 +1,6 @@
 
 
-# 一、SpringMVC简介
+# 一、SpringMVC
 
 ### 1、什么是MVC
 

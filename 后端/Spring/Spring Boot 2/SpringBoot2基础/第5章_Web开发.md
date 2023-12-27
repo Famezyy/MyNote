@@ -642,6 +642,7 @@ public class MyMapperConfiguration implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(new MyInterceptor())
+            // “/*” 表示单层匹配，"/**"表示全路径匹配
                 .addPathPatterns("/**")
                 .excludePathPatterns("/", "/login", "/css/**", "/fonts/**", "images/**", "js/*");
     }
@@ -949,6 +950,7 @@ public class MyRegistConfig {
         MyFilter myFilter = new MyFilter();
         // return new FIlterRegistrationBean(myFilter, myServlet()); 会拦截 myServlet 的访问路径
         FilterRegistrationBean filterRegistrationBean = new FilterRegistrationBean(myFilter);
+        // “/*” 是一层匹配，“/**” 是全路径匹配
         filterRegistrationBean.setUrlPatterns(Arrays.asList("/my", "/css/*"));
         return filterRegistrationBean;
     }
