@@ -547,14 +547,16 @@ public ObjectMapper objectMapper() {
 }
 ```
 
-项目常用：
+**最佳实践**
 
 ```java
 @Bean
 public ObjectMapper objectMapper() {
     Jackson2ObjectMapperBuilder builder = new Jackson2ObjectMapperBuilder();
     builder.modules(new JavaTimeModule())
-            .featuresToDisable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, SerializationFeature.WRITE_DATES_WITH_CONTEXT_TIME_ZONE, SerializationFeature.FAIL_ON_EMPTY_BEANS)
+            .featuresToDisable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, SerializationFeature.WRITE_DATES_WITH_CONTEXT_TIME_ZONE, 
+                    SerializationFeature.FAIL_ON_EMPTY_BEANS, DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, DeserializationFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE)
+            .featuresToEnable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT)
             .serializationInclusion(JsonInclude.Include.NON_NULL);
     return builder.build();
 }
