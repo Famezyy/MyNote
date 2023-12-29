@@ -1,4 +1,21 @@
 # ThreadLocal
+
+在多线程并发执行过程中，为了保证多个线程对变量的安全访问，可以将变量放到 `ThreadLocal` 类型的对象中，使变量在每个线程间独立。
+
+## 1.基本使用
+
+`ThreadLocal` 位于 JDK 的 java.lang 核心包。如果程序创建了一个 `ThreadLocal` 实例，那么在访问这个变量值时，每个线程都会拥有一个独立的、自己的本地值，避免了线程安全问题。当线程结束后，每个线程拥有的本地值会被释放。
+
+`ThreadLocal` 提供了以下三种方法用于进行本地值的操作：
+
+```java
+public T get();
+public void set(T value);
+public void remove();
+```
+
+下面的例子展示了 `ThreadLocal` 的值无法在两个线程间共享： 
+
 ```java
 public class ThreadLocalTest {
     static ThreadLocal<Person> tl = new ThreadLocal<>();
@@ -6,20 +23,22 @@ public class ThreadLocalTest {
     public static void main(String[] args) {
         new Thread(() ->{
             try {
-                TimeUnit.SECONDS.sleep(2);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            System.out.println(tl.get()); // null
-        }).start();
-        
-        new Thread(() ->{
-            try {
+                // 休息 1 秒
                 TimeUnit.SECONDS.sleep(1);
             } catch (Exception e) {
                 e.printStackTrace();
             }
             tl.set(new Person());
+        }).start();
+        
+        new Thread(() ->{
+            try {
+                // 休息 2 秒
+                TimeUnit.SECONDS.sleep(2);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            System.out.println(tl.get()); // null
         }).start();
     }
     
@@ -28,7 +47,69 @@ public class ThreadLocalTest {
     }
 }
 ```
-## 1.ThreadLocal源码
+如果线程尚未在本地变量中绑定一个值，直接通过调用 `get()` 方法获取本地值会获取一个空值，此时可以通过 `ThreadLocal.withInitial()` 静态工厂方法，在定义 `ThreadLocal` 对象时设置一个获取初始值的回调函数：
+
+```java
+ThreadLocal<String> localVariable = ThreadLocal.withInitial(() -> {"initial value"});
+```
+
+## 2.适用场景
+
+`ThreadLocal` 的常用案例有：为每个线程绑定一个会话信息、数据库连接、HTTP 请求等。
+
+### 2.1 线程隔离
+
+`ThreadLocal` 的主要价值在于线程隔离，`ThreadLocal` 中的数据只属于当前线程，对其他线程不可见；同时由于各个线程之间的数据相互隔离，避免了同步加锁带来的性能损失，提升了并发的性能。
+
+下面的代码来自 Hibernate，代码中通过 `ThreadLocal` 进行数据库连接 `Session` 的线程本地化存储：
+
+```java
+private static final ThreadLocal threadSession = new ThreadLocal();
+
+public static Session getSession() throws InfrastructureException {
+    // 一个 Session 代表一个数据库连接
+    Session s = (Session) threadSession.get();
+    try {
+        if (s == null) {
+            s = getSessionFactory().openSession();
+            threadSession.set(s);
+        }
+    } catch (HibernateException ex) {
+        throw new InfrastructureException(ex);
+    }
+    return s;
+}
+```
+
+### 2.2 跨函数传递数据
+
+在同一个线程内跨类、跨方法传递数据时，如果不用 `ThreadLocal`，则需要靠传参和返回值，会增加类和方法之间的耦合度。而线程执行过程中所执行到的函数都能读写 `ThreadLocal` 变量，从而可以方便地实现跨函数的数据传递。
+
+例如如下获取 `Session` 和保存 `Session` 的示例代码：
+
+```java
+private static final ThreadLocal<HttpSession> sessionLocal = new ThreadLocal<>();
+
+public static void setSession(HttpSession session) {
+    sessionLocal.set(session);
+}
+
+public static HttpSession getSession() {
+    HttpSession session = sessionLocal.get();
+    return session;
+}
+```
+
+## 3.内部结构演进
+
+在早期的 JDK 版本中，ThreadLocal 的内部结构是一个 `Map`，其中每一个线程实例作为 Key，线程在“线程本地变量”中绑定的值为 Value。这个版本中的  `Map` 的拥有者是 `ThreadLocal`，每一个 `ThreadLocal` 实例拥有一个 `Map` 实例。
+
+到了 JDK 8 版本中，ThreadLocal 的内部结构发生了演进，虽然还是使用 `Map` 结构，但是其拥有者变成了 `Thread` 实例，每一个 `Thread` 实例拥有一个 `map` 实例。同时 `Map` 的 Key 也变成了 `ThreadLocal` 实例。
+
+新版本的 `ThreadLocalMap` 还是由 `ThreadLocal` 类维护的，由 `ThreadLocal` 负责 `ThreadLocalMap` 实例的获取和创建，并从中设置本地值、获取本地值。所以 `ThreadLocalMap` 还寄存于 `ThreadLocal` 内部，没有迁移到 `Thread` 内部。
+
+## 4.ThreadLocal源码分析
+
 ```java
 // ThreadLocal 的 set() 方法
 public void set(T value) {

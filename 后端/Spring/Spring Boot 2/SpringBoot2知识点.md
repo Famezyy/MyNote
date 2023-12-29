@@ -819,6 +819,7 @@ public static void printFileContent(Object obj) throws IOException {
     @EnableAsync
     @Configuration
     public class AsyncConfiguration() implements AsyncConfigurer {
+        // 也可以使用 ExecutorService 作为返回类型，使用 ThreadPoolExecutor 来创建原始线程
         @Bean(name="defaultTaskExecutor")
         public ThreadPoolTaskExecutor defaultExecutor() {
             ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();

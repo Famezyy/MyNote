@@ -95,7 +95,7 @@ public boolean add(E e) {
 
 ### 4.1 get弱一致性
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220819144405146-2bce14506bcb988a7c596fd8e6669831-288688.png" alt="image-20220819144405146" style="zoom:80%;" />
+<img src="img/CopyOnWriteArrayList/image-20220819144405146-2bce14506bcb988a7c596fd8e6669831-288688.png" alt="image-20220819144405146" style="zoom:80%;" />
 
 | 时间点 | 操作                         |
 | ------ | ---------------------------- |
