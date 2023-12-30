@@ -900,16 +900,16 @@ public class CaffeineConfig {
 
     public Cache<Object, Object> getCaffeine(int refreshAfterWriteTime){
         return Caffeine.newBuilder()
-                //设置过期时间，最后一次写入或访问后过多久过期
-                //.expireAfterAccess(expireAfterAccessTime, TimeUnit.SECONDS)
-                //cache的初始容量值
+                // 设置过期时间，最后一次写入或访问后过多久过期
+                // .expireAfterAccess(expireAfterAccessTime, TimeUnit.SECONDS)
+                // cache的初始容量值
                 .initialCapacity(100)
-                //maximumSize用来控制cache的最大缓存数量，maximumSize和maximumWeight(最大权重)不可以同时使用，
+                // maximumSize用来控制cache的最大缓存数量，maximumSize 和 maximumWeight(最大权重) 不可以同时使用，
                 .maximumSize(1000)
-                //弱引用
-                //.weakKeys()
-                //.weakValues()
-                //写入多久后过期
+                // 弱引用
+                // .weakKeys()
+                // .weakValues()
+                // 写入多久后过期
                 .expireAfterWrite(refreshAfterWriteTime,TimeUnit.SECONDS)
                 .build();
     }

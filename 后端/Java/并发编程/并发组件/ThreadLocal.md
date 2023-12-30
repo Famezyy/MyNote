@@ -108,30 +108,94 @@ public static HttpSession getSession() {
 
 新版本的 `ThreadLocalMap` 还是由 `ThreadLocal` 类维护的，由 `ThreadLocal` 负责 `ThreadLocalMap` 实例的获取和创建，并从中设置本地值、获取本地值。所以 `ThreadLocalMap` 还寄存于 `ThreadLocal` 内部，没有迁移到 `Thread` 内部。
 
+与早期的实现相比，新版本的主要优势为：
+
+- 每个 `ThreadLocalMap` 存储的 "Key-Value" 数量变少。早期版本的数量与线程个数强相关，这意味着每个线程都有一个槽位，无论是否实际上使用 `ThreadLocal` 存储变量；而新版本的 Key 为 `ThreadLocal` 实例，即每个 `ThreadLocal` 实例对应一个槽位，而不是每个线程一个槽位，因此相比较下 `TreadLocal` 实例会少一些。
+- 早期版本 `ThreadLocalMap` 的拥有者为 `ThreadLocal`，在 `Thread` 实例销毁后，`ThreadLocalMap` 还是存在的；而新版本中 `ThreadLocalMap` 的拥有者为 `Thread`，当 `Thread` 销毁后，`ThreadLocalMap` 也会随之销毁，在一定程度上减少了内存的消耗。
+
 ## 4.ThreadLocal源码分析
 
+### 4.1 set(T value)
+
 ```java
-// ThreadLocal 的 set() 方法
+// Thread 的 threadLocals (threadLocalMap) 成员变量，每个线程管理一个，初始为 null
+ThreadLocal.ThreadLocalMap threadLocals = null;
+
 public void set(T value) {
+    // 获取当前线程
     Thread t = Thread.currentThread();
+    // 获取当前线程的 ThreadLocalMap 成员属性
     ThreadLocalMap map = getMap(t);
+    // 如果 ThreadLocalMap 存在
     if (map != null) {
         // 将 value 放到 map 中，key 是当前的 ThreadLocal 对象
         map.set(this, value);
     } else {
-        // 只有当赋值或获取值时才会创建 map
+        // 如果 ThreadLocalMap 不存在则创建一个实例，然后作为成员属性关联到 t 实例
+        // 只有当赋值或获取值时才会创建 ThreadLocalMap
         createMap(t, value);
     }
 }
 
-// ThreadLocal 的 getMap() 方法
+// 获取线程 t 的 ThreadLocalMap 成员属性
 ThreadLocalMap getMap(Thread t) {
     return t.threadLocals;
 }
 
-// Thread 的 threadLocals 成员变量，每个线程管理一个
-ThreadLocal.ThreadLocalMap threadLocals = null;
+// 为线程 t 创建一个 ThreadLocalMap 成员
+// 并为新的 map 成员设置第一个 Key-Value 对，Key 为当前 ThreadLocal 对象
+void createMap(Thread t, T firstValue) {
+    t.threadLocals = new ThreadLocalMap(this, firstValue);
+}
 ```
+###  4.2 get()
+
+```java
+public T get() {
+    // 获得当前线程
+    Thread t = Thread.currentThread();
+    // 获得线程的 ThreadLocalMap 成员变量
+    ThreadLocalMap map = getMap(t);
+    // 如果 ThreadLocalMap 存在
+    if (map != null) {
+        // 以 ThreadLocal 为 Key 尝试获取
+        ThreadLocalMap.Entry e = map.getEntry(this);
+        // 如果 entry 存在
+        if (e != null) {
+            @SuppressWarnings("unchecked")
+            // 返回 entry 的 value
+            T result = (T)e.value;
+            return result;
+        }
+    }
+    // 如果当前线程对应的 map 不存在
+    // 或者 map 存在但是没有对应的键值对，返回初始值
+    return setInitialValue();
+}
+
+// 设置 ThreadLocal 关联的初始值并返回
+private T setInitialValue() {
+    // 调用初始化钩子函数，获取初始值
+    T value = initialValue();
+    Thread t = Thread.currentThread();
+    ThreadLocalMap map = getMap(t);
+    if (map != null) {
+        map.set(this, value);
+    } else {
+        createMap(t, value);
+    }
+    return value;
+}
+```
+
+### 4.3 remove()
+
+
+
+### 4.4 initialValue()
+
+## 5.ThreadLocalMap源码分析
+
 ```java
 // ThreadLocal 的静态内部类
 static class ThreadLocalMap {

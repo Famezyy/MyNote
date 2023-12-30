@@ -3474,13 +3474,96 @@ key 对应的数据在数据源并不存在，每次针对此 key 的请求从�
 
 **解决方案：**
 
-- 对空值缓存：如果一个查询返回的数据为空（不管是不是由于数据不存在），我们仍然把这个空结果（null）进行缓存（比如设置 value 为 -1，代表没有数据），设置空结果的过期时间会很短，最长不超过五分钟
+- **对空值缓存**
 
-- 设置可访问的名单（白名单）：使用 `bitmaps` 类型定义一个可以访问的名单，名单 id 作为 bitmaps 的偏移量，每次访问和 bitmap 里面的 id 进行比较，如果访问 id 不在 bitmaps 里面，进行拦截，不允许访问，可使用 `stringRedisTemplate.opsForValue().setBit(key, hash, value)` 命令
+  如果一个查询返回的数据为空（不管是不是由于数据不存在），我们仍然把这个空结果（null）进行缓存（比如设置 value 为 -1，代表没有数据），设置空结果的过期时间会很短，最长不超过五分钟。
 
-- 采用布隆过滤器：布隆过滤器（Bloom Filter）是1970年由布隆提出的。它实际上是一个很长的二进制向量（位图）和一系列随机映射函数（哈希函数）。布隆过滤器可以用于检索一个元素是否在一个集合中。它的优点是空间效率和查询时间都远远超过一般的算法，缺点是有一定的误识别率和删除困难。将所有可能存在的数据哈希到一个足够大的 bitmaps 中，一个一定不存在的数据会被 这个 bitmaps 拦截掉，从而避免了对底层存储系统的查询压力
+- **设置可访问的名单（白名单）**
 
-- 进行实时监控：当发现的命中率开始急速降低，需要排查访问对象和访问的数据，和运维人员配合，可以设置黑名单限制服务
+  使用 `bitmaps` 类型定义一个可以访问的名单，名单 id 作为 bitmaps 的偏移量，每次访问和 bitmap 里面的 id 进行比较，如果访问 id 不在 bitmaps 里面，进行拦截，不允许访问，可使用 `stringRedisTemplate.opsForValue().setBit(key, hash, value)` 命令。
+
+- **采用布隆过滤器**
+
+  布隆过滤器（Bloom Filter）是1970年由布隆提出的。它实际上是一个很长的二进制向量（位图）和一系列随机映射函数（哈希函数）。布隆过滤器可以用于检索一个元素是否在一个集合中。它的优点是空间效率和查询时间都远远超过一般的算法，缺点是有一定的误识别率和删除困难。将所有可能存在的数据哈希到一个足够大的 bitmaps 中，一个一定不存在的数据会被 这个 bitmaps 拦截掉，从而避免了对底层存储系统的查询压力。
+
+  一个简单的示例如下：
+
+  ```java
+  public class BloomFilter {
+  	
+      private static final int DEFAULT_SIZE = 1 << 16; // 默认位数组大小
+      private BitSet bitSet = new BitSet(DEFAULT_SIZE);
+      private static final int MOD = (int) Math.pow(10, 9) + 7;
+     
+      private Hash[] hashFunctions;
+      
+  	// seed 用于求随机盐
+      public BloomFilter(int seed, int size) {
+          Random random = new Random(seed);
+          hashFunctions = new Hash[size];
+          for (int i = 0; i < size; i++) {
+              hashFunctions[i] = new Hash(DEFAULT_SIZE, random.nextInt());
+          }
+      }
+  
+      public void add(String value) {
+          for (Hash hashFunction : hashFunctions) {
+              int hash = hashFunction.hash(value);
+              bitSet.set(hash, true);
+          }
+      }
+  
+      public boolean contains(String value) {
+          for (Hash hashFunction : hashFunctions) {
+              int hash = hashFunction.hash(value);
+              if (!bitSet.get(hash)) {
+                  return false;
+              }
+          }
+          return true;
+      }
+  
+      private static class Hash {
+          private int size;
+          private int salty;
+          
+  
+          public Hash(int size, int salty) {
+              this.size = size;
+              this.salty = salty;
+          }
+  
+          public int hash(String value) {
+              int result = 0;
+              for (char c : value.toCharArray()) {
+                  result = (result + c * salty) % MOD;
+              }
+              return (size - 1) & result;
+          }
+      }
+  
+      public static void main(String[] args) {
+          BloomFilter bloomFilter = new BloomFilter(10, 5);
+  
+          // 添加元素到布隆过滤器
+          bloomFilter.add("apple");
+          bloomFilter.add("banana");
+          bloomFilter.add("orange");
+  
+          // 检查元素是否在布隆过滤器中
+          System.out.println(bloomFilter.contains("apple"));  // true
+          System.out.println(bloomFilter.contains("grape"));  // false
+          System.out.println(bloomFilter.contains("orange"));  // true
+          System.out.println(bloomFilter.contains("appl"));  // false
+      }
+  }
+  ```
+
+  
+
+- **进行实时监控**
+
+  当发现的命中率开始急速降低，需要排查访问对象和访问的数据，和运维人员配合，可以设置黑名单限制服务。
 
 ### 2.缓存击穿
 

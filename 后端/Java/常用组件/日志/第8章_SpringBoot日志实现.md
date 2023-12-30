@@ -126,6 +126,21 @@ void test() {
 }
 ```
 
+> **注意**
+>
+> `log4j2.xml` 可以被 `properties` 替换：
+>
+> ```properties
+> appender.console.type = Console
+> appender.console.name = console
+> appender.console.target = SYSTEM_OUT
+> appender.console.layout.type = PatternLayout
+> appender.console.layout.pattern = [%d{yyyy-MM-dd HH:mm:ss.SSS}] [%-5level] [%t] [%c#%M-%L] %m%n
+> rootLogger.level = info
+> rootLogger.appenderRefs = console
+> rootLogger.appenderRef.console.ref = console
+> ```
+
 ## 6.MDC链路追踪
 
 底层实现是 `ThreadContext`。

@@ -1432,6 +1432,27 @@ Spring Cloud 2020 版本后默认的负载均衡器，也是一种客户端负�
   }
   ```
 
+#### 3.修改缓存工厂
+
+使用默认缓存工厂会警告：
+
+```bash
+Spring Cloud LoadBalancer is currently working with the default cache. While this cache implementation is useful for development and tests, it's recommended to use Caffeine cache in production.You can switch to using Caffeine cache, by adding it and org.springframework.cache.caffeine.CaffeineCacheManager to the classpath.
+```
+
+添加以下依赖
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-cache</artifactId>
+</dependency>
+<dependency>
+    <groupId>com.github.ben-manes.caffeine</groupId>
+    <artifactId>caffeine</artifactId>
+</dependency>
+```
+
 ## 4.Open Feign
 
 Feign 是 Netflix 开发的声明式、模版化的 HTTP 客户端，可以像调用本地方法一样调用远程接口。它像 Dubbo 一样，消费者直接调用接口方法，而不需要 HTTP 请求解析数据。
@@ -1745,7 +1766,7 @@ Group  :    DEFAULT_GROUP
         server-addr: 192.168.11.100:8848
         # username: nacos
         # password: nacos
-        conf:
+        config:
         # file-extension: properties 默认 properties，使用其他格式时必须指定，例如 yaml
   ```
 
@@ -2030,7 +2051,7 @@ public class OrderController {
 }
 ```
 
-### 5.6 监听配置变化
+### 5.8 监听配置变化
 
 环境发生变化时 `ContextRefresher` 会调用 `refreshEnvironment()` 方法发布 `EnvironmentChangeEvent` 时间，可以创建监听类监听该事件：
 
@@ -2056,3 +2077,88 @@ public class MyListener implements ApplicationListener<EnvironmentChangeEvent> {
 }
 ```
 
+### 5.9 反射动态加载日志
+
+**（1）在 Nacos 中创建 log4j2.xml**
+
+```xml
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<Configuration  xlms="https://logging.apache.org/log4j/2.x/">
+
+    <Properties>
+        <Property name="pattern" value="[tess][%d{yyyy-MM-dd HH:mm:ss.SSS}] [%-5level] [%t] [%c#%M-%L] %m%n"/>
+    </Properties>
+
+    <Appenders>
+        <Console name="console" target="SYSTEM_OUT">
+            <PatternLayout pattern="${pattern}"/>
+        </Console>
+    </Appenders>
+
+    <Loggers>
+        <Root level="info">
+            <AppenderRef ref="console"/>
+        </Root>
+    </Loggers>
+
+</Configuration>
+```
+
+**（2）在项目中导入远程 log4j2.xml**
+
+```yaml
+spring:
+  config:
+    # 指定监控 nacos:log4j2.xml
+    import: nacos:${spring.application.name},nacos:log4j2.xml
+  application:
+    name: order-server
+  cloud:
+    nacos:
+      config:
+        group: my_GROUP
+        file-extension: yaml
+      username: nacos
+      password: nacos
+      server-addr: 192.168.11.100:8848
+# 指定远程配置地址
+logging:
+  config: http://${spring.cloud.nacos.server-addr}/nacos/v1/cs/configs?group=my_GROUP&dataId=log4j2.xml&username=${spring.cloud.nacos.username}&password=${spring.cloud.nacos.password}
+```
+
+**（3）配置监听器**
+
+```java
+@Component
+@Slf4j
+public class MyListener implements ApplicationListener<EnvironmentChangeEvent> {
+
+    @Autowired
+    Environment env;
+    
+    @Override
+    public void onApplicationEvent(EnvironmentChangeEvent event) {
+        // 检测 key 是否从 Configuration 开始，是的话则构建远程 URI 地址
+        if(event.getKeys().stream().anyMatch(key -> key.startsWith("Configuration"))) {
+                String serverAddr = env.getProperty("spring.cloud.nacos.server-addr");
+                String dataId = "log4j2.xml";
+                String group = env.getProperty("spring.cloud.nacos.config.group");
+                String username = env.getProperty("spring.cloud.nacos.username");
+                String password = env.getProperty("spring.cloud.nacos.password");
+                try {
+                    URI uri = new URI("http://"+ serverAddr +"/nacos/v1/cs/configs?group="+group+"&dataId="+dataId+"&username="+username+"&password="+password);
+                    // 刷新 Configuration
+                    Configurator.reconfigure(uri);
+                    log.info("reconfigured");
+                } catch (URISyntaxException e) {
+                    e.printStackTrace();
+                }
+        }
+    }
+}
+```
+
+> **注意**
+>
+> 使用 Log4j2 时记得要把 `Spring-boot-starter-logging` 依赖排除掉。

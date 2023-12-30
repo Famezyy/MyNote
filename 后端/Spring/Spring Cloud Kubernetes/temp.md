@@ -271,6 +271,7 @@ spec:
           path: /root/app/app.jar
       - name: configmap-volume
         configMap:
+          # 为文件增加权限
           defaultMode: 420
           name: cloud-k8s-app
       serviceAccountName: user
@@ -306,7 +307,7 @@ spec:
 > }
 > ```
 >
-> 当服务名和 ConfigMap 名不同时需要在 ConfigMap 中添加以下 annotation：
+> 当服务名和 ConfigMap 名不同时，需要在 `ConfigMap` 中添加以下 `annotation`：
 >
 > ```yaml
 > spring.cloud.kubernetes.configmap.apps: service_name
@@ -438,8 +439,8 @@ spec:
 >         web:
 >           exposure:
 >             include:
->               - "refresh"
->               - "restart"
+>          - "refresh"
+>          - "restart"
 > ```
 
 ## 2.挂载Secret
@@ -460,11 +461,6 @@ spring:
         enabled: true
         name: ${spring.application.name}
         namespace: default
-      secrets:
-        enabled: true
-        namespace: default
-        sources:
-          - name: mysql-root-authn
 ```
 
 **secrets.yaml**
@@ -476,11 +472,6 @@ data:
   db.username: cm9vdA==
 kind: Secret
 metadata:
-  annotations:
-    spring.cloud.kubernetes.secret.apps: cloud-k8s-app
-  labels:
-    spring.cloud.kubernetes.secret: "true"
-    spring.cloud.kubernetes.secret.informer.enabled: "true"
   name: mysql-root-authn
   namespace: default
 type: Opaque
@@ -515,6 +506,8 @@ spec:
 
 ### 2.2 非映射方式
 
+由 `springc-cloud-kubernetes` 在启动时自动加载
+
 **application.yaml**
 
 ```yaml
@@ -534,7 +527,7 @@ spring:
         namespace: default
         sources:
           - name: mysql-root-authn
-        # 默认为 false，表示只能通过环境变量绑定
+        # secret 的该选项默认为 false，表示只能通过环境变量绑定
         enable-api: true
 ```
 
@@ -603,4 +596,106 @@ public class MyListener implements ApplicationListener<EnvironmentChangeEvent> {
 }
 ```
 
-## 4.日志
+通过这种方式可以实现**动态更改线程池参数**。
+
+## 4.挂载方式动态加载日志
+
+使用 `log4j2` 时，引入 `spring-boot-starter-log4j2` 后，除了要排除 `spring-boot-starter-web` 中的 `spring-boot-starter-logging`，还要排除 `spring-boot-starter-actuator` 中的 `spring-boot-starter-logging`。
+
+1. 创建新的 `log4j2.properties` Configmap（或者 `log4j2.xml`）
+
+   ```properties
+   appender.console.type = Console
+   appender.console.name = console
+   appender.console.target = SYSTEM_OUT
+   appender.console.layout.type = PatternLayout
+   appender.console.layout.pattern = [%d{yyyy-MM-dd HH:mm:ss.SSS}] [%-5level] [%t] [%c#%M-%L] %m%n
+   rootLogger.level = info
+   rootLogger.appenderRefs = console
+   rootLogger.appenderRef.console.ref = console
+   ```
+
+   ```bash
+   $ kubectl create configmap log4j2.properties --from-file=path-to-log4j2/log4j2.propperties                                                  
+   ```
+
+2. 挂载至容器，并指定 log4j 文件地址
+
+   ```yaml
+   spec:
+     containers:
+     - name: cloud-k8s-app
+       image: openjdk:17
+       command: ["java","-Dlog4j.configurationFile=file:/app/config/log4j2.properties",  "-jar", "/app/app.jar"]
+       volumeMounts:
+       - name: app-volume
+         mountPath: /app/app.jar
+       - name: log4j2
+         mountPath: /app/config/
+     volumes:
+     - name: app-volume
+       hostPath:
+         path: /root/app/app.jar
+     - name: log4j2
+       configMap:
+         name: log4j2.properties
+   ```
+
+3. 添加一个监听器，用于监听 `log4j.xml` 文件并更新 log4j 配置
+
+   ```java
+   @Component
+   @Slf4j
+   public class MyListener implements ApplicationListener<ApplicationReadyEvent> {
+   
+       @Override
+       public void onApplicationEvent(ApplicationReadyEvent applicationReadyEvent) {
+           try {
+               // 获取文件系统的 WatchService
+               WatchService watchService = FileSystems.getDefault().newWatchService();
+   
+               // 指定要监听的目录
+               Path directory = Paths.get("/app/config/");
+   
+               // 注册目录到 WatchService，并指定要监听的事件类型
+               directory.register(watchService, StandardWatchEventKinds.ENTRY_MODIFY);
+   
+               // 启动监听线程
+               Thread watchThread = new Thread(() -> {
+                   try {
+                       while (true) {
+                           // 获取 WatchKey，它表示一组相关的事件
+                           WatchKey key = watchService.take();
+   
+                           // 处理事件
+                           for (WatchEvent<?> event : key.pollEvents()) {
+                               // 获取事件的种类
+                               WatchEvent.Kind<?> kind = event.kind();
+                               // 获取事件关联的路径
+                               Path changedPath = (Path) event.context();
+                               // 在这里处理文件变化事件
+                               log.info("Event type: " + kind + ", File changed: " + changedPath);
+                               Configurator.reconfigure();
+                           }
+                           // 重置 WatchKey，以便下一次监听
+                           boolean valid = key.reset();
+                           if (!valid) {
+                               // 如果 WatchKey 无效，可能是由于目录不再存在，退出监听
+                               break;
+                           }
+                       }
+                   } catch (InterruptedException e) {
+                       e.printStackTrace();
+                   }
+               });
+               // 启动监听线程
+               watchThread.start();
+           } catch (Exception e) {
+               e.printStackTrace();
+           }
+       }
+   }
+   ```
+
+   
+

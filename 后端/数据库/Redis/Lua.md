@@ -213,9 +213,9 @@ public void setScriptSource(ScriptSource scriptSource) {
 
 ## SpringBoot执行脚本流程分析
 
-​    在之前介绍执行脚本指令时，提到过两种指令EVAL、EVALSHA，并提供了检查脚本缓存是否存在的指令SCRIPT EXISTS，EVAL指令或者SCRIPT LOAD指令都可以将脚本缓存，EVAL立即执行，但不会返回SHA1，SCRIPT LOAD缓存脚本，但不立即执行，并且返回SHA1值。EVALSHA指令可以直接利用Redis缓存的脚本执行，而不需要每次都传递脚本，当脚本比较大时，可以节约网络传输数据量。
+在之前介绍执行脚本指令时，提到过两种指令 EVAL、EVALSHA，并提供了检查脚本缓存是否存在的指令SCRIPT EXISTS，EVAL指令或者SCRIPT LOAD指令都可以将脚本缓存，EVAL立即执行，但不会返回SHA1，SCRIPT LOAD缓存脚本，但不立即执行，并且返回SHA1值。EVALSHA指令可以直接利用Redis缓存的脚本执行，而不需要每次都传递脚本，当脚本比较大时，可以节约网络传输数据量。
 
-​    但是在上面SpringBoot执行过程中，并没有发现其调用EVALSHA，也没有执行SCRIPT EXISTS的方法，这个过程中有没有利用到SHA(*在RedisScript中，有一个getSha1的方法*)，需要分析一下其执行流程。
+但是在上面 SpringBoot 执行过程中，并没有发现其调用 EVALSHA，也没有执行 SCRIPT EXISTS 的方法，这个过程中有没有利用到 SHA(*在RedisScript中，有一个getSha1的方法*)，需要分析一下其执行流程。
 
 上面的两种方法最终都调用到下述方法
 
@@ -267,9 +267,9 @@ protected <T> T eval(RedisConnection connection, RedisScript<T> script, ReturnTy
 }
 ```
 
-​    从上面最后一个方法执行中可以看到，SpringBoot 先计算了当前资源的 Sha1，并使用 EVALSHA 指令尝试执行了一次，如果成功，则返回结果，如果缓存没有该脚本，则进入异常部分，并最终使用了EVAL指令进行执行。
+从上面最后一个方法执行中可以看到，SpringBoot 先计算了当前资源的 Sha1，并使用 EVALSHA 指令尝试执行了一次，如果成功，则返回结果，如果缓存没有该脚本，则进入异常部分，并最终使用了 EVAL 指令进行执行。
 
-​    从这里可以看到，SpringBoot 客户端已经实现了脚本缓存的功能，只不过进行了封装，并且不对用户暴露。在使用时简单，傻瓜，并且用起来很舒服。总结一下就是：SpringBoot 每次都先按EVALSHA 执行，没有缓存脚本，再次执行EVAL，得到结果并缓存脚本。
+从这里可以看到，SpringBoot 客户端已经实现了脚本缓存的功能，只不过进行了封装，并且不对用户暴露。在使用时简单，傻瓜，并且用起来很舒服。总结一下就是：SpringBoot 每次都先按EVALSHA 执行，没有缓存脚本，再次执行 EVAL，得到结果并缓存脚本。
 
 > ==注：==开发环境是 Windows，Redis 在 Linux 上部署，由于编码以及文件的换行符配置导致 Windows 下计算的 SHA1，与 Redis 在 Linux 下缓存的文件 SHA1 不匹配，导致每次都无法命中缓存，此时可以通过 IDEA 的文件换行设置，调整脚本文件使用 Unix 换行符，可以解决不同系统匹配问题。
 >
