@@ -697,5 +697,11 @@ public class MyListener implements ApplicationListener<EnvironmentChangeEvent> {
    }
    ```
 
-   
 
+### Automatic Reconfiguration
+
+When configured from a File, Log4j has the ability to automatically detect changes to the configuration file and reconfigure itself. If the `monitorInterval` attribute is specified on the configuration element and is set to a non-zero value then the file will be checked the next time a log event is evaluated and/or logged and the monitorInterval has elapsed since the last check. The example below shows how to configure the attribute so that the configuration file will be checked for changes only after at least 30 seconds have elapsed. The minimum interval is 5 seconds.
+
+```
+<?xml version="1.0" encoding="UTF-8"?><Configuration monitorInterval="30">...</Configuration>
+```

@@ -61,7 +61,7 @@
 
 ## 2.Request与Response
 
-`HttpServletRequest` 和 `HttpServletResponse` 是请求对象和响应对象的接口，分别继承了 `ServletRequest` 和 `ServletResponse`，其中集成了一些操作 HTTP 请求和响应的方法。实际开发中不需要开发人员去实现接口，Servlet 容器提供了默认实现，只需了解 API 的使用即可。
+`HttpServletRequest` 和 `HttpServletResponse` 是请求对象和响应对象的接口，分别继承了 `ServletRequest` 和 `ServletResponse`，其中集成了一些操作 HTTP 请求和响应的方法。实际开发中不需要开发人员去实现接口，Servlet 容器提供了默认实现 `HttpServletRequestWrapper` 和 `HttpServletResponseWrapper`，只需了解 API 的使用即可。
 
 ### 2.1 字符集
 
@@ -98,11 +98,17 @@
 
 `Filter` 是**责任链模式**的典型应用，其功能更像是一个流水线而不是过滤器，它可以获取 `Request` 和 `Response` 并进行验证和操作，放行时需要执行 `chain.doFilter(req, resp)` 将其传递给下一个 `Filter`。`Filter` 常用来进行认证限权、日志记录、装饰 `Request`、`Response`、`Session` 等。
 
-## 4.ServletContext
+## 4.Listener
+
+监听器是一个对象在生命周期范围内发生状态变化时的旁观者。在《Java Servlet 标准》体系中，可以监听三类对象：`ServletContext`、`ServletRequest`、`HttpSession`。监听的事件分别是生命周期事件和属性变化事件。
+
+监听 `httpSession` 时需要实现 `HttpSessionListener` 接口：当新会话被创建后就会触发监听器的 `sessionCreated()` 方法；当调用 Session 对象的 `invalidate()` 方法，或者 Session 超过时效自动过期，就会触发监听器的 `sessionDestroyed` 方法。可以用来统计在线用户数量。
+
+## 5.ServletContext
 
 `ServletContext` 是在 JVM 上的 Web 应用的唯一上下文信息。
 
-### 4.1 获取ServletContext
+### 5.1 获取ServletContext
 
 获取方式有以下三种：
 
@@ -175,7 +181,7 @@
 
   `HttpServlet` 继承自 `GenericServlet`，在 `GenericService` 中提供了 `ServletContext getServletContext()` 方法可以直接获取 `ServletCOntext` 实例对象。此外，`Filter` 的 `init()` 方法参数为 `FilterConfig`，该接口也提供了 `getServletContext()` 方法。
 
-### 4.2 注册Web组件
+### 5.2 通过ServletContext注册Web组件
 
 ```java
 // 注册 Servlet
@@ -192,27 +198,27 @@ FilterRegistration.Dynamic userFilter = servletContext.addFilter("UserFilter", U
 userFilter.addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), true, "/*");
 ```
 
-## 5.与SpringMVC整合
+## 6.与SpringMVC整合
 
-1. Web 容器启动时，会扫描每个 jar 包下的 META-INFO/services/javax.servlet.ServletContainerInitializer
+1. Web 容器启动时，会扫描每个 jar 包下的 `META-INFO/services/javax.servlet.ServletContainerInitializer`
 
-2. 加载这个文件指定的类：SpringServletContainerInitializer
-3. Spring 的应用启动后会加载 WebApplicationInitializer 接口下的所有组件
-4. 并且为 WebApplicationInitializer 这些组件创建对象（组件不是接口，不是抽象类）
-   1. AbstractContextLoaderInitializer：创建根容器，ContextLoaderListener
-   2. AbstractDispatcherServletInitializer
-      1. 创建一个 web 的 IOC 容器：createServletApplicationContext()
-      2. 创建一个 DispatcherServlet：createDispatcherServlet()
+2. 加载这个文件指定的类：`SpringServletContainerInitializer`
+3. Spring 的应用启动后会加载 `WebApplicationInitializer `接口下的所有组件
+4. 并且为 `WebApplicationInitializer` 这些组件创建对象（组件不是接口，不是抽象类）
+   1. `AbstractContextLoaderInitializer`：创建根容器，`ContextLoaderListener`
+   2. `AbstractDispatcherServletInitializer`
+      1. 创建一个 web 的 IOC 容器：`createServletApplicationContext()`
+      2. 创建一个 DispatcherServlet：`createDispatcherServlet()`
       3. 将创建的 DispatcherServlet 添加到 ServletContext 中
-   3. AbstractAnnotationConfigDispatcherServletInitializer：注解方式配置的 DispatcherServlet 初始化器
+   3. `AbstractAnnotationConfigDispatcherServletInitializer`：注解方式配置的 DispatcherServlet 的初始化器
       1. 创建根容器
-      2. getServletConfigClasses()：传入一个配置类
-      3. 创建一个 web 的 IOC 容器：createServletApplicationContext()
-         - 获取配置类：getServletConfigClasses()
+      2. `getServletConfigClasses()`：传入一个配置类
+      3. 创建一个 web 的 IOC 容器：`createServletApplicationContext()`
+         - 获取配置类：`getServletConfigClasses()`
 
-**总结**
+**流程**
 
-1. 以注解方式启动 SpringMVC，继承 AbstractAnnotationConfigDispatcherServletInitializer
+1. 以注解方式启动 SpringMVC，继承 `AbstractAnnotationConfigDispatcherServletInitializer`
 
 2. 实现抽象方法指定 DispatcherServlet 的配置信息
 
@@ -261,9 +267,9 @@ public class AppConfig {
 }
 ```
 
-## 6.异步请求
+## 7.异步请求
 
-### 6.1 Servlet 3.0
+### 7.1 Servlet 3.0
 
 ```java
 @WebServlet(value="/async", asyncSupported = true)
@@ -300,7 +306,7 @@ public class AsyncServlet extends HttpServlet {
 }
 ```
 
-### 6.2 SpringMVC
+### 7.2 SpringMVC
 
 #### 1.Callable
 
