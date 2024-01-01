@@ -602,6 +602,8 @@ public class MyListener implements ApplicationListener<EnvironmentChangeEvent> {
 
 使用 `log4j2` 时，引入 `spring-boot-starter-log4j2` 后，除了要排除 `spring-boot-starter-web` 中的 `spring-boot-starter-logging`，还要排除 `spring-boot-starter-actuator` 中的 `spring-boot-starter-logging`。
 
+### 4.1 监听器（不推荐）
+
 1. 创建新的 `log4j2.properties` Configmap（或者 `log4j2.xml`）
 
    ```properties
@@ -697,11 +699,75 @@ public class MyListener implements ApplicationListener<EnvironmentChangeEvent> {
    }
    ```
 
-
-### Automatic Reconfiguration
+### 4.2 monitorInterval自动检测
 
 When configured from a File, Log4j has the ability to automatically detect changes to the configuration file and reconfigure itself. If the `monitorInterval` attribute is specified on the configuration element and is set to a non-zero value then the file will be checked the next time a log event is evaluated and/or logged and the monitorInterval has elapsed since the last check. The example below shows how to configure the attribute so that the configuration file will be checked for changes only after at least 30 seconds have elapsed. The minimum interval is 5 seconds.
 
 ```
 <?xml version="1.0" encoding="UTF-8"?><Configuration monitorInterval="30">...</Configuration>
 ```
+
+1. 创建新的 `log4j2.xml` Configmap
+
+   ```xml
+   <?xml version="1.0" encoding="UTF-8" ?>
+   
+   <Configuration  monitorInterval="5">
+   
+       <Properties>
+           <Property name="pattern" value="[%d{yyyy-MM-dd HH:mm:ss.SSS}] [%-5level] [%t] [%c#%M-%L] %m%n"/>
+       </Properties>
+   
+       <Appenders>
+           <Console name="console" target="SYSTEM_OUT">
+               <PatternLayout pattern="${pattern}"/>
+           </Console>
+       </Appenders>
+   
+       <Loggers>
+           <Logger name="com.youyi" level="info" additivity="false">
+               <AppenderRef ref="console"/>
+           </Logger>
+           <Root level="error">
+               <AppenderRef ref="console"/>
+           </Root>
+       </Loggers>
+   
+   </Configuration>
+   ```
+
+2. 挂载至容器，并指定 log4j 文件地址
+
+   ```yaml
+   spec:
+     selector:
+       matchLabels:
+         app: cloud-k8s-app
+     template:
+       metadata:
+         labels:
+           app: cloud-k8s-app
+       spec:
+         containers:
+         - name: cloud-k8s-app
+           image: openjdk:17
+           # 指定 log4j 文件
+           command: ["java","-Dlog4j.configurationFile=file:/app/config/log4j2.xml",  "-jar", "/app/app.jar"]
+           volumeMounts:
+           - name: app-volume
+             mountPath: /app/app.jar
+           # 挂载 log4j configmap
+           - name: log4j2
+             mountPath: /app/config/
+         volumes:
+         - name: app-volume
+           hostPath:
+             path: /root/app/app.jar
+         # log4j confgimap 容器卷
+         - name: log4j2
+           configMap:
+             name: log4j2.xml
+         serviceAccountName: user
+   ```
+
+修改 log4j2.xml Configmap，过段时间（Configmap 同步需要时间，检测到变化也需要时间）发现服务日志已经修改了。
