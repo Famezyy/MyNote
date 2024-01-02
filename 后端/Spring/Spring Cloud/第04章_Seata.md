@@ -628,4 +628,7 @@ docker compose up -d
    }
    ```
 
-   
+
+## 4.整合sharding JDBC
+
+在整合 sharding JDBC 后会出现读操作从从库进行，写操作从主库进行，可能会出现问题，同时由于主从同步需要时间，可能会导致回滚失败。此时可以为 seata 单独配置数据源。
