@@ -770,7 +770,7 @@ OpenResty 的目标是让 Web 服务直接跑在 Nginx 服务内部，充分利�
 |     `set_by_lua_file`     | 类似于 `rewrite` 模块的 `set` 指令，将 Lua 脚本文件的返回结果设置在 Nginx 的变量中 |
 |     `content_by_lua`      | 执行在 `content` 阶段的 Lua 代码块，执行结果将作为请求响应的内容。Lua 代码块是编写在 Nginx 字符串中的 Lua 脚本，可能需要进行特殊字符转义 |
 |   `content_by_lua_file`   | 执行在 `content` 阶段的 Lua 脚本文件，执行结果将作为请求响应的内容 |
-|  `content_by_lua_block`   | 与 `content_by_lua` 指令类似，不同之处在于该指令直接在一堆花括号 `"{}"` 中编写 Lua 脚本源码，而不是在 Nginx 字符串中（需要特殊字符转义） |
+|  `content_by_lua_block`   | 与 `content_by_lua` 指令类似，不同之处在于该指令直接在一堆花括号 `"{}"` 中编写 Lua 脚本源码，而不是在 Nginx 字符串中 |
 |     `rewrite_by_lua`      | 执行在 `rewrite` 阶段的 Lua 代码块，完成转发、重定向、缓存等功能 |
 |   `rewrite_by_lua_file`   | 执行在 `rewrite` 阶段的 Lua 脚本文件，完成转发、重定向、缓存等功能 |
 |      `access_by_lua`      | 执行在 `access` 阶段的 Lua 代码块，完成IP 准入、接口权限等功能 |
@@ -831,17 +831,150 @@ init_by_lua lua-script-str
 
 #### 4.lua_code_cache
 
+```nginx
+lua_code_cache on（默认） | off
+```
 
+`lua_code_cache` 用于启用或禁用 Lua 脚本缓存，可以使用的上下文有 `http`、`server`、`location`。当关闭缓存时，通过 `ngx_lua` 提供的每个请求都将在一个单独的 Lua VM 实例中运行。在缓存关闭的情况下，在 `set_by_lua_file`、`content_by_lua_file`、`access_by_lua_file` 等指令中引用的 Lua 脚本都将不会被缓存，所有的 Lua 脚本都从新加载。
+
+但是通过该指令，开发人员可以进行快速开发，该动代码后不需要重启 Nginx。关闭缓存对整体性能会产生负面的影响。如在禁用 Lua 脚本缓存后，一个简单的 “hello world” 示例的性能可能会下降一个数量级。
+
+在生产环境中必须开启 Lua 脚本缓存，仅仅可以在开发期间关闭。
 
 #### 5.set_by_lua
 
+```nginx
+set_by_lua $destVar lua-script-str params
+```
+
+`set_by_lua` 指令的功能类似于 `rewrite` 模块的 `set` 指令，是将 Lua 脚本块的返回结果设置在 Nginx 的变量中。`set_by_lua` 指令所处的上下文和执行阶段与 Nginx 的 `set` 指令基本相同。
+
+使用 `set_by_lua` 配置指令时，可以在 Lua 脚本的后面带上一个调用参数列表。在 Lua 脚本中可以通过 Nginx Lua 模块内置的 `ngx.arg[n]` 读取实际参数。
+
+下面是一个简单的示例，将 Lua 脚本的相加结果设置给 Nginx 的变量 `$sum`，具体代码如下：
+
+```nginx
+location /set_by_lua_demo {
+    set $foo 1;
+    set $bar 2;
+    
+    # 调用內联代码，将结果放入 Nginx 变量 $sum
+    set_by_lua $sum 'return tonumber(ngx.arg[1]) + tonumber(ngs.arg[2])' $foo $bar;
+    echo ”$foo + $bar = $sum“;
+}
+```
+
+在这段代码中，`set_by_lua` 将两个输入参数 `$a`、`$b` 累积起来，然后将相加的结果设置到 Nginx 的变量 `$sum` 中。
+
 #### 6.access_by_lua
+
+```nginx
+access_by_lua $destVar lua-script-str
+```
+
+`access_by_lua` 执行在 HTTP 请求处理 11 个阶段的 `access` 阶段，使用 Lua 脚本进行访问控制。`access_by_lua` 指令运行于 `access` 阶段的末尾，因此总是在 `allow` 和 `deny` 这样的指令之后运行。一般可以通过 `access_by_lua` 进行比较复杂的用户权限验证，因为能借助 Lua 脚本执行一系列复杂的验证操作，比如实时查询数据库或者其他后端服务。
+
+下面的示例中利用 `access_by_lua` 实现 `ngx_access` 模块的 IP 地址过滤功能：
+
+```nginx
+location /access_demo {
+    access_by_lua '
+        ngx.log(ngx.DEBUG, "remote_addr = " .. ngx.var.remote_addr)
+        if ngx.var.remote_addr == "133.203.55.21" then
+            return
+        end
+            ngx.exit(ngx.HTTP_UNAUTHORIZED)
+       ';
+    echo "hello world";
+}
+```
+
+这段代码检测远程 IP 地址是否为 133.203.55.21，如果请求来源不是这个就通过 `ngx_lua` 提供的 `ngx.exit()` 中断当前的整个请求处理流程，直接返回 401（未授权错误）。如果 `access-by_lua` 指令没有将 HTTP 请求处理流程中断，处于 `access` 阶段后面的 `content` 阶段就会顺利执行，`echo` 指令的结果就能输出给客户端。
 
 #### 7.content_by_lua
 
-### 3.3 内置常量和变量
+```nginx
+content_by_lua lua-script-str
+```
 
-### 3.4 实践
+`content_by_lua` 用于设置执行在 `content` 阶段的 Lua 代码块，执行结果将作为请求响应的内容。该指令可以用于 `location` 上下文。
+
+`lua-script-str` 代码块用于在 Nginx 配置文件中编写字符串形式的 Lua 脚本，可能需要进行特殊字符转义，所以现在**不鼓励使用该命令**，改为使用 `content_by_lua_block` 指令代替。`content_by_lua_block` 指令代码块使用花括号 `"{}"` 定义，不再使用字符串分隔符。
+
+### 3.3 编程实例
+
+#### 1.获取URL中的参数
+
+下面的示例通过 Lua 脚本获取 URL 中的 query 参数然后进行相加。
+
+```nginx
+location /add_params_demo {
+    set_by_lua $sum '
+        local args = ngx.req.get_uri_args()
+        local a = args["a"]
+        local b = args["b"]
+        return a + b
+    ';
+    echo "$arg_a + $arg_b = $sum";
+}
+```
+
+除了通过 `ngx.req.get_uri_args()` 获取参数外，还可以通过 Nginx 内置变量 `$arg_PARAMETER` 获取请求参数的值，然后传递给 `set_by_lua` 指令：
+
+```nginx
+location /add_params_demo {
+    set_by_lua $sum "
+        local a = tonumber(ngx.arg[1])
+        local b = tonumber(ngx.arg[2])
+        return a + b;
+    " $arg_a $arg_b;
+    echo "$arg_a + $arg_b = $sum";
+}
+```
+
+#### 2.设置响应头
+
+可通过内置变量 `ngx.header` 来访问和设置 HTTP 响应头字段，`ngx.header` 的类型为 `table`，可以通过 `ngx.header.HEADER` 形式引用某个响应头。一个示例如下：
+
+```nginx
+content_by_lua_block {
+    ngx.header["header1"] = "value1"
+    ngx.header.header2 = 2
+    ngx.header.set_cookie = {'Foo = bar; test = ok; path = /', 'age = 18; path = /'}
+    ngx.say("check header")
+}
+```
+
+以上代码设置了响应头 `header1` 的值为 `value1`、`header2` 的值为 2；`ngx.header.set_cookie` 变量用于设置响应头 `set-cookie` 的值，使用 `table` 类型的对象可以一次设置多个。
+
+响应结果如下：
+
+```bash
+HTTP/1.1 200 OK
+Connection: keep-alive
+Content-Type: text/html; charset=utf-8
+Date: Thu, 04 Jan 2024 14:40:31 GMT
+header1: value1
+header2: 2
+Server: openresty/1.21.4.3
+Set-Cookie: Foo = bar; test = ok; path = /
+Set-Cookie: age = 18; path = /
+Transfer-Encoding: Identity
+```
+
+Cookie 是通过请求的 `set-cookie` 响应头来保存的，HTTP 响应内容中可以包含多个 `set-cookie` 响应头，一个 `set-cookie` 的值通常是一个字符串，该字符串大致包含下表所示的信息和属性（不区分大些小）：
+
+| Cookie 信息（或属性） | 说明                                                         |
+| --------------------- | ------------------------------------------------------------ |
+| Cookie 名称           | Cookie 名称的组成字符只能使用可以用于 URL 中的字符，一般为字母和数字，不能包含特殊字符，若有特殊字符需要进行转码。Cookie 名称为 Cookie 字符串的第一组键值对中的 key |
+| Cookie 值             | Cookie 值的字符组成规则和 Cookie 名称相同， 若有特殊字符则需要进行转码。Cookie 值为 Cookie 字符串的第一组键值对中的 value |
+| expires               | Cookie 过期日期，这是一个 GMT 格式的时间，当过了这个日期之后，浏览器就会将这个 Cookie 删除掉，不设置 expires 时 Cookie 在浏览器关闭后消失 |
+| path                  | Cookie 的访问路径，此属性设置指定路径下的页面才可以访问该 Cookie。访问路径的值一般设为 `"/"`，表示同一个站点的所有页面都可以访问这个 Cookie |
+| domain                | Cookie 的访问域名，此属性设置指定域名下的页面才可以访问该 Cookie。例如要让 Cookie 只能在 a.test.com 域名才可以访问，可将其 domain 设置为 a.test.com |
+| Secure                | Cookie 的安全属性，此属性设置该 Cookie 是否只能通过 HTTPS 协议访问。一般的 Cookie 使用 HTTP 即可访问，如果设置了 Secure 属性（没有属性值），则只有使用 HTTPS 协议 Cookie 才可以被访问 |
+| HttpOnly              | 如果 Cookie 设置了 HttpOnly 属性，那么通过程序（JS 脚本、Applet 等）将无法读取到 Cookie 信息。HttpOnly 属性和 Secure 一样都没有值，只有名称 |
+
+
 
 ## 4.重定向与内部子请求
 
