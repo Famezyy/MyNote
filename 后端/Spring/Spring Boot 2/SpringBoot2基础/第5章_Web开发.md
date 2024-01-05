@@ -257,6 +257,10 @@ public class MyMapperConfiguration implements WebMvcConfigurer {
 }
 ```
 
+> **提示**
+>
+> 也可以继承 `AbstractJackson2HttpMessageConverter`，仿照 `MappingJackon2GttoNessageConverter` 仅修改构造器传入希望支持的 `MediaType`。
+
 **设置支持基于参数的内容协商**
 
 需要使自定义的`MessageConverter`支持基于参数的内容协商时，需要配置内容协商策略。因为`ParameterContentNegotiationStrategy`策略仅支持`xml`和`json`。

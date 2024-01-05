@@ -57,7 +57,7 @@
 |   内置变量   | 说明                                                         |
 | :----------: | ------------------------------------------------------------ |
 |  `ngx.arg`   | 类型为 `table`，`ngx.arg.VARIABLE` 用于获取 `ngx_lua`配置指令后面的调用参数值。例如可以获取跟在 `set_by_lua` 指令后面的调用参数值 |
-|  `ngx.var`   | 类型为 `table`，`ngx.var.VARIABLE` 引用某个 Nginx 变量。如果需要对 Nginx 变量进行赋值，如 `ngx.var.b = 2`，则变量 b 必须提前声明；另外可以使用 `ngx.var[捕获组序号]` 的格式引用 `location` 配置块中被正则表达式捕获的捕获组 |
+|  `ngx.var`   | 类型为 `table`，`ngx.var.VARIABLE` 引用某个 Nginx 内置变量或通过 `set` 设置的变量。如果需要对 Nginx 变量进行赋值，如 `ngx.var.b = 2`，则变量 b 必须提前声明；另外可以使用 `ngx.var[捕获组序号]` 的格式引用 `location` 配置块中被正则表达式捕获的捕获组 |
 |  `ngx.ctx`   | 类型为 `table`，可以用来访问当前请求的 Lua 上下文数据，生存周期与当前请求相同 |
 | `ngx.header` | 类型为 `table`，用于访问 HTTP 响应头，可以通过 `ngx.header.HEADER` 形式引用某个头，比如可以通过 `ngx.header.set_cookie` 访问响应头部的 Cookie 信息，同样是 `table` 类型 |
 | `ngx.status` | 用于设置当前请求的 HTTP 响应码                               |

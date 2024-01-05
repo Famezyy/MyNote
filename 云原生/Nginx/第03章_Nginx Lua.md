@@ -901,7 +901,7 @@ content_by_lua lua-script-str
 
 `lua-script-str` 代码块用于在 Nginx 配置文件中编写字符串形式的 Lua 脚本，可能需要进行特殊字符转义，所以现在**不鼓励使用该命令**，改为使用 `content_by_lua_block` 指令代替。`content_by_lua_block` 指令代码块使用花括号 `"{}"` 定义，不再使用字符串分隔符。
 
-### 3.3 编程实例
+### 3.3 常用功能
 
 #### 1.获取URL中的参数
 
@@ -940,7 +940,7 @@ location /add_params_demo {
 content_by_lua_block {
     ngx.header["header1"] = "value1"
     ngx.header.header2 = 2
-    ngx.header.set_cookie = {'Foo = bar; test = ok; path = /', 'age = 18; path = /'}
+    ngx.header.set_cookie = {'Foo=bar; test=ok; path=/', 'age=18; path=/'}
     ngx.say("check header")
 }
 ```
@@ -957,8 +957,8 @@ Date: Thu, 04 Jan 2024 14:40:31 GMT
 header1: value1
 header2: 2
 Server: openresty/1.21.4.3
-Set-Cookie: Foo = bar; test = ok; path = /
-Set-Cookie: age = 18; path = /
+Set-Cookie: Foo=bar; test=ok; path=/
+Set-Cookie: age=18; path =/
 Transfer-Encoding: Identity
 ```
 
@@ -972,12 +972,216 @@ Cookie 是通过请求的 `set-cookie` 响应头来保存的，HTTP 响应内容
 | path                  | Cookie 的访问路径，此属性设置指定路径下的页面才可以访问该 Cookie。访问路径的值一般设为 `"/"`，表示同一个站点的所有页面都可以访问这个 Cookie |
 | domain                | Cookie 的访问域名，此属性设置指定域名下的页面才可以访问该 Cookie。例如要让 Cookie 只能在 a.test.com 域名才可以访问，可将其 domain 设置为 a.test.com |
 | Secure                | Cookie 的安全属性，此属性设置该 Cookie 是否只能通过 HTTPS 协议访问。一般的 Cookie 使用 HTTP 即可访问，如果设置了 Secure 属性（没有属性值），则只有使用 HTTPS 协议 Cookie 才可以被访问 |
-| HttpOnly              | 如果 Cookie 设置了 HttpOnly 属性，那么通过程序（JS 脚本、Applet 等）将无法读取到 Cookie 信息。HttpOnly 属性和 Secure 一样都没有值，只有名称 |
+| HttpOnly              | 如果 Cookie 设置了 HttpOnly 属性，那么通过程序（JS 脚本、Applet 等）将无法读取到 Cookie 信息，可以防止 XSS 攻击。HttpOnly 属性和 Secure 一样都没有值，只有名称 |
 
+为了通信安全，某些场景下只能在前后端之间使用 HTTPS 协议通信，如微信小程序的官网要求必须使用 HTTPS 协议。这种场景下，在内网环境可以继续使用 HTTP 通信协议，然后通过 Nginx 网关完成外部 HTTPS 协议到内部 HTTP 协议的转换。此时 Nginx 外部网关可以对 Cookie 属性进行修改，增加 `Secure` 安全属性。
 
+此外，大部分场景下确实不需要在前端脚本中访问 Cookie。Cookie 信息仅仅在后端 Java 容器中访问（如 Session 会话 ID），不需要在前端 JS 等脚本中访问，此时可以对 Cookie 属性进行修改，增加 `HttpOnly` 安全属性，这将有助于缓解跨站点脚本攻击。
+
+为 Cookie 增加 `HttpOnly` 安全属性的操作可以通过 Servlet 过滤器的形式在 Java 容器中完成：
+
+```java
+public void doFilter(ServletRequest request, ServletResponse response, FilterChain filterChain) throws IOException, ServletException {
+    HttpServletRequest req = (HttpServletRequest) request;
+    HttpServletResponse resp = (HttpServletResponse) response;
+    Cookie[] cookies = req.getCookies();
+    if (cookies != null) {
+        for (Cookie : cookies) {
+            String name = cookie.getName();
+            String value = cookie.getValue();
+            StringBuilder sb = new StringBuilder();
+            sb.append(name).append("=").append(value).append("; httpOnly "); // 在 cookie 末尾添加 httpOnly 安全属性
+            resp.setHeader("Set-Cookie", sb.toString());
+        }
+    }
+    filterChain.doFilter(request, response);
+}
+```
+
+更好的方式是在反向代理外部网关 Nginx 中完成：
+
+```nginx
+# 模拟上游服务器
+location /header_demo {
+    content_by_lua_block {
+        ngx.header["header1"] = "value1"
+        ngx.header.header2 = 2
+        ngx.header.set_cookie = {'Foo=bar; test=ok; path=/', 'age=18; path=/'}
+        ngx.say("header demo")
+    }
+}
+
+# 反向代理外部网关
+location /header_filter_demo {
+    proxy_pass http://127.0.0.1/header_demo;
+    
+    header_filter_by_lua_block {
+        local cookies = ngx.header.set_cookie
+        if cookies then
+            if type(cookies) == "table" then
+            	local cookie = {}
+        		for k, v in pairs(cookies) do
+            		cookie[k] = v .. "; secure; httpOnly"
+            	end
+            	ngx.header.set_cookie = cookie
+            else
+            	ngx.header.set_cookie = cookies .. "; secure; httpOnly"
+            end
+        end
+    }
+}
+```
+
+访问 `/header_filter_demo` 查看返回值的 Cookie 头：
+
+<img src="img/第03章_Nginx Lua/image-20240105215804884.png" alt="image-20240105215804884" style="zoom:67%;" />
+
+可以看到 Foo 和 age 两个 Cookie 被标记为了不安全，因为没有通过 HTTPS 协议访问。
+
+#### 3.访问Nginx变量
+
+不论是在[核心模块内置变量](第02章_基础使用.md#6.核心模块内置变量)中介绍的 Nginx 的内置变量，还是在配置文件中使用 `set` 指令定义的 Nginx 变量，都可以在 Lua 代码中通过 `ngx.var` 进行访问。
+
+```nginx
+location /lua_var_demo {
+    set $hello world;
+    
+    content_by_lua_block {
+        local basic = require("luaScript.module.common.basic");
+        
+        local vars = {};
+        -- 访问内置变量
+        vars.remote_addr = ngx.var.remote_addr;
+        vars.request_uri = ngx.var.request_uri;
+        vars.query_string = ngx.var.query_string;
+        vars.uri = ngx.var.uri;
+        vars.nginx_version = ngx.var.nginx_version;
+        vars.server_protocol = ngx.var.server_protocol;
+        vars.remote_user = ngx.var.remote_user;
+        vars.request_filename = ngx.var.request_filename;
+        vars.request_method = ngx.var.request_method;
+        vars.document_root = ngx.var.document_root;
+        vars.body_bytes_sent = ngx.var.body_bytes_sent;
+        vars.binary_remote_addr = ngx.var.binary_remote_addr;
+        vars.args = ngx.var.args;
+        
+        -- 访问自定义变量
+        vars.hello = ngx.var.hello;
+        
+        -- 访问请求参数
+        vars.foo = ngx.var.arg_foo;
+        
+        local str= basic.tableToStr(vars, "<br>");
+        ngx.say(str);
+    }
+}
+```
+
+其中的 `tableToStr()` 方法如下
+
+```lua
+local function tableToStr(vars, delimiter)
+    string = "";
+    for k, v in pairs(vars) do
+        string = string .. "[" .. k .. "] = '" .. v .. "'" .. delimiter
+    end
+    return string;
+end
+```
+
+结果如下
+
+```bash
+[remote_addr] = '133.203.55.21'
+[request_uri] = '/lua_var_demo'
+[uri] = '/lua_var_demo'
+[server_protocol] = 'HTTP/1.1'
+[request_method] = 'GET'
+[request_filename] = './html/lua_var_demo'
+[nginx_version] = '1.21.4'
+[document_root] = './html'
+[body_bytes_sent] = '0'
+[binary_remote_addr] = '��7'
+[hello] = 'world'
+```
+
+#### 4.访问请求上下文变量
+
+Nginx 执行 Lua 脚本涉及很多阶段，每个阶段都可以嵌入不同的 Lua 脚本，不同阶段的 Lua 脚本可以通过 `ngx.ctx` 进行上下文变量的共享。
+
+`ngx.ctx` 上下文实质上是一个 Lua `table`，生存周期与当前请求相同，当前请求不同阶段嵌入的 Lua 脚本都可以读写 `ngx.ctx` 表中的属性。
+
+```nginx
+location /ctx_demo {
+    rewrite_by_lua_block {
+        ngx.ctx.var1 = 1;
+    }
+    
+    access_by_lua_block {
+        ngx.ctx.var2 = 2;
+    }
+    
+    content_by_lua_block {
+        local basic = require("luaScript.module.common.basic");
+        ngx.ctx.var3 = 3;
+        local result = ngx.ctx.var1 + ngx.ctx.var2 + ngx.ctx.var3;
+        ngx.ctx.sum = result;
+        local str = basic.tableToStr(ngx.ctx, "<br>");
+        ngx.say(str);
+    }
+}
+```
+
+结果如下
+
+```bash
+[sum] = '6'
+[var2] = '2'
+[var1] = '1'
+[var3] = '3'
+```
+
+可以看出，`ngx.ctx` 表中定义的属性可以在请求处理的 `rewrite`、`access`、`content` 等处理阶段进行共享。需要注意的是，在 `ngx_lua` 模块中，每个请求（包括子请求）都有一份独立的 `ngx.ctx` 表。
 
 ## 4.重定向与内部子请求
 
+Nginx 的 `rewrite` 指令不仅可以在 Nginx 内部的 `server`、`location` 之间进行跳转，还可以进行外部链接的重定向。通过 `ngx_lua` 模块的 Lua 函数除了能实现 Nginx 的 `rewrite` 指令外，还能完成内部子请求、并发子请求等复杂功能。
+
+### 4.1 重定向
+
+`ngx_lua` 可以实现 Nginx 的 `rewrite` 指令类似的功能，该模块提供了两个 API 来实现重定向的功能：
+
+- `ngx.exec(uri, args?)`：内部重定向
+- `ngx.redirect(uri, status?)`：外部重定向
+
+#### 1.内部重定向
+
+`ngx.exec()` 等价于 `rewrite regrex replacement last`，下面是三个示例：
+
+```lua
+-- 重定向到 /internal/sum
+ngx.exec('/internal/sum');
+
+-- 重定向到 /internal/sum?a=3&b=5，并且追加参数 c=6
+ngx.exec('/internal/sum?a=3&b=5', 'c=6');
+
+-- 重定向到 /internal/sum，并且追加参数 ?a=3&b=5&c=6
+ngx.exec('/internal/sum', {a=3, b=5, c=6});
+```
+
+下面是一个完整的示例，通过内部重定向完成 3 个参数的累加：
+
+```nginx
+```
+
+
+
+#### 2.外部重定向
+
+### 4.2 子请求
+
+### 4.3 并发子请求
+
 ## 5.Nginx Lua操作Redis
 
-## 6.实战
+## 6.Nginx Lua实战

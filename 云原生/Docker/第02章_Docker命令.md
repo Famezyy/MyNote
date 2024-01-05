@@ -403,6 +403,8 @@ docker load -i my_image.tar
 
 - 查看容器内部配置：`docker inspect [container id or name]`
 
+- 查看容器资源使用情况：`docker stats [container id or name]`
+
 ### 3.9 交互正在运行的容器
 
 进入正在运行的容器并以命令行交互：`docker exec -it [container id or name] bash`
