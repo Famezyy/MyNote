@@ -61,7 +61,7 @@
 |  `ngx.ctx`   | 类型为 `table`，可以用来访问当前请求的 Lua 上下文数据，生存周期与当前请求相同 |
 | `ngx.header` | 类型为 `table`，用于访问 HTTP 响应头，可以通过 `ngx.header.HEADER` 形式引用某个头，比如可以通过 `ngx.header.set_cookie` 访问响应头部的 Cookie 信息，同样是 `table` 类型 |
 | `ngx.status` | 用于设置当前请求的 HTTP 响应码                               |
-|  `ngx.req`   | 获取请求相关参数，例如 `ngx.req.get_url_args()` 可以获取 query 参数 |
+|  `ngx.req`   | 获取请求相关参数，例如 `ngx.req.get_uri_args()` 可以获取 query 参数 |
 
 ## 3.Nginx Lua内置常量
 

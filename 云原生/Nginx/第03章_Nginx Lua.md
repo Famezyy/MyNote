@@ -1154,6 +1154,10 @@ Nginx 的 `rewrite` 指令不仅可以在 Nginx 内部的 `server`、`location` 
 - `ngx.exec(uri, args?)`：内部重定向
 - `ngx.redirect(uri, status?)`：外部重定向
 
+> **注意**
+>
+> 不论 `ngx.exec(...)` 还是 `ngx.redirect(...)` 都==**不会自动传递原始参数**==。
+
 #### 1.内部重定向
 
 `ngx.exec()` 等价于 `rewrite regrex replacement last`，下面是三个示例：
@@ -1172,13 +1176,232 @@ ngx.exec('/internal/sum', {a=3, b=5, c=6});
 下面是一个完整的示例，通过内部重定向完成 3 个参数的累加：
 
 ```nginx
+location /internal/sum {
+    internal; # 只允许内部调用
+    content_by_lua_block {
+        local arg_a = tonumber(ngx.var.arg_a);
+        local arg_b = tonumber(ngx.var.arg_b);
+        local arg_c = tonumber(ngx.var.arg_c);
+        local sum = arg_a + arg_b + arg_c;
+        ngx.say(arg_a, "+", arg_b, "+", arg_c, "=", sum);
+    }
+}
+
+location /sum1 {
+    content_by_lua_block {
+        return ngx.exec("/internal/sum", {a = 100, b = 10, c = 1});
+    }
+}
+
+location /sum2 {
+    # 等同于以下 rewrite 指令
+    rewrite /sum2 /internal/sum?a=100&b=10&c=1 last;
+}
 ```
 
-
+> **注意**
+>
+> - 如果有 `args` 参数，参数可以是字符串的形式，也可以是 Lua `table` 的形式：
+>
+>   ```lua
+>   ngx.exec("/internal/sum", "a=100&b=5");
+>   ngx.exec("/internal/sum", {a=100, b=5});
+>   ```
+>
+>   第二个参数可以传递 `ngx.req.get_uri_args()` 将原始 query 参数传递下去。
+>
+> - 该方法可能不会主动返回，建议在调用时加上 `return`
+>
+>   ```nginx
+>   return ngx.exec(...)
+>   ```
+>
 
 #### 2.外部重定向
 
-### 4.2 子请求
+```lua
+ngx.redirect(uri, status?)
+```
+
+`ngx.redirect` 外部重定向方法与 `ngx.exec` 内部重定向方法不同，外部重定向将通过客户端进行二次跳转，所以 `ngx.redirect` 方法会产生额外的网络流量，该方法的第二个参数为响应状态码，可以传递 `301/302/303/307/308` 重定向状态码。其中 301、302 是 HTTP 1.0 协议定义的相应码，302、307、308 是 HTTP 1.1 协议定义的相应码。
+
+如果不指定 `status`，那么默认的相应状态为 `302 (ngx.HTTP_MOVED_TEMPORARILY)` 临时重定向。
+
+```nginx
+# 注意取消 /internal/sum 的 internal 属性
+location /sum3 {
+    content_by_lua_block {
+        return ngx.redirect("/internal/sum?a=100&b=10&c=1")
+    }
+}
+
+location /sum4 {
+    rewrite ^/sum4 "/internal/sum?a=100&b=10&c=1" redirect;
+}
+```
+
+如果指定 `status` 为 301，那么对应的常量为 `ngx.HTTP_MOVED_PERMANENTLY` 永久重定向，对应到 `rewrite` 指令的标志位为 `permanent`。
+
+```nginx
+location /sum5 {
+    content_by_lua_block {
+        return ngx.redirect("/internal/sum?a=100&b=10&c=1", ngx.HTTP_MOVED_PERMANENTLY);
+    }
+}
+
+location /sum6 {
+    rewrite ^/sum6 "/internal/sum?a=100&b=10&c=1" permanent;
+}
+```
+
+下面是一个综合案例，通过 `ngx.redirect` 和 `rewrite` 进行 3 种方式的外部跳转：
+
+```nginx
+# ngx_lua 中获取 location 中的匹配组
+location ~*/baidu1/(.*) {
+    content_by_lua_block {
+        return ngx.redirect("https://www.baidu.com/" .. ngx.var[1])
+    }
+}
+
+# ngx_lua 中获取 rewrite 指令中的匹配组
+location ~*/baidu2/.* {
+    rewrite ^/baidu2/(.*) $1 break;
+    content_by_lua_block {
+            return ngx.redirect("https://www.baidu.com/" .. ngx.var[1])
+    }
+}
+
+# rewrite 中获取自身的匹配组，会自动传递 query 参数
+location ~*/baidu3/.* {
+    rewrite ^/baidu3/(.*) https://www.baidu.com/$1 redirect;
+}
+```
+
+访问 `/baidu[n]/s?wd=test` 发现只有 `baidu3` 传递了参数，其他两个只二次跳转到了 `www.baidu.com/s`。可以通过以下方式获取参数列表拼接到跳转地址后面：
+
+```nginx
+location ~*/baidu1/(.*) {
+    content_by_lua_block {
+        function parseParams(args)
+            str = "?"
+            for k, v in pairs(args) do
+                str = str .. k .. "=" .. v .. "&"
+            end
+            return str
+        end
+        return ngx.redirect("https://www.baidu.com/" .. ngx.var[1] .. parseParams(ngx.req.get_uri_args()))
+    }
+}
+```
+
+当然实际使用时要把 `parseParams()` 抽取出来。
+
+> **注意**
+>
+> 和 `exec` 一样，`ngx.redirect` 不会主动返回，需要显示调用 `return`。
+
+###  4.2 子请求
+
+`Nginx` 子请求不是 HTTP 协议的标准实现，是 nginx 特有的设计，主要为了提高内部对单个客户端请求处理的并发能力。
+
+如果某个客户端的请求访问了多个内部资源，为了提高效率，可以为每一个内部资源访问建立单个子请求，并让所有子请求同时进行。
+
+子请求并不是由客户端直接发起的，它是由 Nginx 服务器在处理客户端请求时根据自身逻辑需要而内部建立的新请求。因此，子请求只在 Nginx 服务器内部进行处理，不会与客户端进行交互。通常情况下，为保护子请求所定义的内部接口，会把这些接口设置为 `internal`，防止外部直接访问。
+
+发起单个子请求可以使用 `ngx.location.capture()` 方法，格式如下：
+
+```lua
+ngx.location.capture(uri, options?)
+```
+
+`capture` 方法的第二个参数 `options` 是一个 `table`，用于设置子请求相关的选项，又如下可以设置的选项：
+
+- `method`：子请求的方法，默认为 `ngx.HTTP_GET`
+- `body`：传给子请求的请求体，仅限于 `string` 或 `nil`
+- `args`：传给子请求的请求参数，支持 `string` 或 `table`
+- `vars`：传给子请求的变量表，仅限于 `table`
+- `ctx`：父子请求共享的变量表 `table`
+- `copy_all_vars`：复制所有变量给子请求
+- `share_all_vars`：父子请求共享所有变量
+- `always_forward_body`：用于设置是否转发请求体
+
+下面是一个综合性实例，包含两个请求接口，外部接口供外部访问使用，在准备好必要的请求参数、上下文环境变量、请求体之后，调用内部访问接口获取执行结果，然后返回给客户端。具体如下：
+
+```nginx
+# 外部访问接口
+location ~ /goods/detail/([0-9]+) {
+    set $goodsId $1;
+    set $var1 '';
+    set $var2 '';
+    content_by_lua_block {
+        -- 解析 body 之前一定要先读取 request body
+        ngx.req_read_body()
+        local uri = "/internal/detail/" .. ngx.var.goodsId
+        local request_method = ngx.var.request_method
+        local args = ngx.req.get_uri_args()
+        local shareCtx = {c1 = "parent value", other = "other value"}
+        local res = ngx.location.capture(uri, {
+            method = ngx.HTTP_GET,
+            args = args,
+            body = 'customed request body',
+            vars = {
+                var1 = "value1",
+                var2 = "value2"
+            },
+            -- 转发父请求的 request body
+            always_forward_body = true
+            ctx = shareCtx
+        })
+        ngx.say("child res.status:", res.status)
+        ngx.say(res.body)
+        ngx.say("<br>shareCtx.c1=", shareCtx.c1)
+    }
+}
+```
+
+```nginx
+# 内部模拟上游服务接口
+location ~ /internal/detail/([0-9]+) {
+    internal;
+    set $goodsId $1;
+    
+    content_by_lua_block {
+        ngx.req.read_body()
+        ngx.say("<br><hr>child scope: <br>")
+        -- 访问父请求传递的参数
+        local args = ngx.req.get_uri_args()
+        ngx.say("<br>foo=", args.foo)
+        -- 访问父请求传递的请求体
+        local data = ngx.req.get_body_data()
+        ngx.say("<br>data=", data)
+        -- 访问 Nginx 定义的变量
+        ngx.say("<br>goodsId=", ngx.var.goodsId)
+        -- 访问父请求传递的变量
+        ngx.say("<br>var.var1=", ngx.var.var1)
+        -- 访问父请求传递的共享上下文，并修改其属性
+        ngx.say("<br>ngx.ctx.c1=", ngx.ctx.c1)
+        ngx.say("<br>child end<hr>")
+        ngx.ctx.c1 = "changed value by child"
+    }
+}
+```
+
+访问 `http://43.153.170.51/goods/detail/10?foo=foo` 结果如下：
+
+```bash
+child res.status:200
+child scope:
+foo=foo
+data=customed request body
+goodsId=10
+var.var1=value1
+ngx.ctx.c1=v1
+child end
+shareCtx.c1=changed value by child
+```
+
+
 
 ### 4.3 并发子请求
 
