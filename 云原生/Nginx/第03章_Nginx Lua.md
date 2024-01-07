@@ -1401,9 +1401,102 @@ child end
 shareCtx.c1=changed value by child
 ```
 
+**`capture` 的参数**
 
+- `capture` 的第二个参数 `options` 是一个 `table` 容器，用于设置子请求的选项。
+
+- `method`：用于指定子请求的 `methid` 类型。
+
+  ```lua
+  local res = ngx.location.capture(uri, {
+          method = ngx.HTTP_PUT        
+      }
+  )
+  ```
+
+- `args`：指定子请求的 URI 请求参数，可以是字符串或者 `table`。
+
+  ```lua
+  local res = ngx.location.capture(uri, {
+          -- 将父请求的参数传递给子请求
+          args = ngx.req.get_uri_args()
+      }
+  )
+  ```
+
+- `vars`：设置传递给子请求中的 Nginx 变量，`table` 类型。
+
+  ```nginx
+  set $var1 '';
+  set $var2 '';
+  content_by_lua_block {
+      local res = ngx.location.capture(uri, {
+              vars = {
+                  var1 = "value1",
+                  var2 = "value2"
+              }
+          }
+      )
+  }
+  ```
+
+  > **注意**
+  >
+  > 使用 `vars` 向子请求中传递 Nginx 变量时，**变量需要提前定义**，否则抛出==变量未定义==的错误。
+
+- `ctx`：指定一个 `table` 作为子请求的 `ngx.ctx` 表。
+
+  ```lua
+  local c = {
+      c1 = "v1",
+      other = "other value"
+  }
+  local res = ngx.location.capture(uri, {
+  		ctx = c;        
+      }
+  );
+  ```
+
+  父请求如果修改了 `ctx` 表中的成员，那么子请求可以通过 `ngx.ctx` 获取，反之，子请求也可以修改 `ngx.ctx` 中的成员，父请求可以通过 `ctx` 表获取。通过 `ctx` 属性值可以方便地让父请求和子请求进行上下文变量共享。
+
+- `always_forward_body`：设置是否转发请求体。但设置为 true 时，父请求中的请求体 request body 将转发到子请求。
+
+  ```lua
+  local res = ngx.location.capture(uri, {
+  		method = ngx.HTTP_POST,
+          always_forward_body = true
+      }
+  )
+  ```
+
+> **注意**
+>
+> `ngx.location.capture` 只能发起到当前 Nginx 服务器的==内部路径==的子请求，如果需要发起外部 HTTP 路径的子请求，就需要与 `location` 反向代理配置配合实现。
 
 ### 4.3 并发子请求
+
+一次客户端请求往往调用多个微服务接口才能获取到完整的页面内容，此时就可以通过 Nginx 进行上游接口合并。在 `OpenResty` 中 `ngx.location.capture_multi` 可以完成内部多个子请求和并发访问。
+
+```lua
+ngx.location.capture_multi({
+        {uri, options?},
+        {uri, options?},
+        ...
+    }
+)
+```
+
+`capture_multi` 可以一次发送多个内部子请求，每个子请求的参数使用方式和 `capture` 方法相同。调用 `capture_multi` 前可以把所有子请求加入一个 `table` 容器作为调用参数传入。`capture_multi` 返回后可以将其结果再用 `"{}"` 包装成一个 `table`。
+
+```nginx
+# 发起两个子请求
+
+location /capture_multi_demo {
+    
+}
+```
+
+
 
 ## 5.Nginx Lua操作Redis
 
