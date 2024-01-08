@@ -411,7 +411,7 @@ Lua 数组的类型定义和关键词为 `table`，和 Java 的数组对比起�
   local array2 = {k1="value1", k2="value2", k3="value3"};
   ```
 
-- 普通 Lua 数组的数字索引对应于 Java 的元素下标，是从 1 开始计数的。
+- 普通 Lua 数组的数字索引对应于 Java 的元素下标，但是 Lua 中==是从 1 开始计数的==。
 
 - 普通 Lua 数组的长度计算从第一个元素开始，计算到最后一个非 `nil` 的元素为止，中间的元素数量就是长度。
 
@@ -578,6 +578,14 @@ end
 Wednesday:4; Thursday:5; Friday:6; Saturday:7; Sunday:1; Monday:2; Tuesday:3;
 ```
 
+使用数字作为 key 时要加上 `"[]"`：
+
+```lua
+for i, v in pairs({[2]=test}) do
+    print(i, v)
+end
+```
+
 ### 2.7 Lua的函数
 
 #### 1.定义
@@ -642,6 +650,29 @@ Lua 允许函数返回多个值。如 Lua 内置函数 `string.find` 在查找�
 - 全局变量会占用全局名称空间，同时也有性能损耗（查询全局环境表的开销），因此应当尽量使用“局部函数”
 - 函数的定义需要放置在函数调用之前
 
+#### 6.常用函数
+
+1. **符串操作**
+   - `string.len(s)`：返回字符串 `s` 的长度
+   - `string.sub(s, i, j)`：返回字符串 `s` 从第 `i` 个字符到第 `j` 个字符的子串
+   - `string.find(s, pattern)`：在字符串 `s` 中查找指定的模式 `pattern`
+2. **表操作**
+   - `table.insert(table, [pos,] value)`：将 `value` 插入到表 `table` 中的指定位置（默认在末尾）。
+   - `table.remove(table [, pos])`：从表 `table` 中移除指定位置（默认是末尾）的元素。
+   - `table.concat(table [, sep [, i [, j]]])`：将表 `table` 中的元素连接成一个字符串，可以指定分隔符 `sep`
+3. **数学运算**
+   - `math.abs(x)`：返回 `x` 的绝对值
+   - `math.sqrt(x)`：返回 `x `的平方根
+   - `math.random([m [, n]])`：返回一个范围在 `[m, n]` 之间的随机数
+4. **文件操作**
+   - `io.open(filename [, mode])`：打开文件，返回文件句柄
+   - `file:read([format])`：读取文件内容，可以指定读取的格式
+   - `file:write(...)`：将数据写入文件
+5. **其他常用函数**
+   - `print(...)`：打印输出
+   - `type(x)`：返回变量 `x` 的类型
+   - `tonumber(s [, base])`：将字符串 `s` 转换为数字
+
 ### 2.8 Lua的面向对象
 
 在 Lua 中使用表（`table`）实现面向对象，一个表就是一个对象。表可以拥有所有 8 大数据类型的成员属性。
@@ -651,28 +682,27 @@ Lua 允许函数返回多个值。如 Lua 内置函数 `string.find` 在查找�
 ```lua
 -- 正方形类
 _Square = {
-    side = 0
+    size = 0
 }
-_Square.__index = _Square
 
 -- 类的方法 getArea
 function _Square.getArea(self)
-    return self.side * self.side;
+    return self.size * self.size;
 end
 
 -- 类的方法 new
 function _Square.new(self, size)
     local cls = {}
-    setmetatable(cls, self)
+    -- 指定 cls 的 metatable 为 _Square，所以 cls 就继承了 _Square 的属性和方法 
+    setmetatable(cls, _Square)
+    -- 指定方法和属性的索引表为自身
+    self.__index = self
     cls.size = size or 0
     return cls;
 end
 
--- 统一的模块对象
-local _Module = {
-    ...
-    Square = _Square
-}
+square = _Square:new(3)
+print(square:getArea())
 ```
 
 在调用 Square 类的方法时，建议将点号改为冒号。使用冒号进行成员方法调用时，Lua 会隐形传递一个 `self` 参数，它将调用者对象本身作为第一个参数传递进来。
@@ -690,7 +720,9 @@ ngx.say("正方形的面积为：", square:getArea());
 - `metadable` 元表：如果一个表（也称对象）的属性找不到，就去它的元表中查找，通过 `setmetatable(table, metatable)` 方法设置一个表的元表
 - 准确来说，不是直接查找元表的属性，而是去元表中的一个特定的属性 `__index`（表）中查找属性，`__index` 也是一个 `table` 类型，Lua 会在 `__index` 中查找相应的属性
 
-所以在上面的代码中，`_Square` 表设置了 `_index` 属性的值为自身，当为新创建的 `new` 对象查找 `getArea` 方法时，需要在元表 `_Square` 表的 `__index` 属性中查找。
+> **注意**
+>
+> 最好同时声明 `setmetatable(table, metatable)` 和 `self.__index = self`，否则部分 lua 版本中无法成功通过实例 `square` 调用类的方法 `getArea()`。
 
 下面是一个继承的代码示例：
 
@@ -700,10 +732,9 @@ Rectangle = {
     width = 0
 }
 
-Rectangle.__index = Rectangle
-
 function Rectangle:new(length, width)
     local obj = setmetatable({}, Rectangle)
+    self.__index = self
     obj.length = length or 0
     obj.width = width or 0
     return obj
@@ -718,17 +749,16 @@ Square = {
     size = 0
 }
 
-Square.__index = Square
-
 function Square:new(size)
     local obj = Rectangle:new(size, size)
+    self.__index = self
     obj.size = size or 0
     return obj
 end
 
 square = Square:new(20)
 ngx.say(square:getArea())
-ngx.say("<bar>")
+ngx.say("<br>")
 ngx.say(square.size)
 ```
 
@@ -1492,12 +1522,242 @@ ngx.location.capture_multi({
 # 发起两个子请求
 
 location /capture_multi_demo {
-    
+    content_by_lua_block {
+        local postBody = ngx.encode_args({
+            post_k1 = 32,
+            post_k2 = "post_v2"
+        });
+        local reqs = {};
+        -- 向 reqs 中插入数据
+        table.insert(reqs, {
+            "/print_get_param",
+            {args = "a=3&b=4"}
+        });
+        table.insert(reqs, {
+            "/print_post_param",
+            {
+                method = ngx.HTTP_POST,
+                args = "a=3&b=4",
+                body = postBody
+            }
+        });
+        -- 将结果封装在 table 中
+        local resps = {ngx.location.capture_multi(reqs)};
+
+        for i, res in pairs(resps) do
+            ngx.say("child res.status:", res.status, "<br>")
+            ngx.say("child res.body:", res.body, "<br>")
+        end
+    }
 }
 ```
 
+两个内部接口用于模拟上游的服务（如 Java 微服务），客户端是不能直接访问内部接口的。
 
+```nginx
+location /print_get_param {
+    internal;
+    content_by_lua_block {
+        ngx.say("<br>child start:");
+        local arg = ngx.req.get_uri_args();
+        for k, v in pairs(arg) do
+            ngx.say("<br>[GET] key:", k, " v:", v);
+        end
+        ngx.say("<br>child end<hr>");
+    }
+}
+
+location /print_post_param {
+    internal;
+    content_by_lua_block {
+        ngx.say("<br>child start:");
+        -- 解析 body 之前一定要先读取
+        ngx.req.read_body();
+        local arg = ngx.req.get_post_args();
+        for k, v in pairs(arg) do
+            ngx.say("<br>[POST] key:", k, " v:", v);
+        end
+        ngx.say("<br>child end<hr");
+    }
+}
+```
+
+结果如下：
+
+```bash
+child res.status:200
+child res.body:
+child start:
+[GET] key:b v:4
+[GET] key:a v:3
+child end
+
+child res.status:200
+child res.body:
+child start:
+[POST] key:post_k1 v:32
+[POST] key:post_k2 v:post_v2
+child end
+```
+
+在所有子请求终止之前，`capture_multi` 函数不会返回。此函数的耗时是单个子请求的最长延迟。
 
 ## 5.Nginx Lua操作Redis
+
+【[官方文档](https://github.com/openresty/lua-resty-redis#connect)】
+
+### 5.1 CURD基本操作
+
+使用 Lua 模块 lua-resty-redis 之前需要确保已经导入相关的库文件（默认存在），可以在官网下载 resty/redis.lua 库文件，然后将该库文件加入项目工程所在的 Lua 外部库路径。大部分的 Redis 操作命令都实现了同名的 Lua API 方法。
+
+下面是一个简单的示例：
+
+```nginx
+location /redis_demo {
+    content_by_lua_file luaScript/module/demo/redisDemo.lua;
+}
+```
+
+```lua
+-- luaScript/module/demo/redisDemo.lua
+
+local redis = require "resty.redis"
+local config = require("luaScript.module.config.redis-config")
+-- 创建 redis 实例
+local red = redis:new()
+
+-- 设置超时时间: connect_timeout, send_timeout, read_timeout
+red:set_timeouts(config.timeout, config.timeout, config.timeout)
+
+-- 连接服务器
+local ok, err = red:connect(config.host_name, config.port)
+if not ok then
+    ngx.say("failed to connect: ", err)
+    return
+end
+
+-- 密码
+local ok, err = red:auth(config.password)
+if not ok then
+    ngx.say("failed to auth: ", err)
+    return
+end
+
+-- 选择数据库
+local ok, err = red:select(config.db)
+if not ok then
+    ngx.say("failed to select db: ", err)
+    return
+end
+
+-- 设置值
+ok, err = red:set("animal", "dog")
+if not ok then
+    ngx.say("failed to set dog: ", err, "<br>")
+    return
+else
+    ngx.say("set dog: ok", "<br>")
+end
+
+-- 取值
+local res, err = red:get("animal")
+-- 判空
+if not res or res == ngx.null then
+    ngx.say("failed to get dog: ", err, "<br>")
+    return
+else
+    ngx.say("get dog: ok - ", res, "<br>")
+end
+
+-- 批量操作，减少网络 IO 次数
+red:init_pipeline()
+red:set("cat", "cat 1")
+red:set("horse", "horse 1")
+red:get("cat")
+red:get("horse")
+red:get("animal")
+local results, err = red:commit_pipeline()
+if not results then
+    ngx.say("failed to commit the pipeline requests: ", err)
+    return
+end
+
+-- 处理结果
+for i, res in ipairs(results) do
+    if type(res) == "table" then
+        if res[1] == false then
+            ngx.say("failed to run commend ",i, ": ", res[2], "<br>")
+        else
+            ngx.say("successed to run commend ", i, ": ", res[2], "<br>")
+        end
+    else
+        ngx.say("successed to run commend ", i, ": ", res, "<br>")
+    end
+end
+```
+
+导入的 redid-config.lua 配置文件如下：
+
+```lua
+local _module = {
+    -- 服务器地址
+    host_name = "10.244.0.254",
+    -- 服务器端口
+    port = "6379",
+    -- 服务器数据库
+    db = "1",
+    -- 服务器密码
+    password = "123456",
+    -- 超时时间
+    timeout = 20000,
+    -- 线程池数量
+    pool_size = 100,
+    -- 最大空闲时间
+    pool_max_idle_time = 10000
+}
+
+return _module
+```
+
+访问 redis_demo 结果如下：
+
+```bash
+set dog: ok
+get dog: ok - dog
+successed to run commend 1: OK
+successed to run commend 2: OK
+successed to run commend 3: cat 1
+successed to run commend 4: horse 1
+successed to run commend 5: dog
+successed to close redis
+```
+
+### 5.2 封装一个操作基础类
+
+```lua
+local redis = require "resty.redis"
+local config = require("luaScript.module.config.redis-config")
+
+-- 统一的模块对象
+local _Module = {}
+
+-- 类的方法
+function _Module.new(self)
+    local obj = setmetatable({}, _Module)
+    self.__index = self
+    obj.red = nil
+    return object
+end
+
+-- 获取 redis 连接
+function _Module:open()
+    local red = redis:new()
+    red.set_timeout(config.timeout, config.timeout, config.timeout)
+    local ok, err = red:connect(config.host_name, config.port)
+    if not ok then
+        
+```
+
+### 5.3 连接池
 
 ## 6.Nginx Lua实战
