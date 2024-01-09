@@ -12,13 +12,12 @@
 
 指在程序运行期间动态的将某段代码切入到指定方法指定位置进行运行的编程方式（动态代理）。
 
-1. 导入 AOP 模块：**spring-aspects**
+1. 导入 AOP 模块
 
    ```xml
    <dependency>
-       <groupId>org.springframework</groupId>
-       <artifactId>spring-aspects</artifactId>
-       <version>4.3.12.RELEASE</version>
+       <groupId>org.springframework.boot</groupId>
+       <artifactId>spring-boot-starter-aop</artifactId>
    </dependency>
    ```
 
@@ -32,7 +31,7 @@
    }
    ```
 
-3. 定义一个日志切面类：**LogAspects**
+3. 定义一个日志切面类：**LogAspects**，将其加入到容器
 
    1. 给切面类加注解`@Aspect`，切面里的方法需要动态感知`MathCalculator.div()`运行到哪里然后执行
    2. 给切面类的方法标注何时何地运行（通知注解）
@@ -47,6 +46,7 @@
     * 切入类
     */
    @Aspect
+   @Component
    public class LogAspects {
    
        // 抽取公共切入点
@@ -83,6 +83,7 @@
            System.out.println(joinPoint.getSignature().getName() + "异常，异常信息为{"+ exception +"}");
        }
    }
+   
    ```
 
    > **execution 基本语法**
@@ -93,32 +94,25 @@
    >
    > <a href="https://docs.spring.io/spring-framework/docs/current/reference/html/core.html#spring-core">参考</a>
 
-4. 开启 aop 模式，将目标方法和切面方法加入容器中
+4. SpringBoot 中 `AopAutoConfiguration` 导入了动态代理，`spring.aop.proxy-target-class` 默认为 true，即默认使用 cglib，设置为 false 且目标类有接口时使用 JDK
 
-   - xml 方式
-
-     ```xml
-     <aop:aspectj-autoproxy></aop:aspectj-autoproxy>
-     ```
-
-   - 配置类方式
-
-     ```java
-     @EnableAspectJAutoProxy
-     @Configuration
-     public class MainConfigOfAOP {
-     
-         @Bean
-         public MathCalculator mathCalculator() {
-             return new MathCalculator();
-         }
-     
-         @Bean
-         public LogAspects logAspects() {
-             return new LogAspects();
-         }
-     }
-     ```
+   ```java
+   // The proxyTargetClass attribute will be true, by default, but can be overridden by specifying spring.aop.proxy-target-class=false.
+   @Configuration(proxyBeanMethods = false)
+   @EnableAspectJAutoProxy(proxyTargetClass = false)
+   @ConditionalOnProperty(prefix = "spring.aop", name = "proxy-target-class", havingValue = "false")
+   static class JdkDynamicAutoProxyConfiguration {
+   
+   }
+   
+   @Configuration(proxyBeanMethods = false)
+   @EnableAspectJAutoProxy(proxyTargetClass = true)
+   @ConditionalOnProperty(prefix = "spring.aop", name = "proxy-target-class", havingValue = "true",
+                          matchIfMissing = true)
+   static class CglibAutoProxyConfiguration {
+   
+   }
+   ```
 
 5. 测试
 
@@ -189,7 +183,9 @@ class AspectJAutoProxyRegistrar implements ImportBeanDefinitionRegistrar {
 
 实际的目标方法的代理对象容器中保存了组件的代理对象（CGlib 增强后的对象），还保存了详细信息：增强器，目标对象等。
 
-代理对象封装了一个`CglibAopProxy`的私有静态内部类`DynamicAdvisedInterceptor`对象用于拦截方法的执行，并将原始对象封装起来。
+代理对象封装了一个`CglibAopProxy`的私有静态内部类`DynamicAdvisedInterceptor`对象用于拦截方法的执行，针对同一个类的任意方法的所有增强方法都放在 `advised` 的 `advisors`  list 中。
+
+同时将原始对象封装到 `StaticUnadvisedInterceptor`。
 
 <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220616171358048-20dee0fee3a227fdc9fb56ef3408d2b1-4d342c.png" alt="image-20220616171358048" style="zoom:80%;" />
 
