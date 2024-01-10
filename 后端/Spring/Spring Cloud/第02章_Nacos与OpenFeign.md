@@ -1272,6 +1272,8 @@ ribbon:
 
 ### 3.2 LoadBalancer
 
+https://cloud.tencent.com/developer/article/2364380
+
 Spring Cloud 2020 版本后默认的负载均衡器，也是一种客户端负载均衡实现，官方提供了两种负载均衡客户端：
 
 - `RestTemplate`
@@ -1459,7 +1461,7 @@ Feign 是 Netflix 开发的声明式、模版化的 HTTP 客户端，可以像�
 
 Spring Cloud openfeign 是对 Feign 进行的增强，支持 Spring MVC 的原生注解，自动集成 Spring Cloud 的负载均衡。
 
-==使用 Feign 时需要引入`LoadBalancer`的依赖！==
+==使用 Feign 时需要引入 LoadBalancer 的依赖！==
 
 ### 4.1 环境配置
 
