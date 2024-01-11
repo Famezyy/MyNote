@@ -771,3 +771,58 @@ When configured from a File, Log4j has the ability to automatically detect chang
    ```
 
 修改 log4j2.xml Configmap，过段时间（Configmap 同步需要时间，检测到变化也需要时间）发现服务日志已经修改了。
+
+## 注册中心
+
+### 1.OpenFeign
+
+provider 中导入 `spring-cloud-starter-kubernetes-client-all`
+
+```java
+@RestController
+public class ProviderController  {
+    @GetMapping("/getInfo")
+    public String getInfo() {
+        return "hello world!";
+    }
+}
+```
+
+consumer 中导入 `spring-cloud-starter-kubernetes-client-all` 和 `spring-cloud-starter-openfeign`
+
+启动类上添加 `@EnableFeignClients` 注解
+
+另创建提供者方法接口并在接口上添加 `@FeignClient` 注解
+
+```java
+@FeignClient(name = "cloud-k8s-provider")
+public interface ProviderService {
+    @GetMapping("/getInfo")
+    String getInfo();
+}
+```
+
+```java
+@Autowired
+ProviderService providerService;
+
+@GetMapping("/getInfo")
+public String getInfo() {
+    return providerService.getInfo();
+}
+```
+
+### 2.原生
+
+直接使用 provider 的 service 名称作为目标地址，依靠 k8s 的 DNS 和负载均衡功能来进行访问：
+
+```java
+@Autowired
+RestTemplate restTemplate;
+
+@GetMapping("/getInfo")
+public String getInfo() {
+    return restTemplate.getForObject("http://cloud-k8s-provider:8080/getInfo", String.class);
+}
+```
+
