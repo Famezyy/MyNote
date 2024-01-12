@@ -1694,6 +1694,8 @@ for i, res in ipairs(results) do
         ngx.say("successed to run commend ", i, ": ", res, "<br>")
     end
 end
+
+red:close()
 ```
 
 导入的 redid-config.lua 配置文件如下：
@@ -1734,30 +1736,184 @@ successed to close redis
 
 ### 5.2 封装一个操作基础类
 
+RedisOperator.lua
+
 ```lua
 local redis = require "resty.redis"
 local config = require("luaScript.module.config.redis-config")
+
+--输出到日志文件
+local function error(string)
+    if  type(string)=="string" then
+        ngx.log(ngx.ERR, string);
+        return
+    end
+    if  type(string)=="table" then
+        ngx.log(ngx.ERR, table.concat(string, " "));
+        return
+    end
+    ngx.log(ngx.ERR, tostring(string));
+end
 
 -- 统一的模块对象
 local _Module = {}
 
 -- 类的方法
-function _Module.new(self)
+function _Module:new()
     local obj = setmetatable({}, _Module)
     self.__index = self
     obj.red = nil
-    return object
+    return obj
 end
 
 -- 获取 redis 连接
 function _Module:open()
     local red = redis:new()
-    red.set_timeout(config.timeout, config.timeout, config.timeout)
+    red:set_timeouts(config.timeout, config.timeout, config.timeout)
     local ok, err = red:connect(config.host_name, config.port)
     if not ok then
-        
+        error("连接 redis 服务器失败: ", err)
+        return false;
+    end
+    if config.password then
+        red:auth(config.password)
+    end
+    if config.db then
+        red:select(config.db)
+    end
+    self.red = red;
+    return true;
+end
+
+-- 缓存值
+function _Module:setValue(key, value)
+    local ok, err = self.red:red(key, value)
+    if not ok then
+        error("redis 缓存设置失败: ", err)
+        return false;
+    end
+    return true;
+end
+
+-- 值递增
+function _Module:incrValue(key)
+    local newVal, err = self.red:incr(key)
+    if not newVal then
+        error("redis 缓存递增失败: ", err)
+        return false;
+    end
+    return newVal;
+end
+
+-- 过期
+function _Module:expire(key, seconds)
+    local ok, err = self.red:expire(key, seconds)
+    if not ok then
+        error("redis 设置过期失败: ", err)
+        return false;
+    end
+    return true;
+end
+
+-- 获取值
+function _Module:getValue(key)
+    local resp, err = self.red:get(key)
+    if not resp then
+        return nil;
+    end
+    return resp
+end
+
+-- 将连接还给连接池
+function _Module:close()
+    if not self.red then
+        return
+    end
+    local ok, err = self.red:set_keepalive(config.pool_max_idle_time, config.pool_size)
+    if not ok then
+        error("连接释放失败: ", err)
+    end
+end
+
+return _Module
+```
+
+使用
+
+```lua
+local redis = require "luaScript.module.demo.redisOperator"
+local red = redis:new()
+red:open()
+red:setValue("number", "1")
+red:incrValue("number")
+red:expire("number", 10000)
+ngx.say(red:getValue("number"))
+red:close()
 ```
 
 ### 5.3 连接池
 
+默认情况下每使用一次 `redis:connect()` 都会创建一个新的 Redis 连接，每一次传输数据都需要经历创建连接、收发数据、销毁连接，高并发场景下会导致以下问题：
+
+- 连接资源被快速消耗
+- 网络一旦抖动，会产生大量 TIME_WAIT 连接，需要定期重启服务程序或机器
+- 服务器工作不稳定，QPS 忽高忽低
+
+此时我们可以使用长连接，并通过一个连接池将所有长连接缓存和管理起来。在 OpenResty 中，lua-resty-redis 模块管理了一个连接池，定义了 `set_keepalive` 方法完成连接的回收和复用。
+
+```lua
+-- max_idle_timeout: 指定连接在池中的最大空闲时常（毫秒）
+-- pool_size: 指定每个 Nginx 工作进程的连接池的最大连接数
+ok, err = red:set_keepalive(max_idle_timeout, pool_size)
+```
+
+该方法将当前的 Redis 连接立即放入连接池。如果入池成功就返回 1，否则返回 nil 和错误描述字符串。
+
+需要注意的是：
+
+- 只有数据传输完毕，Redis 连接使用完成后才能调用 `set_keepalive` 方法将连接放到池子中，`set_keepalive` 会立即将 red 连接对象转换到 closed 状态，后面再调用时对象方法时会出错。
+- 如果设置错误，那么 red 连接对象不一定可用，不能把可用性存疑的连接对象放到池子中
+
+`set_keepalive` 方法完成连接回收后，下次通过 `red:connect()`  获取连接时，`connect` 方法会在创建新连接前在连接池中查找空闲连接，查找失败时才会创建新的连接。
+
 ## 6.Nginx Lua实战
+
+### 6.1 访问统计实战
+
+得益于 Nginx 的高并发性能和 Redis 的高速缓存，基于 Nginx + Redis 的受访统计的架构设计比纯 Java 实现的架构设计在性能上高出很多。
+
+```lua
+local redisOp = require "luaScript.module.demo.redisOperator"
+local red = redisOp:new()
+red:open()
+local visitCount = red:incrValue("demo:visitCount")
+if visitCount then
+    -- 设置 10s 过期
+    red:expire("demo:visitCount", 10)
+    -- 将结果存入 Nginx 变量 $count
+    ngx.var.count = visitCount
+end
+red:close()
+```
+
+```nginx
+location /visitCount {
+    set $count 0;
+    access_by_lua_file luaScript/module/demo/redisVisitCount.lua;
+    echo "10s 內访问次数为: $count";
+}
+```
+
+### 6.2 高并发访问实战
+
+在有数据库连接的高并发场景下，我们往往会选择将数据放入 Redis 缓存中，Java API 会先访问 Redis 缓存，如果未命中则查询 DB，再将 Redis 中的结果进行更新或者删除。但是，常用的 java 容器（如 Tamcat、Jetty）的性能其实不是太高，QPS 往往会在 1000 以内。而Nginx 的性能是 Java 容器的 10 倍左右，并且稳定性更强，还不存在 FullGC 卡顿。
+
+因此我们可以将 ”Java 容器 + Redis + DB“ 架构优化为 ”Nginx + Redis + Java 容器“，将 Java 容器的缓存判断、缓存查询前移到 Nginx，这样可以充分发挥 Nginx 的高并发优势和稳定性优势。
+
+下面以秒杀系统的商品数据查询为例提供一个参考实现。首先定义两个接口：一个模拟 Java 容器的商品查询接口：/java/good/detail；另一个模拟供外部调用的商品查询接口：/good/detail。
+
+然后提供一个 Lua 操作缓存的类来实现：查询商品缓存、访问上游接口获取商品数据、设置商品缓存。
+
+
+
+### 6.3 黑名单拦截实战
