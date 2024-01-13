@@ -162,16 +162,16 @@ max 1 and 11 is: 11
 
 #### 1.八种数据类型
 
-|    类型    |    名称    | 说明                                                         |
-| :--------: | :--------: | ------------------------------------------------------------ |
-|  `number`  |    实数    | 可以是整数、浮点数                                           |
-|  `string`  |   字符串   | 字符串类型，值是不可改变的                                   |
-| `boolean`  |  布尔类型  | false 和 `nil` 是假，其他为真                                |
-|  `table`   | 数组、容器 | `table` 类型实现了一种抽象的“关联数组”，相当于 Java 中的 `Map` |
-| `userdata` |     类     | 其他语言中的对象类型，转换过来就变成 `userdata` 类型，比如 Redis 返回的空值有可能就是 `userdata` 类型，判空的时候要注意！ |
-|  `thread`  |    线程    | 和 Java 中的线程差不多，代表一条执行序列，拥有自己独立的栈、局部变量和命令指针 |
-| `function` |    函数    | 由 C 或 Lua 编写的函数，属于一种数据类型                     |
-|   `nil`    |   空类型   | 表示变量没被赋值，`nil` 类型就 `nil` 一个值，变量赋值成 `nil` 也表示删除变量 |
+|    类型    |   名称   | 说明                                                         |
+| :--------: | :------: | ------------------------------------------------------------ |
+|  `number`  |   实数   | 可以是整数、浮点数                                           |
+|  `string`  |  字符串  | 字符串类型，值是不可改变的                                   |
+| `boolean`  | 布尔类型 | false 和 `nil` 是假，其他为真                                |
+|  `table`   | 数组容器 | `table` 类型实现了一种抽象的“关联数组”，相当于 Java 中的 `Map` |
+| `userdata` |    类    | 其他语言中的对象类型，转换过来就变成 `userdata` 类型，比如 Redis 返回的空值有可能就是 `userdata` 类型，判空的时候要注意！ |
+|  `thread`  |   线程   | 和 Java 中的线程差不多，代表一条执行序列，拥有自己独立的栈、局部变量和命令指针 |
+| `function` |   函数   | 由 C 或 Lua 编写的函数，属于一种数据类型                     |
+|   `nil`    |  空类型  | 表示变量没被赋值，`nil` 类型就 `nil` 一个值，变量赋值成 `nil` 也表示删除变量 |
 
 Lua 是弱类型语言，和 JavaScript 等脚本语言类似，变量没有固定的数据类型，每个变量可以包含任意类型的值。使用内置的 `type()` 方法可以获取该变量的数据类型。
 
@@ -427,7 +427,9 @@ Lua 数组的类型定义和关键词为 `table`，和 Java 的数组对比起�
   end
   ```
 
-Lua 定义了一个负责数组和容器操作的 `table` 模块，主要的字符串操作大致如下：
+数组的常用方法有如下几种：
+
+此外 Lua 定义了一个负责数组和容器操作的 `table` 模块，主要的字符串操作大致如下：
 
 - `table.getn(t)`：获取长度
 
@@ -672,6 +674,10 @@ Lua 允许函数返回多个值。如 Lua 内置函数 `string.find` 在查找�
    - `print(...)`：打印输出
    - `type(x)`：返回变量 `x` 的类型
    - `tonumber(s [, base])`：将字符串 `s` 转换为数字
+6. **比较操作**
+   - `==`：比较两个元素是否相等
+   - `~=`：比较两个元素是否不等
+   - `not x`：取 x 的反
 
 ### 2.8 Lua的面向对象
 
@@ -1787,7 +1793,7 @@ end
 
 -- 缓存值
 function _Module:setValue(key, value)
-    local ok, err = self.red:red(key, value)
+    local ok, err = self.red:set(key, value)
     if not ok then
         error("redis 缓存设置失败: ", err)
         return false;
@@ -1822,6 +1828,61 @@ function _Module:getValue(key)
         return nil;
     end
     return resp
+end
+
+function _Module:getSmembers(key)
+    local resp, err = self.red:smembers(key)
+    if not resp then
+        basic.log("redis 缓存读取失败 ")
+        return nil;
+    end
+    return resp;
+end
+
+--缓存值
+function _Module:hsetValue(key, id, value)
+    local  ok, err = self.red:hset(key, id, value)
+    if not ok then
+        basic.log("redis hset 失败 ")
+        return false;
+    end
+    print("set result: ", ok)
+
+    return true;
+end
+
+--获取值
+function _Module:hgetValue(key, id)
+    local resp, err = self.red:hget(key, id)
+    if not resp then
+        basic.log("redis hget 失败 ")
+        return nil;
+    end
+    return resp;
+end
+
+--执行脚本
+function _Module:evalsha(sha, key1, key2)
+    local resp, err = self.red:evalsha(sha, 2, key1, key2)
+    if not resp then
+        basic.log("redis evalsha 执行失败 ")
+        return nil;
+    end
+    return resp;
+end
+
+--执行秒杀的脚本
+function _Module:evalSeckillSha(sha,method, skuId, userId, token)
+    local resp, err = self.red:evalsha(sha, 1,method, skuId, userId, token);
+    if not resp then
+        basic.log(" redis evalsha 秒杀 执行失败 ".. method .." " .. skuId .." ".. userId .." ".. token .." ".. err .." ")
+        return nil;
+    end
+    return resp;
+end
+
+function _Module:getConnection()
+   return  self.red;
 end
 
 -- 将连接还给连接池
@@ -1910,10 +1971,303 @@ location /visitCount {
 
 因此我们可以将 ”Java 容器 + Redis + DB“ 架构优化为 ”Nginx + Redis + Java 容器“，将 Java 容器的缓存判断、缓存查询前移到 Nginx，这样可以充分发挥 Nginx 的高并发优势和稳定性优势。
 
-下面以秒杀系统的商品数据查询为例提供一个参考实现。首先定义两个接口：一个模拟 Java 容器的商品查询接口：/java/good/detail；另一个模拟供外部调用的商品查询接口：/good/detail。
+下面以秒杀系统的商品数据查询为例提供一个参考实现。
 
-然后提供一个 Lua 操作缓存的类来实现：查询商品缓存、访问上游接口获取商品数据、设置商品缓存。
+首先提供一个 Lua 操作缓存的类来实现：查询商品缓存、访问上游接口获取商品数据。
 
+```lua
+-- luaScrupt.module.demo.RedisCache
 
+local RedisOp = require "luaScript.module.demo.RedisOperator"
+local PREFIX = "GOOD_CACHE:"
+
+--输出到日志文件
+local function log(string)
+    if  type(string)=="string" then
+        ngx.log(ngx.DEBUG, string);
+        return
+    end
+    if  type(string)=="table" then
+        ngx.log(ngx.DEBUG, table.concat(string, " "));
+        return
+    end
+    ngx.log(ngx.DEBUG, tostring(string));
+end
+--输出到日志文件
+local function error(string)
+    if  type(string)=="string" then
+        ngx.log(ngx.ERR, string);
+        return
+    end
+    if  type(string)=="table" then
+        ngx.log(ngx.ERR, table.concat(string, " "));
+        return
+    end
+    ngx.log(ngx.ERR, tostring(string));
+end
+
+local _RedisCacheDemo = {}
+function _RedisCacheDemo:new()
+    local object = setmetatable({}, _RedisCacheDemo)
+    self.__index = self
+    return object
+end
+
+-- 获取缓存数据
+function _RedisCacheDemo:getCache(goodId)
+    local red = RedisOp:new()
+    if not red:open() then
+        error("redis 连接失败")
+        return nil;
+    end
+    local json = red:getValue(PREFIX .. goodId)
+    red:close()
+    if not json or json == ngx.null then
+        log(goodId .. "的缓存没有命中")
+        return nil
+    end
+    log(goodId .. "的缓存命中")
+    return json
+end
+
+-- 通过子请求访问上游接口
+function _RedisCacheDemo:goUpstream()
+    local request_method = ngx.var.request_method
+    local args = nil
+    if "GET" == request_method then
+        args = ngx.req.get_uri_args()
+    elseif "POST" == request_method then
+        ngx.req.read_body()
+        args = ngx.req.get_post_args()
+    end
+
+    -- 访问上游接口
+    local res = ngx.location.capture("/java/good/detail", {
+            method = ngx.HTTP_GET,
+            args = args
+        }
+    )
+    log("数据获取成功: ", res.body)
+    return res.body
+end
+
+return _RedisCacheDemo
+```
+
+然后在 Nginx 配置文件中定义两个接口：一个模拟 Java 容器的商品查询接口：/java/good/detail；另一个作为外部调用的商品查询接口：/good/detail。
+
+```nginx
+# 首先从缓存中查找商品，未命中时调用上游接口
+location = /good/detail {
+    content_by_lua_block {
+        local goodId = ngx.var.arg_goodId
+        -- 从缓存中查询
+        local RedisCache = require "luaScript.module.demo.RedisCache"
+        local redisCache = RedisCache:new()
+        local json = redisCache:getCache(goodId)
+        -- 判断缓存是否命中
+        if not json then
+            ngx.say("缓存没有命中，访问上游接口<br>")
+            json = redisCache:goUpstream()
+        else
+            ngx.say("缓存已命中<br>")
+        end
+        ngx.say("商品信息: ", json)
+    }
+}
+```
+
+```nginx
+# 模拟 Java 后台服务，查询商品并缓存
+location = /java/good/detail {
+    internal;
+    content_by_lua_block {
+        local PREFIX = "GOOD_CACHE:"
+        local RedisOp = require "luaScript.module.demo.RedisOperator"
+        local goodId = ngx.var.arg_goodId
+        -- 从数据库查找数据，这里简化
+        local json = '{goodId:' .. goodId .. ',goodname:商品名称}'
+        -- 将商品缓存到 redis
+        local red = RedisOp:new()
+        red:open()
+        red:setValue(PREFIX .. goodId, json)
+        red:expire(PREFIX .. goodId, 60)
+        red:close()
+        ngx.say(json)
+    }
+}
+```
+
+访问 /good/detail 结果如下：
+
+```bash
+缓存没有命中，访问上游接口
+商品信息: {goodId:3,goodname:商品名称}
+
+缓存已命中
+商品信息: {goodId:3,goodname:商品名称}
+```
 
 ### 6.3 黑名单拦截实战
+
+实现 IP 黑名单拦截有很多途径：
+
+- 在操作系统层面配置 `iptables` 防火墙规则，拒绝黑名单中 IP 的网络请求
+- 使用 Nginx 网关的 `deny` 配置指令拒绝黑名单中 IP 的网络请求
+- 在 Nginx 网关的 `access` 处理阶段，通过 Lua 脚本检查客户端 IP 是否在黑名单中
+- 在 Spring Cloud 内部网关的过滤器中检查客户端 IP 是否在黑名单中
+
+以上检查方式都是基于一个静态的、提前准备好的黑名单进行。如果需要动态配置黑名单，则可以使用 Nginx 网关配合 Redis 实现。
+
+首先是黑名单的组成，黑名单应该包括静态部分和动态部分。静态部分为系统管理员通过控制台设置的黑名单。动态部分主要通过流计算框架完成，具体方法为：将 Nginx 的访问日志通过 Kafka 消息中间件发送到流计算框架，然后通过滑动窗口机制计算出窗口内相同 IP 的访问计数，将超出阈值的 IP 动态加入黑名单中，流计算框架可以选用 Apache Flink 或者 Apache Storm。当然也可以使用 RxJava 滑动窗口进行访问计数的统计。
+
+这里假设 IP 黑名单已经生成并且定期更新在 Redis 中。Nginx 网关可以直接从 Redis 获取计算好的 IP 黑名单，但是为了提高黑名单的读取速度，并不是每一次请求过滤都从 Redis 读取黑名单，而是从本地的共享内存中获取，同时定期将 Redis 的黑名单更新到本地共享内存。
+
+<img src="img/第03章_Nginx Lua/image-20240113170601174.png" alt="image-20240113170601174" style="zoom:67%;" />
+
+以下是一个 Lua 脚本实现：
+
+```lua
+-- luaScript/module/demo/Black_ip_filter.lua
+
+local RedisOp = require "luaScript.module.demo.RedisOperator"
+
+--输出到日志文件
+local function log(string)
+    if  type(string)=="string" then
+        ngx.log(ngx.DEBUG, string);
+        return
+    end
+    if  type(string)=="table" then
+        ngx.log(ngx.DEBUG, table.concat(string, " "));
+        return
+    end
+    ngx.log(ngx.DEBUG, tostring(string));
+end
+--输出到日志文件
+local function error(string)
+    if  type(string)=="string" then
+        ngx.log(ngx.ERR, string);
+        return
+    end
+    if  type(string)=="table" then
+        ngx.log(ngx.ERR, table.concat(string, " "));
+        return
+    end
+    ngx.log(ngx.ERR, tostring(string));
+end
+
+-- 获取客户端 IP
+local function getClientIP()
+    local clientIP = ngx.req.get_headers()["X-Real-IP"]
+    if clientIP == nil then
+        clientIP = ngx.req.get_headers()["X-Forwarded-For"]
+    end
+    if clientIP == nil then
+        clientIP = ngx.var.remote_addr
+    end
+    return clientIP;
+end
+
+local ip = getClientIP()
+-- 获取共享变量
+local black_ip_list = ngx.shared.black_ip_list
+local last_update_time = black_ip_list:get("last_update_time")
+if last_update_time ~= nil then
+    -- 如果本地缓存更新时间小于 60 秒则使用本地缓存进行判断
+	local dif_time = ngx.now() - last_update_time
+    if dif_time < 60 then
+        if black_ip_list:get(ip) then
+            return ngx.exit(ngx.HTTP_FORBIDDEN)
+        end
+        return
+    end
+end
+
+-- 如果本地缓存过期，则同步 redis 到本地
+local KEY = "limit:ip:blacklist"
+local red = RedisOp:new()
+red:open()
+local ip_blacklist = red:getSmembers(KEY)
+red:close()
+
+if not ip_blacklist then
+    log("black ip set is null")
+ 	return
+else
+    -- 将字典中的当前所有数据设置为过期
+    black_ip_list:flush_all()
+    
+    -- 同步 redis 黑名单到本地缓存
+    for i, ip in ipairs(ip_blacklist) do
+        black_ip_list:set(ip, true)
+    end
+    black_ip_list:set("last_update_time", ngx.now())
+end
+
+-- 再次进行黑名单判断
+if black_ip_list:get(ip) then
+    return ngx.exit(ngx.HTTP_FORBIDDEN)
+end
+```
+
+在 Nginx 配置文件中执行该脚本，另外由于 lua 脚本中使用了名为 black_ip_list 的共享内存进行黑名单本地缓存，因此需要在 http 上下文中配置共享内存空间：
+
+```nginx
+http {
+    charset utf-8;
+    lua_shared_dict black_ip_list 1m;
+    keepalive_timeout 60;
+    server {
+        location /black_ip_demo {
+            access_by_lua_file luaScript/module/demo/Black_ip_filter.lua;
+            echo "恭喜，没有被拦截";
+        }
+    }
+}
+```
+
+这里使用 `lua_shared_dict` 指令定义了一块 1MB 的共享内存。访问 /black_ip_demo 查看结果：
+
+```bash
+恭喜，没有被拦截
+```
+
+在 redis 服务器中添加 `Set` 类型的 key：`limit:ip:blacklist`，并加入当前客户端 IP，再次访问：
+
+```bash
+403 Forbidden
+openresty/1.21.4.3
+```
+
+### 6.4 Nginx Lua共享内存
+
+Nginx Lua 共享内存就是在内存块中分配出一个内存空间，该空间是一种字典结构，类似于 Java Map 的 Key-Value 映射结构。同一个 Nginx 下的 Worker 进程都能访问存储在这里面的数据。
+
+Lua 中定义共享内存非常简单：
+
+- 语法：`lua_shared_dict <DICT> <SIZE>`
+- 上下文：`http` 配置块
+
+```lua
+lua_shared_dict black_ip_list 1m;
+```
+
+对于共享内存的引用可以使用以下两种方式：
+
+- `ngx.shared.DICT`
+- `ngx.shared["DICT"]`
+
+常用 API 如下：
+
+| API          | 说明                                                         |
+| ------------ | ------------------------------------------------------------ |
+| 取值         | `value, flags = ngx.shared.DICT:get(key)`                    |
+| 设置值       | `success, err, forcible = ngx.shared.DICT:set(key, value, exptime?, flags?)`<br />可选参数 `exptime` 为过期时间，单位 s，如果不设置则默认永久；<br />可选参数 `flags` 表示额外的缓存内容，如果设置则可以通过 get 方法获取 |
+| 删除数据项   | `ngx.shared.DICT:delete(key)`                                |
+| 设置过期时间 | `ngx.shared.DICT:expire(key, exptime)`<br />`exptime` 为过期时间，单位 s |
+| 查询过期时间 | `ttl, err = ngx.shared.DICT:ttl(key)`                        |
+| 全部过期     | `ngx.shared.DICT:flush_all()`<br />将字典中所有数据项设置为过期，此操作并没有真正地删除数据 |
+| 清除过期数据 | `flushed = ngx.shared.DICT:flush_expired(max_count?)`<br />清除字典中的过期数据项，可选参数 `max_count` 表示清楚数量，不设置则清除所有的过期数据 |
+
+共享内存的 API 方法都是==原子操作==，`lua_shared_dict` 定义的同一个共享内存区域自带锁，可以避免多个 Worker 并发访问的问题。在新增数据时，如果字典的内存区域不够，`ngx.shared.DICT.set` 方法就会根据 LRU 算法淘汰一部分内容。当 nginx 退出时，共享内存中的数据项都会丢失。
