@@ -977,11 +977,11 @@ CPU 要保证数据的一致性，如果某个 CPU 核心更改了数据，其�
 - Core-0 要修改 Cell[0]
 - Core-1 要修改 Cell[1]
 
-无论谁修改成功，都会导致对方 Core 的缓存行失效，比如 Core-0 中`Cell[0]=6000, Cell[1]=8000`要累加`Cell[0]=6001, Cell[1]=8000`，这时会让 Core-1 的缓存行失效。
+无论谁修改成功，都会导致对方 Core 的缓存行失效，比如 Core-0 中 `Cell[0]=6000, Cell[1]=8000` 要累加 `Cell[0]=6001, Cell[1]=8000`，这时会让 Core-1 的缓存行失效。
 
-`@sun.misc.Contended`用来解决这个问题，它的原理是在使用此注解的对象或字段的前后各增加 128 字节大小的 padding，从而让 CPU 将对象预读至缓存时占用不同的缓存行，这样，不会造成对方缓存行的失效。
+`@sun.misc.Contended` 用来解决这个问题，它的原理是在使用此注解的对象或字段的前后各增加 128 字节大小的 padding，从而让 CPU 将对象预读至缓存时占用不同的缓存行，这样，不会造成对方缓存行的失效。
 
-> 默认使用这个注解是无效的，需要在JVM启动参数加上`-XX:-RestrictContended`才会生效。
+> 默认使用这个注解是无效的，需要在JVM启动参数加上 `-XX:-RestrictContended` 才会生效。
 
 <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220818145800319-4e5132707f1396ae9e404273b2ad845f-84fe38.png" alt="image-20220818145800319" style="zoom:80%;" />
 
