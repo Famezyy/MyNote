@@ -326,6 +326,8 @@ Optional<Integer> sum = Arrays.stream(new Integer[] {1, 2, 3, 4})
 
 <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220625215156376-86f1e9c96247f15de2ba277e60bdc5c7-50257d.png" alt="image-20220625215156376" style="zoom:80%;" />
 
+慎用 `parallel` 并行流方法，会调用空闲的`CPU`进行数据处理，影响其他服务，使用前进行压力测试。
+
 ### 3.15 reduce
 
 - `T reduce(T identity, BinaryOperator<T> accumulator)`：终结方法，使用提供的标识值和关联累积函数对此流的元素执行归约，并返回归约后的值。

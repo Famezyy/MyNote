@@ -1,4 +1,8 @@
-## **准备**
+# 生成exe执行文件
+
+## 1.外部工具
+
+### **准备**
 
 准备工作：
 
@@ -6,7 +10,7 @@
 - exe4j，一个将jar转换成exe的工具
 - inno setup，一个将依赖和exe一起打成一个安装程序的工具
 
-## **开始**
+### **开始**
 
 以我为例子，我将jar包放在了桌面
 
@@ -137,3 +141,18 @@ Source: "自己本地JRE路径*"; DestDir: "{app}{#MyJreName}"; Flags: ignorever
 <img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/671-ad76061941435c4ef9a8182f3bfb79fa-d88e3f" alt="图片" style="zoom:80%;" />
 
 这个就是最后的程序了，双击运行就可以看到结果了，把setup.exe文件给别人安装，就都可以看到自己的程序了！
+
+## 2.Java Packager
+
+JDK 16 引入的用于生成可执行文件的命令。
+
+```bash
+jpackage
+	-- name installer
+	-- app-version 1.0
+	-- win-dir-shooser -win-console -win-shortcur
+	--module-path modules/app.jar
+	-- module org.myapp/org.mycompany.com.myapp.MainClass
+```
+
+## 3.使用native image

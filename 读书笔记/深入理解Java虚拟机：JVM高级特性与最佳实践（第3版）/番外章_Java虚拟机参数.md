@@ -6,7 +6,7 @@
 
 - `-XX:+PrintFlagsFinal`
   
-  使用`java -XX:+PrintFlagsFinal`可以打印出当前版本的 JVM 可选参数及默认值。
+  使用 `java -XX:+PrintFlagsFinal` 可以打印出当前版本的 JVM 可选参数及默认值。
 
 - `-Xnoclassgc`
 
@@ -14,7 +14,7 @@
 
 - `-verbose:class`、`-XX:+TraceClassLoading`、`-XX:+TraceClassUnLoading`
 
-  查看类加载和卸载信息，其中`-verbose:-class`和`-XX:+TraceClassLoading`可以在 Product 版的虚拟机中使用，`-XX:+TranceClassUnLoading`参数需要 FastDebug 版的虚拟机支持。
+  查看类加载和卸载信息，其中 `-verbose:-class` 和 `-XX:+TraceClassLoading` 可以在 Product 版的虚拟机中使用，`-XX:+TranceClassUnLoading` 参数需要 FastDebug 版的虚拟机支持。
 
 - `-XX:+UseCondCardMark`
 
@@ -72,7 +72,7 @@
 
 |参数（`-XX:+...`）|描述|
 |--|--|
-|`MinMetaspaceFreeRatio`|控制垃圾收集之后至少保留的元空间剩余容量百分比，适当提高可减少因为元空间不足导致的垃圾收集的频率。类似的还有`-XX:MaxMetaspaceFreeRatio`，用于控制最大的元空间剩余容量的百分比。|
+|`MinMetaspaceFreeRatio`|控制垃圾收集之后至少保留的元空间剩余容量百分比，适当提高可减少因为元空间不足导致的垃圾收集的频率。类似的还有 `-XX:MaxMetaspaceFreeRatio`，用于控制最大的元空间剩余容量的百分比。|
 |`UseSerialGC`|虚拟机运行在 Client 模式下的默认值，打开此开关后，使用 Serial + Serial Old 的收集器组合进行内存回收|
 |`UseParNewGC`|打开此开关后，使用 ParNew + Serial Old 的收集器组合进行内存回收，JDK 9 后不再支持|
 |`UseConcMarkSweepGC`|打开此开关后，使用 ParNew + CMS + Serial Old 的收集器组合进行内存回收。Serial Old 收集器将作为 CMS 收集器出现 "Concurrent Mode Failure" 失败后的后备收集器使用|
@@ -96,9 +96,9 @@
 |`ParallelGCThreads`|用户线程冻结期间并行执行的收集器线程数|
 |`ConcGCThreads=n`|并发标记、并发整理的执行线程数，对不同的收集器，根据其能够并发的阶段，有不同的含义|
 |`InitiatingHeapOccupancyPercent`|设置触发标记周期的 Java 堆占用率阈值。默认值是 45%。这里的 Java 堆占比指的是 non_young_capacity_bytes，包括 old + humongous|
-|`UseShenandoahGC`|使用 Shenandoah 收集器。这个选项在 OracleJDK 中不被支持，只能在 OpenJDK 12 或者某些支持 Shenandoah 的 Backport 发行版本使用。目前仍然要配合`-XX:+UnlockExperimentalVMOptions`使用|
+|`UseShenandoahGC`|使用 Shenandoah 收集器。这个选项在 OracleJDK 中不被支持，只能在 OpenJDK 12 或者某些支持 Shenandoah 的 Backport 发行版本使用。目前仍然要配合 `-XX:+UnlockExperimentalVMOptions` 使用|
 |`ShenandoahGCHeuristics`|Shenandoah 何时启动一次 GC 过程，其可选值有 adaptive、static、compact、passive、aggressive|
-|`UseZGC`|使用 ZGC 收集器，目前仍然要配合`-XX:+UnlockExperimentalVMOptions`使用|
+|`UseZGC`|使用 ZGC 收集器，目前仍然要配合 `-XX:+UnlockExperimentalVMOptions` 使用|
 |`UseNUMA`|启用 NUMA 内存分配支持，目前只有 Parallel 和 ZGC 支持，以后 G1 收集器可能也会支持|
 
 ## 2.JDK9前后日志参数变化
