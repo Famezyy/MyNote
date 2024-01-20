@@ -572,13 +572,13 @@ public User getUser(User queryPram, int[] arr, String str) {
 
 **API 结构**
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220113005721925-4c5291c8ae4509885be2472ee4943723-39e44c.png" alt="image-20220113005721925" style="zoom: 80%;" />
+<img src="img/Cache/image-20220113005721925-4c5291c8ae4509885be2472ee4943723-39e44c.png" alt="image-20220113005721925" style="zoom: 80%;" />
 
 ---
 
 ## 4.Spring 的缓存
 
-<img src="https://raw.githubusercontent.com/Famezyy/picture/master/notePictureBed/image-20220113005837032-feb75e3e93bb8b305c1294b0e1ce09df-ce844d.png" alt="image-20220113005837032" style="zoom:80%;" />
+<img src="img/Cache/image-20220113005837032-feb75e3e93bb8b305c1294b0e1ce09df-ce844d.png" alt="image-20220113005837032" style="zoom:80%;" />
 
 ```java
 @Configuration
