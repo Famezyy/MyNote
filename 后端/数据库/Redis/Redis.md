@@ -1624,6 +1624,11 @@ public void test() {
   }
   ```
   
+  > **注意**
+  >
+  > RedisTemplate 默认的系列化类是 `JdkSerializationRedisSerializer`，但是被序列化的对象必须实现 `Serializable` 接口。在存储内容时，除了属性的内容外还存了其它内容在里面，总长度长，且不容易阅读。`Jackson2JsonRedisSerializer` 和 `GenericJackson2JsonRedisSerializer` 两者都能系列化成 json，但是后者会在 json 中加入 `@class` 属性，类的全路径包名，方便反系列化，但是不能指定 `ObjectMapper`。
+  >
+  
 - 继续测试
 
   ```java
