@@ -558,8 +558,8 @@
   >    - 不写的情况下，无限制接受任何 ip
   >
   >    - 生产环境肯定要写你应用服务器的地址；服务器是需要远程访问的，所以需要将其注释掉
-  >
-  >    - 如果开启了 protected-mode，那么在没有设定 bind ip 且没有设密码的情况下，Redis 只允许接受本机的响应
+  >     - 如果开启了 protected-mode，那么在没有设定 bind ip 且没有设密码的情况下，Redis 只允许接受本机的响应
+  >    
   >
   > ```text
   > # Examples:
@@ -2784,8 +2784,12 @@ return 1;
 - 配置哨兵，填写内容
 
 ```bash
+# mymaster 为监控的主机对象起的服务器名称， 1 为至少有 1 个同意主机宕机的哨兵数量
 sentinel monitor mymaster 127.0.0.1 6379 1
-#其中 mymaster 为监控的主机对象起的服务器名称， 1 为至少有多少个同意主机宕机的哨兵数量
+
+# 设置解析并使用主机名进行通信和公告
+sentinel resolve-hostnames yes
+sentinel announce-hostnames yes
 ```
 
 - 启动哨兵，执行 `redis-sentinel /myredis/sentinel.conf`

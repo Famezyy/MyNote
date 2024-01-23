@@ -675,6 +675,17 @@ spring.redis.password=123456
   done
   ```
 
+> **注意**
+>
+> Redis Sentinel 的 `announce-ip` 配置选项用于在特定场景下指定 Sentinel 实例向其他 Sentinel 实例和 Redis 主从服务器宣告的 IP 地址。这个选项主要在下面的情况中很有用：
+>
+> 1. **网络环境复杂的情况**：在使用多网络接口（比如在 Docker 容器或者某些云环境中）的情况下，Sentinel 实例可能不能自动检测出它应该使用哪个IP地址。`announce-ip` 可以用来明确指定 Sentinel 用于通信的 IP 地址
+> 2. **NAT（网络地址转换）环境下**：当 Sentinel 运行在 NAT 环境中，例如在虚拟机或容器中，其对外的 IP 地址和内部 IP 地址可能不同。在这种情况下，使用 `announce-ip` 可以指定外部网络环境可见的IP地址，确保其他 Sentinel 实例和 Redis 服务器能够正确地与其通信
+>
+> 当配置了 `announce-ip` 后，Sentinel 会使用这个指定的 IP 地址来通告自己的存在，而不是使用它自己检测到的本地 IP 地址。这有助于在复杂网络环境中维持 Redis Sentinel 集群的正常工作和高可用性。
+>
+> 如果不在这类复杂网络环境中，或者没有特殊的网络配置要求，通常不需要设置 `announce-ip`。在大多数标准部署中，Sentinel 能够自动检测并使用合适的 IP 地址。
+
 ### 3.3 集群配置
 
 配置 3 主 3 从集群：Master1 - Slave1；Master2 - Slave2；Master3 - Slave3
