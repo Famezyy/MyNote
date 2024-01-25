@@ -1,7 +1,5 @@
 # Mybatis 3
 
-[TOC]
-
 ## 简介
 
 <img src="..\img\image-20211217001005534.png" alt="image-20211217001005534" style="zoom: 67%;" />
@@ -776,7 +774,7 @@ jdbc.password=root
 >        <result column="last_name" property="lastName"></result>
 >        <!-- 其他不指定的列会自动封装，推荐写 resultMap 的话就把全部的映射规则都写上 -->
 >    </resultMap>
->                                                       
+>                                                                
 >    <!-- resultMap：自定义结果集映射规则 -->
 >    <select id="getEmpById" resultMap="myEmp">
 >        select * from tbl_employee where id = #{id}
@@ -977,7 +975,7 @@ jdbc.password=root
 >       <result column="last_name" property="lastName"></result>
 >       <result column="email" property="email"></result>
 >       <result column="gender" property="gender"></result>
->                                     
+>                                           
 >       <!--
 >           - column：指定判定的列名
 >           - javaType：列值对应的 java 类型
@@ -990,12 +988,12 @@ jdbc.password=root
 >                            column="d_id"
 >                            />
 >           </case>
->                                     
+>                                           
 >           <case value="1" resultType="com.mybatis.bean.Employee">
 >               <result column="last_name" property="email"></result>
 >           </case>
 >       </discriminator>
->                                     
+>                                           
 >   </resultMap>
 >   <select id="getEmpDis" resultMap="MyEmpDis">
 >       select * from tbl_employee where id=#{id}
@@ -1308,8 +1306,8 @@ jdbc.password=root
 >
 > ```xml
 > <select id="getEmpsTestBind" resultType="com.mybatis.bean.Employee">
->     <bind name="_lastName" value="'%' + lastName + '%'"></bind>
->     select * from tbl_employee where last_name like #{_lastName}
+>        <bind name="_lastName" value="'%' + lastName + '%'"></bind>
+>        select * from tbl_employee where last_name like #{_lastName}
 > </select>
 > ```
 >
@@ -2167,23 +2165,23 @@ class IntegrateMybatisApplicationTests {
 >        public void setParameter(PreparedStatement ps, int i, EmpStatus parameter, JdbcType jdbcType) throws SQLException {
 >            ps.setString(i, parameter.getCode().toString());
 >        }
->                                           
+>       
 >        @Override
 >        public EmpStatus getResult(ResultSet rs, String columnName) throws SQLException {
 >            // 需要根据从数据库中拿到的枚举的状态码返回一个枚举对象
 >            int code = rs.getInt(columnName);
 >            EmpStatus empStatus = Employee.getEmpStatus(code);
 >            return empStatus;
->                                           
+>       
 >        }
->                                           
+>       
 >        @Override
 >        public EmpStatus getResult(ResultSet rs, int columnIndex) throws SQLException {
 >            int code = rs.getInt(columnIndex);
 >            EmpStatus empStatus = Employee.getEmpStatus(code);
 >            return empStatus;
 >        }
->                                           
+>       
 >        @Override
 >        public EmpStatus getResult(CallableStatement cs, int columnIndex) throws SQLException {
 >            int code = cs.getInt(columnIndex);
@@ -2198,28 +2196,28 @@ class IntegrateMybatisApplicationTests {
 >     * 希望数据库保存的是100， 200状态码
 >     */
 >    public enum EmpStatus {
->                                           
+>       
 >        LOGIN(100,"用户登录"),LOGOUT(200, "用户登出"),REMOVE(300, "用户移除");
->                                           
+>       
 >        private Integer code;
 >        private String message;
 >        private EmpStatus(Integer code, String message) {
 >            this.code = code;
 >            this.message = message;
 >        }
->                                           
+>       
 >        public Integer getCode() {
 >            return code;
 >        }
->                                           
+>       
 >        public void setCode(Integer code) {
 >            this.code = code;
 >        }
->                                           
+>       
 >        public String getMessage() {
 >            return message;
 >        }
->                                           
+>       
 >        public void setMessage(String message) {
 >            this.message = message;
 >        }
@@ -2228,17 +2226,17 @@ class IntegrateMybatisApplicationTests {
 >
 >    ```java
 >    Employee.class
->                                           
+>       
 >    public EmpStatus empStatus;
->                                           
+>       
 >    public EmpStatus getEmpStatus() {
 >        return empStatus;
 >    }
->                                           
+>       
 >    public void setEmpStatus(EmpStatus empStatus) {
 >        this.empStatus = empStatus;
 >    }
->                                           
+>       
 >    /**
 >         * 根据状态码返回枚举对象
 >         */
@@ -2256,9 +2254,9 @@ class IntegrateMybatisApplicationTests {
 >    }
 >    ```
 >
->    配置：
+>    有以下 3 种配置：
 >
->    1. 在 mybatis 配置文件中设置
+>    1. 在 mybatis 全局配置文件中配置
 >
 >       ```xml
 >       <?xml version="1.0" encoding="UTF-8" ?>
@@ -2268,11 +2266,6 @@ class IntegrateMybatisApplicationTests {
 >       <configuration>
 >           <typeHandlers>
 >               <typeHandler handler="com.example.integratemybatis.bean.MyEnumEmpStatusTypeHandler" javaType="com.example.integratemybatis.bean.EmpStatus"></typeHandler>
->               <!--
->               保存时，也可以在mapper.xml中处理某个字段时告诉 mybatis 用什么类型处理器：#{empStatus, typeHandler=xxx}
->               查询时，可以自定义一个 resultMap，指定：<result column="empStatus" property="empStatus" typeHandler=xxx>
->               注意：如果在参数位置修改 TypeHandler，应该保证存储数据和查询数据使用的 TypeHandler 一致
->                -->
 >           </typeHandlers>
 >       </configuration>
 >       ```
@@ -2290,3 +2283,19 @@ class IntegrateMybatisApplicationTests {
 >         @MappedTypes(value = {EmpStatus.class})
 >         public class MyEnumEmpStatusTypeHandler implements TypeHandler<EmpStatus> {
 >         ```
+>
+>    3. 在各个查询 mapper 文件中配置
+>
+>       ```xml
+>       <resultMap id="myEnum" type="xxx.EmpStatus" authMapping="true">
+>       	<result typeHandler="com.example.integratemybatis.bean.MyEnumEmpStatusTypeHandler" column="empStatus" property="emapStatus"></result>
+>       </resultMap>
+>       <select id="find" result="myEnum">
+>       	...
+>       </select>
+>       <insert id="insert" parameterMap="myEnum">
+>       	...
+>       </insert>
+>       ```
+>
+> 

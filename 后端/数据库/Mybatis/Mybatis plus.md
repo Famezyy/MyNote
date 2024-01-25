@@ -74,35 +74,53 @@ mybatis-plus.configuration.log-impl=org.apache.ibatis.logging.stdout.StdOutImpl
 >       private Date updateTime;
 >       ```
 >
+>       > **扩展：TypeHandler**
+>       >
+>       > ```java
+>       > @Data
+>       > @AllArgsConstructor
+>       > // autoResultMap=true 指定自动 map
+>       > @TanbleName(value="customer", autoResultMap=true)
+>       > public class Customer {
+>       >     @TableId(type=IdType.AUTO)
+>       >     private Integer id;
+>       >     // 指定 typeHandler
+>       >     @TanbleField(typeHandler=AESTypeHandler.class)
+>       >     private String email;
+>       > }
+>       > ```
+>       >
+>       > 这种方法仅适用于 plus 提供的默认方法，如果自定义查询方法则需要按照[自定义类型处理器](Mybatis 3.md#10.4 自定义类型处理器)在 XML 中配置。
+>    
 >    3. 自定义 MetaObjectHandler 的实现类处理注解（3.0.5 version 的方法，最新版见官网）
->
+>    
 >       ```java
 >       /**
 >       * 旧版
 >       */
 >       @Component
 >       public class MyMetaObjectHandler implements MetaObjectHandler {
->                   
+>       
 >           // 插入时的填充策略
 >           @Override
 >           public void insertFill(MetaObject metaObject) {
 >               this.setFieldValByName("createTime", new Date(), metaObject);
 >               this.setFieldValByName("updateTime", new Date(), metaObject);
 >           }
->                   
+>       
 >           // 更新时的填充策略
 >           @Override
 >           public void updateFill(MetaObject metaObject) {
 >               this.setFieldValByName("updateTime", new Date(), metaObject);
 >           }
 >       }
->                   
+>       
 >       /**
 >       * 新版
 >       */
 >       @Component
 >       public class MyMetaObjectHandler implements MetaObjectHandler {
->                   
+>       
 >           @Override
 >           public void insertFill(MetaObject metaObject) {
 >               log.info("start insert fill ....");
@@ -112,7 +130,7 @@ mybatis-plus.configuration.log-impl=org.apache.ibatis.logging.stdout.StdOutImpl
 >               // 或者
 >               this.fillStrategy(metaObject, "createTime", LocalDateTime.now()); // 也可以使用(3.3.0 该方法有bug)
 >           }
->                   
+>       
 >           @Override
 >           public void updateFill(MetaObject metaObject) {
 >               log.info("start update fill ....");
@@ -160,7 +178,7 @@ mybatis-plus.configuration.log-impl=org.apache.ibatis.logging.stdout.StdOutImpl
 >          public OptimisticLockerInterceptor optimisticLockerInterceptor() {
 >              return new OptimisticLockerInterceptor();
 >          }
->                
+>                     
 >          /**
 >           * 新版
 >           */

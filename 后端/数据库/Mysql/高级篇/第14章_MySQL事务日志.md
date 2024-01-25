@@ -282,16 +282,16 @@ MySQL 把对底层页面中的一次原子访问的过程称之为一个`Mini-Tr
 
 <img src="img\image-20220223220213363.png" alt="image-20220223220213363" style="zoom: 50%;" />
 
-真正的 redo 日志都是存储到占用`496`字节大小的`log block body`中，图中的`log block header`和`log block trailer`存储的是一些管理信息。
+真正的 redo 日志都是存储到占用 `496` 字节大小的 `log block body` 中，图中的 `log block header` 和 `log block trailer` 存储的是一些管理信息。
 
 <img src="img\image-20220223220242973.png" alt="image-20220223220242973" style="zoom: 50%;" />
 
-- `log block header`的属性分别如下：
+- `log block header` 的属性分别如下：
   - `LOG_BLOCK_HDR_NO`：log buffer 是由 log block 组成,在内部 log buffer 就好似一个数组,因此 LOG_BLOCK_HDR_NO 用来标记这个数组中的位置。其是递增并且循环使用的,占用 4 个字节,但是由于第一位用来判断是否是 flush bit，所以最大的值为2G
   - `LOG_BLOCK_HDR_DATA_LEN`：表示 block 中已经使用了多少字节，初始值为`12`（因为`log block body`从第 12 个字节处开始）。随着往 block 中写入的 redo 日志越来越多，本属性值也跟着增长。如果`log block body`已经被全部写满，那么本属性的值被设置为`512`
   - `LOG_BLOCK_FIRST_REC_GROUP`：一条 redo 日志也可以被称之为一条 redo 日志记录（redo log record），一个 mtr 会产生多条 redo 日志记录，这些 redo 日志记录被称之为一个 redo 日志记录组（redo log record group）。LOG_BLOCK_FIRST_REC_GROUP 就代表该 block 中第一个 mtr 生成的 redo 日志记录组的偏移量（其实也就是这个 block 里第一个 mtr 生成的第一条 redo 日志的偏移量）。如果该值的大小和 LOG_BLOCK_HDR_DATA_LEN 相同，则表示当前 log block 不包含新的日志
   - `LOG_BLOCK_CHECKPOINT_NO`：占用 4 个字节，表示该 log block 最后被写入时的`checkpoint`
-- `log block trailer`中属性的意思如下：
+- `log block trailer` 中属性的意思如下：
   - `LOG_BLOCK_CHECKSUM`：表示 block 的校验值，用于正确性校验（其值和 LOG_BLOCK_HDR_NO 相同）
 
 ### 1.8  redo log file
@@ -376,14 +376,14 @@ redo 日志会携带一个`LSN（Log Sequence Number）`，同时每个数据页
 
 ## 2.undo日志
 
-redo log 是事务持久性的保证，undo log 是事务原子性的保证。在事务中`更新数据`的`前置操作`其实是要先写入一个`undo log`。
+redo log 是事务持久性的保证，undo log 是事务原子性的保证。在事务中`更新数据`的`前置操作`其实是要先写入一个 `undo log`。
 
 ### 2.1 如何理解undo日志
 
-事务需要保证`原子性`，也就是事务中的操作要么全部完成，要么什么也不做。但有时候事务执行到一半会出现一些情况：
+事务需要保证 `原子性`，也就是事务中的操作要么全部完成，要么什么也不做。但有时候事务执行到一半会出现一些情况：
 
 - 事务执行过程中可能遇到各种错误，比如`服务器本身的错误`，`操作系统错误`，甚至是突然`断电`导致的错误
-- 程序员可以在事务执行过程中手动输入`ROLLBACK`语句结束当前事务的执行
+- 程序员可以在事务执行过程中手动输入 `ROLLBACK` 语句结束当前事务的执行
 
 以上情况出现时，我们需要把数据改回原来的样子，这个过程称之为`回滚`，这样就可以造成一个假象：这个事务看起来什么都没做，符合`原子性`要求。
 
@@ -413,10 +413,10 @@ MySQL 把这些为了回滚而记录的内容称之为`撤销日志`或者`回�
 
 #### 1.回滚段与undo页
 
-InnoDB 对 undo log 的管理采用段的方式，也就是`回滚段（rollback segment）`。每个回滚段记录了`1024`个`undo log segment`，而在每个 undo log segment 段中进行`undo页`的申请。
+InnoDB 对 undo log 的管理采用段的方式，也就是`回滚段（rollback segment）`。每个回滚段记录了 `1024` 个 `undo log segment`，而在每个 undo log segment 段中进行 `undo页`的申请。
 
-- 在`InnoDB1.1版本之前`（不包括 1.1 版本），只有一个 rollback segment，因此支持同时在线的事务限制为 1024 。虽然对绝大多数的应用来说都已经够用
-- 从 1.1 版本开始 InnoDB 支持最大`128个rollback segment`，故其支持同时在线的事务限制提高到了`128*1024`
+- 在 `InnoDB1.1 版本之前`（不包括 1.1 版本），只有一个 rollback segment，因此支持同时在线的事务限制为 1024 。虽然对绝大多数的应用来说都已经够用
+- 从 1.1 版本开始 InnoDB 支持最大 `128 个 rollback segment`，故其支持同时在线的事务限制提高到了 `128*1024`
 
 ```sql
 mysql> show variables like 'innodb_undo_logs';
@@ -430,8 +430,8 @@ mysql> show variables like 'innodb_undo_logs';
 虽然 InnoDB1.1 版本支持了 128 个 rollback segment，但是这些 rollback segment 都存储于共享表空间 ibdata 中。从 InnoDB1.2 版本开始，可通过参数对 rollback segment 做进一步的设置，这些参数包括：
 
 - `innodb_undo_directory`：设置 rollback segment 文件所在的路径。这意味着 rollback segmen 可以存放在共享表空间以外的位置，即可以设置为独立表空间。该参数的默认值为`./`，表示当前 InnoDB 存储引擎的目录
-- `innodb_undo_logs`：设置 rollback segment 的个数，默认值为 128。在 InnoDB1.2 版本中，该参数用来替换之前版本的参数 innodb_rollback_segments
-- `innodb_undo_tablespaces`：设置构成 rollback segment 文件的数量，这样 rollback segment 可以较为平均地分布在多个文件中。设置该参数后，会在路径 innodb_undo_directory 看到 undo 为前缀的文件，该文件就代表 rollback segment 文件。默认值为 2
+- `innodb_undo_logs`：设置 rollback segment 的个数，默认值为 128。在 InnoDB1.2 版本中，该参数用来替换之前版本的参数 `innodb_rollback_segments`
+- `innodb_undo_tablespaces`：设置构成 rollback segment 文件的数量，这样 rollback segment 可以较为平均地分布在多个文件中。设置该参数后，会在路径 `innodb_undo_directory` 看到 undo 为前缀的文件，该文件就代表 rollback segment 文件。默认值为 2
 
 > undo log 相关参数一般很少改动。
 

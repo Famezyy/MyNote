@@ -41,7 +41,7 @@ public class AesTestOne {
     Cipher cipher = Cipher.getInstance(ALG_AES_CBC_PKCS5);
     // step 2 初始化密码器，指定是加密还是解密(Cipher.DECRYPT_MODE 解密; Cipher.ENCRYPT_MODE 加密)
     // 加密时使用的盐来够造秘钥对象
-    skeySpec = new SecretKeySpec(aesKey.getBytes(),ALGORITHM);
+    skeySpec = new SecretKeySpec(aesKey.getBytes(), ALGORITHM);
     // 加密时使用的向量，16位字符串
     iv = new IvParameterSpec(aesIv.getBytes());
     cipher.init(Cipher.DECRYPT_MODE, skeySpec, iv);
@@ -61,9 +61,9 @@ public class AesTestOne {
    */
   public String encrypt(String plainText) throws Exception{
     Cipher cipher = Cipher.getInstance(ALG_AES_CBC_PKCS5);
-    skeySpec = new SecretKeySpec(aesKey.getBytes(),ALGORITHM);
+    skeySpec = new SecretKeySpec(aesKey.getBytes(), ALGORITHM);
     iv = new IvParameterSpec(aesIv.getBytes());
-    cipher.init(Cipher.ENCRYPT_MODE, skeySpec,iv);
+    cipher.init(Cipher.ENCRYPT_MODE, skeySpec, iv);
     // 这里的编码格式需要与解密编码一致
     byte [] encryptText = cipher.doFinal(plainText.getBytes(UTF8));
     return Base64.encodeBase64String(encryptText);
