@@ -386,17 +386,17 @@ public class CSVParser implements Parser {
 
 ## 4.视图解析与模板引擎
 
-如果不是一个**RestController**则返回 String 时会自动将其视为视图并进行解析，如果无法解析则抛出相关错误。
+如果不是一个 `RestController` 则返回 String 时会自动将其视为视图并进行解析，如果无法解析则抛出相关错误。
 
 ### 4.1 视图解析
 
-`SpringBoot`默认不支持 JSP，需要引入第三方模块引擎技术实现页面渲染。
+`SpringBoot` 默认不支持 JSP，需要引入第三方模块引擎技术实现页面渲染。
 
 **原理流程**
 
-- 在处理派发结果时，会调用`DispatcherServlet`的`render()`方法进行页面渲染（出错或者返回值为 JSON 时，mv 为 null，不会调用该方法）
+- 在处理派发结果时，会调用 `DispatcherServlet `的 `render()` 方法进行页面渲染（出错或者返回值为 JSON 时，mv 为 null，不会调用该方法）
 
-- 根据 view 名称创建 view 对象，一般由`ContentNegotiationViewResolver`解析
+- 根据 view 名称创建 view 对象，一般由 `ContentNegotiationViewResolver` 解析
 
   - error：`ErrorMvcAutoconfiguration$StaticView`
 
