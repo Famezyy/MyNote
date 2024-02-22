@@ -182,13 +182,13 @@ protected Map<String, Session> sessions = new ConcurrentHashMap<>();
 3. 因为 Token 是以 Json 的形式保存在客户端的，所以 JWT 是跨语言的
 4. 不需要在服务端保存会话信息，特别适用于分布式微服务
 
-### 3.2 JWT的结构
+### 3.2 JWT令牌
 
-实际的 JWT 大概长下面的这样，它是一个很长的字符串，中间用`.`分割成三部分
+JWT（JSON Web Token）是一种用户凭证的编码规范，是一种网络环境下编码用户凭证的 JSON 格式的开放标准（RFC 7519）。
 
 <img src="img/Session & Cookie/202309261454577.png" alt="image-20220515173238210" style="zoom:67%;" />
 
-JWT是有三部分组成的
+一个编码后的 JWT 令牌字符串分为三部分：header + payload + signature。这三部分通过 `.` 连接。
 
 #### 1.Header
 
@@ -201,9 +201,12 @@ JWT是有三部分组成的
 }
 ```
 
-上面代码中，`alg` 属性表示签名的算法（algorithm），默认是 HMAC SHA256（写成 HS256）；`typ` 属性表示这个令牌（token）的类型（type），JWT 令牌统一写为 JWT。
+上面代码中，`alg` 属性表示签名的算法（algorithm），默认是 HMAC SHA256（写成 HS256）；`typ` 属性表示这个令牌的类型（type）。
+
 最后，将上面的 JSON 对象使用 Base64URL 算法转成字符串。
 
+> **补充**
+>
 > JWT 作为一个令牌（token），有些场合可能会放到 URL（比如 api.example.com/?token=xxx）。Base64 有三个字符 `+`、`/` 和 `=`，在 URL 里面有特殊含义，所以要被替换掉：
 >
 > = 被省略、+ 替换成 -，/ 替换成 _ 
@@ -212,15 +215,15 @@ JWT是有三部分组成的
 
 #### 2.Payload
 
-Payload 部分也是一个 Json 对象，用来存放实际需要传输的数据，JWT 官方规定了下面几个官方的字段供选用。
+Payload 部分也是一个 Json 对象，用来存放实际需要传输的数据，JWT 规定了下面几个官方的字段供选用。
 
-- iss (issuer)：签发人
-- exp (expiration time)：过期时间
-- sub (subject)：主题
-- aud (audience)：接收 jwt 的一方
-- nbf (Not Before)：定义在什么时间之前，该 jwt 都是不可用的
-- iat (Issued At)：签发时间
-- jti (JWT ID)：jwt 的唯一身份标识，用来作为一次性 token，保持幂等性
+- `iss` (issuer)：签发人
+- `exp` (expiration time)：过期时间
+- `sub` (subject)：主题
+- `aud` (audience)：接收 jwt 的一方
+- `nbf` (Not Before)：定义在什么时间之前，该 jwt 都是不可用的
+- `iat` (Issued At)：签发时间
+- `jti` (JWT ID)：jwt 的唯一身份标识，用来作为一次性 token，保持幂等性
 
 当然除了官方提供的这几个字段我们也能够自己定义私有字段，下面就是一个例子
 
@@ -235,7 +238,7 @@ Payload 部分也是一个 Json 对象，用来存放实际需要传输的数据
 
 #### 3.Signature
 
-这个部分需要 base64 加密后的 header 和 base64 加密后的 payload 使用。连接组成的字符串，然后通过 header 中声明的加密方式进行加盐 secret 组合加密，然后就构成了 jwt 的第三部分。
+JWT 的第三部分是一个签名字符串，这一部分是将 header 的 Base64 编码和 payload 的 Base64 编码使用点号 `.` 连接起来后，通过 header 声明的加密算法进行加密所得到的密文。为了保证安全，加密时需要加入盐。
 
 首先需要定义一个秘钥，这个秘钥只有服务器才知道，不能泄露给用户，然后使用 Header 中指定的签名算法（默认情况是HMAC SHA256），算出签名以后将 Header、Payload、Signature 三部分拼成一个字符串，每个部分用 `.` 分割开来，就可以返给用户了。
 
@@ -243,34 +246,65 @@ Payload 部分也是一个 Json 对象，用来存放实际需要传输的数据
 
 > HS256 可以使用单个密钥为给定的数据样本创建签名。当消息与签名一起传输时，接收方可以使用相同的密钥来验证签名是否与消息匹配。
 
-### 3.3 Java中使用Token
+### 3.3 Java中的使用
 
 上面我们介绍了关于 JWT 的一些概念，接下来如何使用呢？首先在项目中引入 Jar 包：
 
-```java
-compile('io.jsonwebtoken:jjwt:0.9.0')
+```xml
+<dependency>
+    <groupId>io.jsonwebtoken</groupId>
+    <artifactId>jjwt-api</artifactId>
+    <version>0.12.4</version>
+</dependency>
+<dependency>
+    <groupId>io.jsonwebtoken</groupId>
+    <artifactId>jjwt-impl</artifactId>
+    <version>0.12.4</version>
+</dependency>
+<dependency>
+    <groupId>io.jsonwebtoken</groupId>
+    <artifactId>jjwt-jackson</artifactId>
+    <version>0.12.4</version>
+</dependency>
 ```
 
 然后编码如下
 
 ```java
-// 签名算法 ，将对token进行签名
-SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.HS256;
-// 通过秘钥签名JWT
-byte[] apiKeySecretBytes = DatatypeConverter.parseBase64Binary("SECRETkey");
-Key signingKey = new SecretKeySpec(apiKeySecretBytes, signatureAlgorithm.getJcaName());
+public class JWTUtil {
 
-Map<String,Object> claimsMap = new HashMap<>();
-claimsMap.put("name","xiaoMing");
-claimsMap.put("age",14);
+    private static final SecretKey SECRET_KEY = Jwts.SIG.HS256.key().build();
 
-JwtBuilder builderWithSercet = Jwts.builder()
-    .setSubject("subject")
-    .setIssuer("issuer")
-    .addClaims(claimsMap)
-    .signWith(signatureAlgorithm, signingKey);
+    // 过期时间，1 小时
+    private static final long expirationTime = 60 * 60 * 1000;
 
-System.out.printf(builderWithSercet.compact());
+    public static String generateJwtToken(Map<String, Object> claims) {
+        long now = System.currentTimeMillis();
+        return Jwts.builder()
+                .issuer("youyi.zhao")
+                .subject("security")
+                .issuedAt(new Date(now))
+                .expiration(new Date(now + expirationTime))
+                .claims(claims)
+                .signWith(SECRET_KEY, Jwts.SIG.HS256)
+                .compact();
+    }
+
+    // 如果 token 过期则会自动抛出 ExpiredJwtException
+    public static Claims getPayload(String token) throws ExpiredJwtException {
+            return  Jwts.parser()
+                    .verifyWith(SECRET_KEY)
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+    }
+
+    public String refreshToken(String token) {
+        Claims payload = getPayload(token);
+        return generateJwtToken(payload);
+    }
+
+}
 ```
 
 发现输出的 Token 如下
@@ -279,28 +313,37 @@ System.out.printf(builderWithSercet.compact());
 eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJzdWJqZWN0IiwiaXNzIjoiaXNzdWVyIiwibmFtZSI6InhpYW9NaW5nIiwiYWdlIjoxNH0.3KOWQ-oYvBSzslW5vgB1D-JpCwS-HkWGyWdXCP5l3Ko
 ```
 
-此时在网上随便找个 Base64 解码的网站就能将信息解码出来
+此时在网上随便找个 Base64 解码的网站就能将 header 和 payload 的信息解码出来
 
-<img src="img/Session & Cookie/202309261454578.png" alt="image-20220515174033219" style="zoom:80%;" />
+```bash
+eyJhbGciOiJIUzI1NiJ9 - {"alg":"HS256"}
+eyJzdWIiOiJzdWJqZWN0IiwiaXNzIjoiaXNzdWVyIiwibmFtZSI6InhpYW9NaW5nIiwiYWdlIjoxNH0 - {"sub":"subject","iss":"issuer","name":"xiaoMing","age":14}
+```
 
-## 4.Cookie和Token的区别
+## 4.Cookie相对Token的优势
 
-**1. 存储位置和传输方式**
+**（1）无状态**
 
-- **Cookies：** Cookies 是服务器生成并存储在客户端（通常是浏览器）的小段文本数据。它们通过 HTTP 请求的头部（`Cookie` 头）发送到服务器，以便在每个请求中携带会话信息。
-- **Tokens：** Tokens 通常是基于 JSON 的数据结构，包含用户信息和其他元数据。它们通常存储在客户端的本地存储（例如，浏览器的本地存储或会话存储）中，然后通过 HTTP 请求头部（通常是 `Authorization` 头）或作为查询参数发送到服务器。
+基于 token 的验证是无状态的，这也许是它相对 cookie 来说最大的优点。后端服务不需要记录 token。每个令牌都是独立的，包括检查其有效性所需的所有数据，并通过声明传达用户信息。
 
-**2. 安全性**
+服务器唯一的工作就是在成功的登陆请求上签署 token，并验证传入的 token 是否有效。
 
-- **Cookies：** Cookies 在客户端存储，容易受到跨站点脚本攻击（XSS）和跨站点请求伪造攻击（CSRF）等安全威胁的影响。为了增加安全性，可以使用 HttpOnly 和 Secure 标志来保护 Cookie，但仍然需要小心处理敏感信息。
-- **Tokens：** Tokens 不直接存储在客户端而是作为请求头的一部分，尤其是当使用 Bearer Token 并结合 HTTPS 加密时，虽然不容易受到 XSS 攻击（不像 cookie 容易被 JS 访问）但是会受到 CSRF 攻击，需要采取额外手段如验证 Referer 头等。此外，JWT（JSON Web Token）等标准可以对 Token 进行**签名**和**加密**，以确保其完整性和安全性。
+**（2）防跨站请求伪造（CSRF）**
 
-**3. 跨域访问**
+假设在网页中有这样的一个链接：`![](http://bank.com?withdraw=1000&to=tom)`，假设你已经通过银行的验证并且 cookie 中存在验证信息，同时银行网站没有 CSRF 保护。一旦用户点了这个图片，就很有可能从银行向 tom 这个人转 1000 块钱。
 
-- **Cookies：** Cookies 在某些情况下受到同源策略的限制，可能需要特殊配置来在不同域之间传递。这可以在一定程度上增加了复杂性。
-- **Tokens：** Tokens 可以更容易地用于跨域访问，因为它们可以在 HTTP 请求头中传递，而不受同源策略的限制。这使得单点登录（SSO）和跨域访问等场景更容易实现。
+但是如果银行网站使用了 token 作为验证手段，攻击者将无法通过上面的链接转走你的钱。（因为攻击者无法获取正确的 token）
 
-**4.使用场景**
+**（3）多站点使用**
 
-- **Cookies：**通常用于保存 session ID
-- **Tokens：**用于更灵活的身份验证和授权机制
+cookie 绑定到单个域。foo.com 域产生的 cookie 无法被 bar.com 域读取。使用 token 就没有这样的问题。这对于需要向多个服务获取授权的单页面应用程序尤其有用。
+
+使用 token，使得用从 myapp.com 获取的授权向 myservice1.com 和 myservice2.com 获取服务成为可能。
+
+**（4）支持移动平台**
+
+好的 API 可以同时支持浏览器，iOS 和 Android 等移动平台。然而，在移动平台上，cookie 是不被支持的。
+
+**（5）性能**
+
+一次网络往返时间（通过数据库查询 session 信息）总比做一次 HMACSHA256 计算的 Token 验证和解析要费时得多。

@@ -515,7 +515,7 @@ return jsonParser.parse(new InputStreamReader(new CLassPathResource(filename).ge
 
 ## 8.SpringBoot整合
 
-SpringBoot 中提供了构造 ObjectMapper 的类`Jackson2ObjectMapperBuilder`。
+SpringBoot 中提供了构造 ObjectMapper 的类 `Jackson2ObjectMapperBuilder`。
 
 ```java
 public ObjectMapper objectMapper() {

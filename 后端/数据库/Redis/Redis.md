@@ -1372,6 +1372,19 @@ public class PhoneCode {
   }
   ```
 
+> **注意**
+>
+> `redisTemplate` 提供了 `multiXXX` 方法用于一次执行多个相同的任务。对于一次执行不同的任务的需求则可以使用 `pipeline`：
+>
+> ```java
+> List<Object> result = redisTemplate.executePipelined((RedisCallback<Object>) connection -> {
+>                 Boolean set = connection.stringCommands().set("a".getBytes(), "b".getBytes());
+>                 byte[] get = connection.stringCommands().get("c".getBytes());
+>                 Long incr = connection.stringCommands().incr("d".getBytes());
+>                 return Arrays.asList(set, get, incr);
+>             });
+> ```
+
 #### 1.2 Cacheable
 
 也可以使用 `@Cacheable` 注解，需要开启 `@EnableCaching`：
@@ -1560,19 +1573,6 @@ public void test() {
 
 ==如何序列化==
 
-- 首先对象要求序列化
-
-  ```java
-  @Component
-  @Data
-  @AllArgsConstructor
-  @NoArgsConstructor
-  public class User implements Serializable {
-      private String name;
-      private int age;
-  }
-  ```
-
 - 自定义 RedisTemplate，在定义的 redisTemplate 设置序列化
 
   ```java
@@ -1581,9 +1581,7 @@ public void test() {
       /**
        * 配置Jackson2JsonRedisSerializer序列化策略
        * */
-      private Jackson2JsonRedisSerializer<Object> serializer() {
-          // 使用Jackson2JsonRedisSerializer来序列化和反序列化redis的value值
-          Jackson2JsonRedisSerializer<Object> jackson2JsonRedisSerializer = new Jackson2JsonRedisSerializer<>(Object.class);
+      private Jackson2JsonRedisSerializer<Object> jsonSerializer() {
           ObjectMapper objectMapper = new ObjectMapper();
   
           // 指定要序列化的域，field、get 和 set 及修饰符范围，ANY是都有包括 private 和 public
@@ -1592,41 +1590,34 @@ public void test() {
           // 不序列化 null 值
           objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
   
-          // 指定序列化输入的类型，类必须是非final修饰的，final修饰的类，比如 String, Integer 等会跑出异常，不指定则可以序列化 final 类型
+          // 指定序列化输入的类型，类必须是非 final 修饰的，final 修饰的类，比如 String, Integer 等会抛出异常，不指定则可以序列化 final 类型
           // 且不做任何验证，允许所有子类型
-          // 不添加该语句输出则会{\"name\":\"zhao\",\"age\":123}
+          // 不添加该语句则会反序列化为 LinkedHashMap
           objectMapper.activateDefaultTyping(LaissezFaireSubTypeValidator.instance, ObjectMapper.DefaultTyping.NON_FINAL);
   
-          jackson2JsonRedisSerializer.setObjectMapper(objectMapper);
-          return jackson2JsonRedisSerializer;
+          return new Jackson2JsonRedisSerializer<>(objectMapper, Object.class);
       }
   
-      @Bean
-      public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory redisConnectionFactory){
-          // 为了开发方便，直接使用<String, Object>
-          RedisTemplate<String, Object> template = new RedisTemplate<>();
-          // 用Jackson2JsonRedisSerializer来序列化和反序列化redis的value值
-          template.setConnectionFactory(redisConnectionFactory);
-          // String 的序列化
-          StringRedisSerializer stringRedisSerializer = new StringRedisSerializer();
-          // key 采用 String 的序列化方式
-          template.setKeySerializer(stringRedisSerializer);
-          // Hash 的 key 采用 String 的序列化方式
-          template.setHashKeySerializer(stringRedisSerializer);
-          // value 采用 jackson 的序列化方式
-          template.setValueSerializer(serializer());
-          // Hash 的 value 采用 jackson 的序列化方式
-          template.setHashValueSerializer(serializer());
-          // 把所有的配置 set 进 template
-          template.afterPropertiesSet();
-          return template;
+      public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory redisConnectionFactory) {
+          RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
+          redisTemplate.setConnectionFactory(redisConnectionFactory);
+          StringRedisSerializer stringSerializer = new StringRedisSerializer();
+          // 这次使用 GenericJackson2JsonRedisSerializer
+          GenericJackson2JsonRedisSerializer jsonSerializer = new GenericJackson2JsonRedisSerializer();
+          redisTemplate.setKeySerializer(stringSerializer);
+          redisTemplate.setHashKeySerializer(stringSerializer);
+          redisTemplate.setValueSerializer(jsonSerializer);
+          redisTemplate.setHashValueSerializer(jsonSerializer);
+          // 初始化所有其他属性
+          redisTemplate.afterPropertiesSet();
+          return redisTemplate;
       }
   }
   ```
   
   > **注意**
   >
-  > RedisTemplate 默认的系列化类是 `JdkSerializationRedisSerializer`，但是被序列化的对象必须实现 `Serializable` 接口。在存储内容时，除了属性的内容外还存了其它内容在里面，总长度长，且不容易阅读。`Jackson2JsonRedisSerializer` 和 `GenericJackson2JsonRedisSerializer` 两者都能系列化成 json，但是后者会在 json 中加入 `@class` 属性，类的全路径包名，方便反系列化，但是不能指定 `ObjectMapper`。
+  > RedisTemplate 默认的系列化类是 `JdkSerializationRedisSerializer`，但是被序列化的对象必须实现 `Serializable` 接口。在存储内容时，除了属性的内容外还存了其它内容在里面，总长度长，且不容易阅读。`Jackson2JsonRedisSerializer` 和 `GenericJackson2JsonRedisSerializer` 两者都能系列化成 json，但是后者会在 json 中加入 `@class` 属性，类的全路径包名，支持反序列化，前者必须添加 `defaultTyping`。
   >
   
 - 继续测试

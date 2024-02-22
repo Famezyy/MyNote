@@ -1833,7 +1833,7 @@ end
 function _Module:getSmembers(key)
     local resp, err = self.red:smembers(key)
     if not resp then
-        basic.log("redis 缓存读取失败 ")
+        error("redis 缓存读取失败 ")
         return nil;
     end
     return resp;
@@ -1843,7 +1843,7 @@ end
 function _Module:hsetValue(key, id, value)
     local  ok, err = self.red:hset(key, id, value)
     if not ok then
-        basic.log("redis hset 失败 ")
+        error("redis hset 失败 ")
         return false;
     end
     print("set result: ", ok)
@@ -1855,7 +1855,7 @@ end
 function _Module:hgetValue(key, id)
     local resp, err = self.red:hget(key, id)
     if not resp then
-        basic.log("redis hget 失败 ")
+        error("redis hget 失败 ")
         return nil;
     end
     return resp;
@@ -1865,17 +1865,17 @@ end
 function _Module:evalsha(sha, key1, key2)
     local resp, err = self.red:evalsha(sha, 2, key1, key2)
     if not resp then
-        basic.log("redis evalsha 执行失败 ")
+        error("redis evalsha 执行失败 ")
         return nil;
     end
     return resp;
 end
 
 --执行秒杀的脚本
-function _Module:evalSeckillSha(sha,method, skuId, userId, token)
-    local resp, err = self.red:evalsha(sha, 1,method, skuId, userId, token);
+function _Module:evalSeckillSha(sha, method, goodId, userId, token)
+    local resp, err = self.red:evalsha(sha, 1, method, goodId, userId, token);
     if not resp then
-        basic.log(" redis evalsha 秒杀 执行失败 ".. method .." " .. skuId .." ".. userId .." ".. token .." ".. err .." ")
+        error(" redis evalsha 秒杀 执行失败 ".. method .." " .. skuId .." ".. userId .." ".. token .." ".. err .." ")
         return nil;
     end
     return resp;

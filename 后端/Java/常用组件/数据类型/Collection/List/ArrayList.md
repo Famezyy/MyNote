@@ -64,7 +64,7 @@ public static void main(String[] args) {
 
 ## 2.Arrays.asList()
 
-`Arrays.asList()`转换后的 list 默认是`AbstractList`，不支持更改操作（抛出`UnsupportedOperationException`异常），可以强转成 list 的实现类后使用。
+- `Arrays.asList()` 转换后的 list 默认是 `AbstractList`，不支持更改操作（抛出 `UnsupportedOperationException` 异常），可以强转成 list 的实现类后使用
 
 ## 3.删除元素
 

@@ -883,24 +883,99 @@ public static void printFileContent(Object obj) throws IOException {
 
 ## 11.跨域问题
 
-**使用`WebMvcConfigurer`注册**
+对于 CORS 的跨域请求，主要有以下几种方式可供选择：
+
+1. `CorsFilter`
+
+2. 重写`WebMvcConfigurer`
+
+3. 手动设置响应头
+
+4. web filter 实现跨域
+
+5. 使用注解 `@CrossOrigin`
+
+`CorFilter` / `WebMvConfigurer` / `@CrossOrigin` 需要 SpringMVC 4.2 以上版本才支持，对应 springBoot 1.3 版本以上。
+
+**（1）CorsFilter**
+
+在任意配置类，返回一个 CorsFIlter Bean，并添加映射路径和具体的 CORS 配置路径：
 
 ```java
 @Configuration
-public class CorsConfig implements WebMvcConfigurer {
-    @Override
-    public void addCorsMappings(CoreRegistry registry) {
-        registry.addMapping("/**")
-            .allowedOrigins("http://localhost:9090")
-            .allowedMethods("*")
-            .allowedHeaders("header1", "header2", "header3")
-            .exposedHeaders("header1", "header2")
-            .allowCredentials(false).maxAge(3600);
-    }
+public class GlobalCorsConfig {
+
+  @Bean
+  public CorsFilter corsFilter() {
+    //1. 添加 CORS配置信息
+    CorsConfiguration config = new CorsConfiguration();
+    //放行哪些原始域
+    config.addAllowedOrigin("*");
+    //是否发送 Cookie
+    config.setAllowCredentials(true);
+    //放行哪些请求方式
+    config.addAllowedMethod("*");
+    //放行哪些原始请求头部信息
+    config.addAllowedHeader("*");
+    //暴露哪些头部信息
+    config.addExposedHeader("*");
+    //2. 添加映射路径
+    UrlBasedCorsConfigurationSource corsConfigurationSource = new UrlBasedCorsConfigurationSource();
+    corsConfigurationSource.registerCorsConfiguration("/**",config);
+    //3. 返回新的CorsFilter
+    return new CorsFilter(corsConfigurationSource);
+  }
 }
 ```
 
-**使用`Filter`注册**
+**（2）WebMvcConfigurer**
+
+```java
+// 案例一
+@Configuration
+public class CorsConfig implements WebMvcConfigurer {
+
+  @Override
+  public void addCorsMappings(CorsRegistry registry) {
+    registry.addMapping("/**")
+      //是否发送Cookie
+      .allowCredentials(true)
+      //放行哪些原始域
+      .allowedOrigins("*")
+      .allowedMethods(new String[]{"GET", "POST", "PUT", "DELETE"})
+      .allowedHeaders("*")
+      .exposedHeaders("*");
+  }
+}
+
+// 案例二 
+@Configuration
+public class AccessControlAllowOriginFilter implements WebMvcConfigurer {
+
+  @Override
+  public void addCorsMappings(CorsRegistry registry){
+    registry.addMapping("/*/**")
+      .allowedHeaders("*")
+      .allowedMethods("*")
+      .maxAge(1800)
+      .allowedOrigins("*");
+  }
+}
+```
+
+**（3）手动设置响应头**
+
+使用 `HttpServletResponse` 对象添加响应头 `Access-Control-Allow-Origin` 来授权原始域，这里 Origin 的值 `*` 表示全部放行。
+
+```java
+@RequestMapping("/index")
+public String index(HttpServletResponse response) {
+  response.addHeader("Access-Allow-Control-Origin","*");
+  return "index";
+}
+```
+
+**（4）Filter**
 
 ```java
 // 1.使用原生 Filter
@@ -908,12 +983,13 @@ public class CorsConfig implements WebMvcConfigurer {
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class RequestFilter implements Filter {
     public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException {
-        HttpServletRequest request = (HttpServletRequest) req;
         HttpServletResponse response = (HttpServletResponse) res;
-        response.setHeader("Access-Control-Allow-Origin", request.getHeader("Origin"));
-        response.setHeader("Access-Control-Allow-Credentials", "true");
-        response.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS, DELETE");
-        chain.doFilter(req, res);
+    response.setHeader("Access-Control-Allow-Origin", "*");
+    response.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS, DELETE");
+    response.setHeader("Access-Control-Max-Age", "3600");
+    response.setHeader("Access-Control-Allow-Headers", "x-requested-with,content-type");
+    response.setHeader("Access-Control-Expose-Headers", "content-disposition");
+    chain.doFilter(req, res);
     }    
 }
 
@@ -936,24 +1012,30 @@ public class MyConfiguration {
 }
 ```
 
-**针对单个 Controler 进行配置**
+**（5）@CrossOrigin**
+
+在控制器上使用表示该类的所有方法允许跨域
 
 ```java
-@CrossOrigin(allowCredentials = "true")
 @RestController
-@RequestMapping("/account")
-public class AccountController {
+@CrossOrigin(origins = "*")
+public class HelloController {
  
-    @CrossOrigin(origins = "http://domain2.com")
-    @GetMapping("/{id}")
-    public Account retrieve(@PathVariable Long id) {
-        // ...
+    @RequestMapping("/hello")
+    public String hello() {
+        return "hello world";
     }
- 
-    @DeleteMapping("/{id}")
-    public void remove(@PathVariable Long id) {
-        // ...
-    }
+}
+```
+
+在方法上使用表示只有对应请求允许跨域
+
+```java
+@RequestMapping("/hello")
+@CrossOrigin(origins = "*")
+//@CrossOrigin(value = "http://localhost:8081") //指定具体 ip 允许跨域
+public String hello() {
+  return "hello world";
 }
 ```
 
@@ -978,3 +1060,46 @@ server:
 默认值保存在`spring-configuration-metadata.json`中。
 
 同时需要注意配置 linux 的最大文件句柄数。
+
+## 13.国际化
+
+- **配置类**
+
+  ```java
+  @Configuration
+  public class MessageI18NConfig {
+      @Bean
+      public ResourceBundleMessageSource resourceBundleMessageSource() {
+          ResourceBundleMessageSource resourceBundleMessageSource = new ResourceBundleMessageSource();
+          // 从 resources/messages 下查找以 messages 开头的文件
+          resourceBundleMessageSource.setBasename("messages/messages");
+          resourceBundleMessageSource.setDefaultLocale(Locale.CHINA);
+          resourceBundleMessageSource.setDefaultEncoding("UTF-8");
+          return resourceBundleMessageSource;
+      }
+  }
+  ```
+
+- **添加 properties 文件**
+
+  ```properties
+  # messages_en_US.properties
+  E001={0} Hello!
+  
+  # messages_zh_CN.properties
+  E001={0} 你好！
+  ```
+
+- **获取值**
+
+  ```java
+  @Autowired
+  ResourceBundleMessageSource resourceBundleMessageSource;
+  
+  @GetMapping("/inter")
+  public String inter() {
+      return resourceBundleMessageSource.getMessage("E001", new String[]{"zhang3"}, Locale.CHINA);
+  }
+  ```
+
+  

@@ -213,9 +213,9 @@ public void setScriptSource(ScriptSource scriptSource) {
 
 ## SpringBoot执行脚本流程分析
 
-在之前介绍执行脚本指令时，提到过两种指令 EVAL、EVALSHA，并提供了检查脚本缓存是否存在的指令SCRIPT EXISTS，EVAL指令或者SCRIPT LOAD指令都可以将脚本缓存，EVAL立即执行，但不会返回SHA1，SCRIPT LOAD缓存脚本，但不立即执行，并且返回SHA1值。EVALSHA指令可以直接利用Redis缓存的脚本执行，而不需要每次都传递脚本，当脚本比较大时，可以节约网络传输数据量。
+在之前介绍执行脚本指令时，提到过两种指令 EVAL、EVALSHA，并提供了检查脚本缓存是否存在的指令 SCRIPT EXISTS，EVAL 指令或者 SCRIPT LOAD 指令都可以将脚本缓存，EVAL 立即执行，但不会返回 SHA1，SCRIPT LOAD 缓存脚本，但不立即执行，并且返回 SHA1 值。EVALSHA 指令可以直接利用 Redis 缓存的脚本执行，而不需要每次都传递脚本，当脚本比较大时，可以节约网络传输数据量。
 
-但是在上面 SpringBoot 执行过程中，并没有发现其调用 EVALSHA，也没有执行 SCRIPT EXISTS 的方法，这个过程中有没有利用到 SHA(*在RedisScript中，有一个getSha1的方法*)，需要分析一下其执行流程。
+但是在上面 SpringBoot 执行过程中，并没有发现其调用 EVALSHA，也没有执行 SCRIPT EXISTS 的方法，这个过程中有没有利用到 SHA（*在 RedisScript 中，有一个 getSha1 的方法*），需要分析一下其执行流程。
 
 上面的两种方法最终都调用到下述方法
 
@@ -271,10 +271,16 @@ protected <T> T eval(RedisConnection connection, RedisScript<T> script, ReturnTy
 
 从这里可以看到，SpringBoot 客户端已经实现了脚本缓存的功能，只不过进行了封装，并且不对用户暴露。在使用时简单，傻瓜，并且用起来很舒服。总结一下就是：SpringBoot 每次都先按EVALSHA 执行，没有缓存脚本，再次执行 EVAL，得到结果并缓存脚本。
 
-> ==注：==开发环境是 Windows，Redis 在 Linux 上部署，由于编码以及文件的换行符配置导致 Windows 下计算的 SHA1，与 Redis 在 Linux 下缓存的文件 SHA1 不匹配，导致每次都无法命中缓存，此时可以通过 IDEA 的文件换行设置，调整脚本文件使用 Unix 换行符，可以解决不同系统匹配问题。
+> **注意**
+>
+> 开发环境是 Windows，Redis 在 Linux 上部署，由于编码以及文件的换行符配置导致 Windows 下计算的 SHA1，与 Redis 在 Linux 下缓存的文件 SHA1 不匹配，导致每次都无法命中缓存，此时可以通过 IDEA 的文件换行设置，调整脚本文件使用 Unix 换行符，可以解决不同系统匹配问题。
 >
 > <img src="img/Lua/9095350-5186dc7073f4f01d-461403208c6dcd04ba28db87156ad896-f5087b.png" alt="img" style="zoom:80%;" />
 >
-> IDEA设置Linux换行符
+> **IDEA 设置 Linux 换行符**
 >
-> *如上图，最开始默认为Windows换行符，CRLF，调整为LF即可解决上述问题。*
+> *如上图，最开始默认为 Windows 换行符，CRLF，调整为 LF 即可解决上述问题。*
+
+> **补充**
+>
+> Redis 在缓存完 Lua 脚本后会返回该脚本的固定长度的 sha1 编码，作为 Lua 脚本的摘要提供给外部调用 Lua 脚本使用。sha1 摘要是通过 SHA-1（Secure Hash Algorithm 1，安全散列算法 1）生成的。SHA-1 是第一代安全散列算法的缩写，本质是一个 Hash 算法，主要用于生成字符串摘要（摘要经过加密后成为数字签名），该算法曾被认为是 MD5 算法的后继者。SHA-1 算法能将一个最大 2^64^ 比特的字符串散列成一串 160 位的散列值，散列值通常的呈现形式为 40 个十六进制数。SHA-1 算法始终能保证任何两组不同的字符串产生的摘要是不同的。
