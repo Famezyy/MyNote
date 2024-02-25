@@ -1,8 +1,29 @@
 # 第5章_Web开发
 
-## 1.静态资源访问
+## 1.简介
 
-**静态资源目录**
+常见的配置项：
+
+- Spring MVC 相关：`spring.mvc`
+- Web 场景通用配置：`spring.web`
+- 文件上传配置：`spring.servlet.multipart`
+- 服务器的配置：`server`
+
+常见的配置：
+
+- 包含了 `ContentNegotiatingViewResolver` 和 `BeanNameViewResolver` 组件，方便视图解析
+- 默认的静态资源处理机制：静态资源放在 `static` 文件夹下即可访问
+- 自动注册了 `Converter`、`GenericConverter`、`Formatter` 组件，适配常见的数据类型转换和格式化需求
+- 提供 `HttpMessageConverters`，支持返回 `json` 等数据类型
+- 提供 `MessageCodesResolver`，方便国际化及错误消息处理
+- 支持静态 `index.html`
+- 提供 `ConfigurableWebBindingInitializer`，实现消息处理、数据绑定、类型转化等功能
+
+## 2.静态资源访问
+
+### 2.1 基础使用
+
+**（1）静态资源目录**
 
 静态资源放在类路径下：`classpath:/static`、`classpath:/public`、`classpath:/resources`、`classpath:/META-INF/resources`。
 
@@ -10,9 +31,9 @@
 
 > **原理**
 >
-> 收到请求时，先去找对应的`Controller`看谁能处理。找不到的所有请求都交给静态资源处理器。静态资源也找不到时则相应 404 页面。
+> 收到请求时，先去找对应的 `Controller` 看谁能处理。找不到的所有请求都交给静态资源处理器。静态资源也找不到时则相应 404 页面。
 
-**改变默认的静态资源路径**
+**（2）改变默认的静态资源路径**
 
 ```yaml
 # 静态资源访问路径（设置该值会导致 index.html 和 Favicon 不能被访问，因为 controll 默认只处理 /index 请求）
@@ -25,11 +46,11 @@ spring:
       static-locations: classpath:/haha/
 ```
 
-**自定义Favicon（浏览器图标）**
+**（3）自定义浏览器图标**
 
-将`Favicon.ico`放在静态资源目录下即可。
+将 `favicon.ico` 放在静态资源目录下即可。
 
-**修改启动图**
+**（4）修改启动图**
 
 ```yaml
 spring:
@@ -38,23 +59,14 @@ spring:
       location: classpath:2.png
 ```
 
-**静态资源配置原理**
+### 2.2 静态资源配置原理
 
-`WebMvcAutoConfiguration`有一个内部静态类`WebMvcAutoConfigurationAdapter`，实现了`WebMvcConfigurer`。
+`WebMvcAutoConfiguration` 的内部静态类 `WebMvcAutoConfigurationAdapter`，其实现了 `WebMvcConfigurer`，重写了 `addResourceHandlers` 方法配置了静态资源的处理规则。
 
 ```java
-@Configuration(proxyBeanMethods = false)
-@ConditionalOnWebApplication(type = Type.SERVLET)
-@ConditionalOnClass({ Servlet.class, DispatcherServlet.class, WebMvcConfigurer.class })
-@ConditionalOnMissingBean(WebMvcConfigurationSupport.class)
-@AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE + 10)
-@AutoConfigureAfter({ DispatcherServletAutoConfiguration.class, TaskExecutionAutoConfiguration.class,
-                     ValidationAutoConfiguration.class })
 public class WebMvcAutoConfiguration {
     
-    @Import(EnableWebMvcConfiguration.class)
-    // WebMvcProperties：prefix = "spring.mvc"
-    // WebProperties：prefix = "spring.web"
+    @Import({WebMvcAutoConfiguration.EnableWebMvcConfiguration.class})
     @EnableConfigurationProperties({ WebMvcProperties.class, WebProperties.class })
     @Order(0)
     public static class WebMvcAutoConfigurationAdapter implements WebMvcConfigurer, ServletContextAware {
@@ -67,10 +79,9 @@ public class WebMvcAutoConfiguration {
 				return;
 			}
 			addResourceHandler(registry, "/webjars/**", "classpath:/META-INF/resources/webjars/");
+            // staticPathPattern = "/**"
 			addResourceHandler(registry, this.mvcProperties.getStaticPathPattern(), (registration) -> {
-                /**
-                 * CLASSPATH_RESOURCE_LOCATIONS = { "classpath:/META-INF/resources/", "classpath:/resources/", "classpath:/static/", "classpath:/public/" };
-                 */
+                // CLASSPATH_RESOURCE_LOCATIONS = { "classpath:/META-INF/resources/", "classpath:/resources/", "classpath:/static/", "classpath:/public/" };
 				registration.addResourceLocations(this.resourceProperties.getStaticLocations());
 				if (this.servletContext != null) {
 					ServletContextResource resource = new ServletContextResource(this.servletContext, SERVLET_LOCATION);
@@ -79,30 +90,89 @@ public class WebMvcAutoConfiguration {
 			});
 		}
         
+         private void addResourceHandler(ResourceHandlerRegistry registry, String pattern, Consumer<ResourceHandlerRegistration> customizer) {
+            if (!registry.hasMappingForPattern(pattern)) {
+                ResourceHandlerRegistration registration = registry.addResourceHandler(new String[]{pattern});
+                customizer.accept(registration);
+                // 设置缓存周期，表示多久不用找服务器更新，默认没有
+                registration.setCachePeriod(this.getSeconds(this.resourceProperties.getCache().getPeriod()));
+                // HTTP 缓存控制
+                registration.setCacheControl(this.resourceProperties.getCache().getCachecontrol().toHttpCacheControl());
+                // 是否使用最后一次修改
+                registration.setUseLastModified(this.resourceProperties.getCache().isUseLastModified());
+                this.customizeResourceHandlerRegistration(registration);
+            }
+        }
+        
     }
     
 }
 ```
 
-**欢迎页的处理规则**
+**规则**
+
+- 访问 `/webjars/**` 就去 `classpath:/META-INF/resources/webjars/` 找
+
+- 访问 `staticPathPattern` 就去 `CLASSPATH_RESOURCE_LOCATIONS` 找
+
+- 静态资源默认都有缓存规则，缓存设置通过 `spring.web` 来配置
+
+  ```properties
+  # 设置缓存时间
+  spring.web.resources.cache.period=3600
+  # 缓存详细合并项控制
+  # 设置缓存时间，时间范围内浏览器无需从服务器再次获取；会覆盖上面的配置
+  spring.web.resources.cache.cachecontrol.max-age=7200
+  # 使用 last-modified 属性来判断资源是否经过修改，默认开启
+  spring.web.resources.cache.use-last-modified=true
+  ```
+
+### 2.3 欢迎页的处理规则
+
+`WebMvcAutoConfiguration` 导入了 `EnableWebMvcConfiguration`，它创建了 `WelcomePageHandlerMapping` 来处理欢迎页。
+
+```java
+@EnableConfigurationProperties({WebProperties.class})
+public static class EnableWebMvcConfiguration extends DelegatingWebMvcConfiguration implements ResourceLoaderAware {
+    @Bean
+    public WelcomePageHandlerMapping welcomePageHandlerMapping(ApplicationContext applicationContext, FormattingConversionService mvcConversionService, ResourceUrlProvider mvcResourceUrlProvider) {
+        // 创建 WelcomePageHandlerMapping
+        return (WelcomePageHandlerMapping)this.createWelcomePageHandlerMapping(applicationContext, mvcConversionService, mvcResourceUrlProvider, WelcomePageHandlerMapping::new);
+    }
+}
+```
 
 ```java
 final class WelcomePageHandlerMapping extends AbstractUrlHandlerMapping {
-	WelcomePageHandlerMapping(TemplateAvailabilityProviders templateAvailabilityProviders,
-			ApplicationContext applicationContext, Resource welcomePage, String staticPathPattern) {
-        // 要使用欢迎页功能，必须是 /**
-		if (welcomePage != null && "/**".equals(staticPathPattern)) {
-			logger.info("Adding welcome page: " + welcomePage);
-            // 底层使用转发机制
-			setRootViewName("forward:index.html");
-		}
-		else if (welcomeTemplateExists(templateAvailabilityProviders, applicationContext)) {
-			logger.info("Adding welcome page template: index");
-			setRootViewName("index");
-		}
-	}    
+    WelcomePageHandlerMapping(TemplateAvailabilityProviders templateAvailabilityProviders, ApplicationContext applicationContext, Resource indexHtmlResource, String staticPathPattern) {
+        this.setOrder(2);
+        // 创建 WelcomePage
+        WelcomePage welcomePage = WelcomePage.resolve(templateAvailabilityProviders, applicationContext, indexHtmlResource, staticPathPattern);
+        if (welcomePage != WelcomePage.UNRESOLVED) {
+            logger.info(LogMessage.of(() -> {
+                return !welcomePage.isTemplated() ? "Adding welcome page: " + indexHtmlResource : "Adding welcome page template: index";
+            }));
+            ParameterizableViewController controller = new ParameterizableViewController();
+            controller.setViewName(welcomePage.getViewName());
+            this.setRootHandler(controller);
+        }
+    }
 }
 ```
+
+```java
+final class WelcomePage {
+    static WelcomePage resolve(TemplateAvailabilityProviders templateAvailabilityProviders, ApplicationContext applicationContext, Resource indexHtmlResource, String staticPathPattern) {
+        if (indexHtmlResource != null && "/**".equals(staticPathPattern)) {
+            return new WelcomePage("forward:index.html", false);
+        } else {
+            return templateAvailabilityProviders.getProvider("index", applicationContext) != null ? new WelcomePage("index", true) : UNRESOLVED;
+        }
+    }
+}
+```
+
+默认访问 `/**` 时会重定向到 `index.html`。
 
 ## 3.数据响应与内容协商
 
@@ -1141,45 +1211,101 @@ public class DispatcherServletAutoConfiguration {
 
 ### 10.1 定制化的常见方式
 
-1. 修改配置文件
+- 修改配置文件
 
-2. XXXXCustomizer
+- 使用 `XXXXCustomizer`
 
-3. 编写自定义的配置类`@Configuration` + `@Bean`替换或者增加组件
+- 编写自定义的配置类 `@Configuration` + `@Bean` 替换或者增加组件
 
-   - 可以实现`WebMvcConfigurer`可定制化大部分 web 功能
-     - 开启矩阵变量
-     - 添加`converter`
-     - 添加内容协商策略
-     - 添加`MessageConverter`
-     - 配置拦截器
+- 实现 `WebMvcConfigurer` 可定制化大部分 web 功能
+  - 添加 `MessageConverter/Formatter`
+  - 配置参数解析器/返回值处理器
+  - 配置拦截器
+  - 配置跨域访问
+  - 配置视图控制器/视图解析器
+  - 配置内容协商
+  - 配置/添加异常解析器
+  - 添加内容协商策略
+  
+- 如果需要保持默认配置，但需要自定义核心组件，例如 `RequestMappingHandlerMapping`、`ExceptionHandlerExceptionResolver`，则可以注册一个 `WebMvcRegistrations` 组件
 
-4. `@EnableWebMvc` + `@WebMvcConfigurer` + `@Bean` 可以全面接管 SpringMVC，所有规则全部重新配置
+- `@EnableWebMvc` + `WebMvcConfigurer` 全面接管 SpringMVC，所有规则全部重新配置
 
-   **原理**
+  **原理**
 
-   - `@EnableWebMvc`会引入`DelegatingWebMvcConfiguration`
+  `@EnableWebMvc` 会引入 `DelegatingWebMvcConfiguration`
 
-     ```java
-     @Import(DelegatingWebMvcConfiguration.class)
-     public @interface EnableWebMvc {
-     }
-     ```
+  ```java
+  @Import(DelegatingWebMvcConfiguration.class)
+  public @interface EnableWebMvc {
+  }
+  ```
 
-   - `DelegatingWebMvcConfiguration`只保证 SpringMVC 最基本的应用
+  `DelegatingWebMvcConfiguration`只保证 SpringMVC 最基本的应用
 
-     - 会加载所有的`WebMvcConfigurer`，所有功能都由`WebMvcConfigurer`配置
-     - 其父类`WebMvcConfigurationSupport`会向容器中导入基本组件，例如`RequestMappingHandlerMapping`、`mvcContentNegotiationManager`等
+  - 会加载所有的 `WebMvcConfigurer`，所有功能都由`WebMvcConfigurer`配置
 
-   - 而`WebMvcAutoConfiguration`只会在容器中没有`WebMvcConfigurationSupport`时才会被加载
+  - 其父类`WebMvcConfigurationSupport`会向容器中导入基本组件，例如`RequestMappingHandlerMapping`、`mvcContentNegotiationManager`等
 
-     ```java
-     @ConditionalOnMissingBean(WebMvcConfigurationSupport.class)
-     @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE + 10)
-     @AutoConfigureAfter({ DispatcherServletAutoConfiguration.class, TaskExecutionAutoConfiguration.class,
-     		ValidationAutoConfiguration.class })
-     public class WebMvcAutoConfiguration {
-     ```
+  而`WebMvcAutoConfiguration`只会在容器中没有`WebMvcConfigurationSupport`时才会被加载
 
-   所以，`@EnableWebMvc`会导致默认的`WebMvcAutoConfiguration`失效。
+  ```java
+  @ConditionalOnMissingBean(WebMvcConfigurationSupport.class)
+  @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE + 10)
+  @AutoConfigureAfter({ DispatcherServletAutoConfiguration.class, TaskExecutionAutoConfiguration.class,
+  		ValidationAutoConfiguration.class })
+  public class WebMvcAutoConfiguration {
+  ```
+
+  所以，`@EnableWebMvc` 会导致默认的 `WebMvcAutoConfiguration` 失效。
+
+### 10.2 WebMvcAutoConfiguration原理
+
+```java
+@AutoConfiguration(after = {DispatcherServletAutoConfiguration.class, TaskExecutionAutoConfiguration.class, ValidationAutoConfiguration.class})
+// 如果是 Web 应用则生效
+@ConditionalOnWebApplication(type = Type.SERVLET)
+@ConditionalOnClass({Servlet.class, DispatcherServlet.class, WebMvcConfigurer.class})
+@ConditionalOnMissingBean({WebMvcConfigurationSupport.class})
+@AutoConfigureOrder(-2147483638)
+@ImportRuntimeHints({WebResourcesRuntimeHints.class})
+public class WebMvcAutoConfiguration {
+    
+    /**
+     * 处理页面表单提交 Rest 请求
+     */
+    @Bean
+    ...
+    public OrderedHiddenHttpMethodFilter hiddenHttpMethodFilter() {
+        return new OrderedHiddenHttpMethodFilter();
+    }
+
+    /**
+     * 表单内容 Filter，GET、POST 请求可以携带数据，PUT 和 DELETE 请求体数据会被忽略
+     */
+    @Bean
+    ...
+    public OrderedFormContentFilter formContentFilter() {
+        return new OrderedFormContentFilter();
+    }
+    
+    ...
+    
+    /**
+     * 注册一个 WebConfigurer
+     */
+    @Configuration(
+        proxyBeanMethods = false
+    )
+    @Import({WebMvcAutoConfiguration.EnableWebMvcConfiguration.class})
+    // WebMvcProperties：prefix = "spring.mvc"
+    // WebProperties：prefix = "spring.web"
+    @EnableConfigurationProperties({WebMvcProperties.class, WebProperties.class})
+    public static class WebMvcAutoConfigurationAdapter implements WebMvcConfigurer, ServletContextAware {
+    	...
+    }
+    
+    ...
+}
+```
 

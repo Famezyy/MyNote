@@ -2,6 +2,8 @@
 
 SpringBoot 默认使用 slf4j 作为日志门面，logback 作为日志实现来记录日志。同时配置了 log4j2、jul 的桥接实现。
 
+日志是利用监听器机制配置的，没有 `XXXAutoConfiguration`。
+
 ##  1.默认测试
 
 SpringBoot 默认是基于 logback 的实现输出 info 级别。
@@ -17,43 +19,57 @@ void test01() {
 }
 ```
 
-## 2.桥接log4j2测试
+## 2.修改基础配置
 
-SpringBoot 默认继承了 log4j2 的桥接组件，使用 log4j2 的实现发现输出格式仍然是 logback 的实现。
-
-```java
-@Test
-void test02() {
-    org.apache.logging.log4j.Logger logger = LogManager.getLogger(StarterTestApplicationTests.class);
-    logger.info("info");
-}
-```
-
-## 3.修改基础配置
-
-在`application.properties`文件中可以修改一些基础的配置。
+默认配置存放在 `spring-boot` 项目的 `META-INF/addtional-spring-configuration-metadata.json` 中，在 `application.properties` 文件中可以修改一些基础的配置。
 
 ```properties
 # 配置记录器，指定 com.youyi 包下的日志输出级别
 logging.level.com.youyi=trace
-logging.pattern.console=%d{yyyy-MM-dd} [%level] -%m%n
-# 配置存储 log 的文件夹，默认文件名为 spring.log
-logging.file.path=D:/test/springbootlog
+logging.pattern.console=%d{yyyy-MM-dd} [%level] - %m%n
+
+# 配置日志文件，默认路径为当前项目同目录，文件名为 spring.log
+# 配置存储 log 的目录
+# logging.file.path=D:/test/springbootlog
+# 配置文件路径和文件名，会覆盖 path 属性，可单独指定目录或者文件名或者同时指定两者
+logging.file.name=my-spring.log
+# 同时指定路径
+# logging.file.name=D:/test/my-spring.log
+
+# 归档、切割，只支持 logback
+logging.logback.rollingpolicy.file-name-pattern=${LOG_FILE}.%d{yyyy-mm-dd}.%i.gz
+# 默认 10MB
+logging.lobback.rollingpolicy.max-file-size=1MB
+# 最大日志占用空间，默认 0B
+logging.logback.rollingpolicy.total-size-cap=500MB
+# 日志保存的最大天数，默认 7
+logging.logback.rollingpolicy.max-history=1
 ```
 
 控制台输出
 
 ```bash
-2023-01-01 [INFO] -info
+2023-01-01 [INFO] - info
 ```
 
-## 4.修改高级配置
+> **扩展：分组**
+>
+> 将相关的 logger 分组在一起，统一配置。
+>
+> ```properties
+> logging.group.myGroup=com.youyi.zhao.controller,com.aaa
+> logging.level.myGroup=debug
+> ```
+>
+> SpringBoot 默认提供了 `web` 和 `sql` 两个组。
+
+## 3.修改高级配置
 
 一些高级配置只能通过配置文件修改，直接在 resources 文件夹下放入相应的配置文件即可。
 
-## 5.导入 log4j2
+## 4.导入 log4j2
 
-使用 log4j2 时，需要将 logback 的依赖去除，引入`spring-boot-starter-log4j2`依赖，该依赖继承了`log4j-slf4j-impl`和`log4j-core`。
+使用 log4j2 时，需要将 logback 的依赖去除，引入 `spring-boot-starter-log4j2` 依赖，该依赖继承了 `log4j-slf4j-impl`和`log4j-core`。
 
 ```xml
 <parent>
@@ -141,7 +157,7 @@ void test() {
 > rootLogger.appenderRef.console.ref = console
 > ```
 
-## 6.MDC链路追踪
+## 5.MDC链路追踪
 
 底层实现是 `ThreadContext`。
 
@@ -175,7 +191,7 @@ void contextLoads() {
 >
 > 使用线程池时要注意删除 MDC 中的数据。
 
-## 7.开启父线程数据共享
+## 6.开启父线程数据共享
 
 **（1）log4j**
 

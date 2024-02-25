@@ -6,11 +6,11 @@ Logback 官网：https://logback.qos.ch/
 
 Logback 是由 Log4j 创始人设计的又一个开源日志组件。作为流行的 Log4j 项目的继承者，在 log4j 1.x 停止的地方接手。其架构非常通用，可以在不同的情况下应用。
 
-目前分为三个模块，`logback-core`、`logback-classic`和`logback-access`。`logback-core`是其它两个模块的基础模块，可以轻松在`logback-core`上构建自己的模块。`logback-classic`（<a href="./第5章_SLF4j.md">第 5 章</a>）是 Log4j 的一个改良版本，并原生实现了 SLF4J API，可以轻松地更换成其他日志框架，例如 log4j 1.x 或 JUL。`logback-access`与 Tomcat 和 Jetty 等 Servlet 容器集成，以提供 HTTP 访问日志功能。
+目前分为三个模块，`logback-core`、`logback-classic` 和 `logback-access`。`logback-core` 是其它两个模块的基础模块，可以轻松在`logback-core`上构建自己的模块。`logback-classic`（<a href="./第5章_SLF4j.md">第 5 章</a>）是 Log4j 的一个改良版本，并原生实现了 SLF4J API，可以轻松地更换成其他日志框架，例如 log4j 1.x 或 JUL。`logback-access` 与 Tomcat 和 Jetty 等 Servlet 容器集成，以提供 HTTP 访问日志功能。
 
 ## 2.组件介绍
 
-Logback 建立在三个主要类之上`Logger`、`Appender`和`Layout`。这三种类型的组件协同工作，使开发人员能够根据消息类型和级别记录消息，并在运行时控制这些消息的格式和报告位置。
+Logback 建立在三个主要类之上 `Logger`、`Appender` 和 `Layout`。这三种类型的组件协同工作，使开发人员能够根据消息类型和级别记录消息，并在运行时控制这些消息的格式和报告位置。
 
 ### 2.1 Logger-记录器
 
@@ -85,7 +85,8 @@ public class LogbackTest {
         // trace < debug < info < warn < error
         Logger logger = LoggerFactory.getLogger(LogbackTest.class);
         logger.trace("trace追踪信息");
-        logger.debug("debug详细信息"); // 默认级别，在此级别下不会打印 trace 信息
+        logger.debug("debug详细信息"); 
+        // 默认级别会打印一下日志
         logger.info("info关键信息");
         logger.warn("warn警告信息");
         logger.error("error错误信息");
@@ -96,7 +97,6 @@ public class LogbackTest {
 **运行结果：**
 
 ```bash
-03:10:56.699 [main] DEBUG com.logback.LogbackTest - debug详细信息
 03:10:56.701 [main] INFO com.logback.LogbackTest - info关键信息
 03:10:56.701 [main] WARN com.logback.LogbackTest - warn警告信息
 03:10:56.701 [main] ERROR com.logback.LogbackTest - error错误信息

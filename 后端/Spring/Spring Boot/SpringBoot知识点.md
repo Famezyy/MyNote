@@ -261,6 +261,10 @@ autoconfigure 包中配置使用`META-INF/spring.factories`中`EnableAutoConfigu
    org.springframework.boot.autoconfigure.EnableAutoConfiguration=com.youyi.hello.HelloAutoConfiguration
    ```
 
+   > **注意**
+   >
+   > 新版在 `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports` 中直接声明配置类。
+
    **配置 pom 文件**
 
    ```xml
@@ -279,6 +283,7 @@ autoconfigure 包中配置使用`META-INF/spring.factories`中`EnableAutoConfigu
        </properties>
    
        <dependencies>
+           <!-- 引入 starter -->
            <dependency>
                <groupId>org.springframework.boot</groupId>
                <artifactId>spring-boot-starter</artifactId>

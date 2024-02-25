@@ -30,7 +30,7 @@ import org.junit.Test;
 public class JclTest {
     @Test
     public void test01() {
-        // JCL使用原则：有Log4j则优先使用，没有任何第三方日志框架则默认使用JUL
+        // JCL 使用原则：有 Log4j 则优先使用，没有任何第三方日志框架则默认使用 JUL
         Log log = LogFactory.getLog(JclTest.class);
         log.info("info信息");
     }
