@@ -117,15 +117,6 @@ public class WebMvcAutoConfiguration {
 
 - 静态资源默认都有缓存规则，缓存设置通过 `spring.web` 来配置
 
-  ```properties
-  # 设置缓存时间
-  spring.web.resources.cache.period=3600
-  # 缓存详细合并项控制
-  # 设置缓存时间，时间范围内浏览器无需从服务器再次获取；会覆盖上面的配置
-  spring.web.resources.cache.cachecontrol.max-age=7200
-  # 使用 last-modified 属性来判断资源是否经过修改，默认开启
-  spring.web.resources.cache.use-last-modified=true
-  ```
 
 ### 2.3 欢迎页的处理规则
 
@@ -174,6 +165,39 @@ final class WelcomePage {
 
 默认访问 `/**` 时会重定向到 `index.html`。
 
+### 2.4 自定义静态资源配置
+
+#### 1.通过配置文件
+
+```properties
+# 指定静态资源访问路径前缀，会覆盖
+spring.mvc.static-path-pattern=/static/**
+# 指定静态资源存放目录，会覆盖
+spring.web.resources.static-locations=classpath:/a/,classpath:/b/
+# 设置缓存时间
+spring.web.resources.cache.period=3600
+# 缓存详细合并项控制
+# 设置缓存时间，时间范围内浏览器无需从服务器再次获取；会覆盖上面的配置
+spring.web.resources.cache.cachecontrol.max-age=7200
+# 使用 last-modified 属性来判断资源是否经过修改，默认开启
+spring.web.resources.cache.use-last-modified=true
+```
+
+#### 2.通过配置类WebMvcConfigurer
+
+```java
+@Configuration
+public class MyConfig implements WebMvcConfigurer {
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        WebMvcConfigurer.super.addResourceHandlers(registry);
+        registry.addResourceHandler("/static/**")
+                .addResourceLocations("classpath:/a/", "classpath:/b/")
+                .setCacheControl(CacheControl.maxAge(7200, TimeUnit.SECONDS));
+    }
+}
+```
+
 ## 3.数据响应与内容协商
 
 ### 3.1 数据响应
@@ -212,31 +236,33 @@ final class WelcomePage {
 
 - WebAsyncTask
 
-- 标注`@ModelAttribute`注解且为对象类型
+- 标注 `@ModelAttribute` 注解且为对象类型
 
-- 标注`@ResponseBody`注解
+- 标注 `@ResponseBody` 注解：最终会由 `MessageConverter` 来处理
 
 #### 2.默认的MessageConverter支持类型
+
+在 `WebMvcConfigurationSupport` 的 `addDefaultHttpMessageConverters` 中会判断系统中是否加载了相应的类，从而加载默认的 `MessageConverter`。
 
 - ByteArrayHttpMessageConverter：Byte
 - StringHttpMessageConverter：String（UTF-8）
 - StringHttpMessageConverter：String（ISO-8859-1）
 - ResourceRegionHttpMessageConverter：ResourceRegion
-- SourceHttpMessageConverter：Resource
+- ResourceSourceHttpMessageConverter：Resource
 - AllEncompassingFormHttpMessageConverter：MultiValueMap
 - MappingJackson2HttpMessageConverter：所有类型
 - MappingJackson2HttpMessageConverter：所有类型
-- Jaxb2RootElementHttpMessageConverter：注解方式 xml 处理的
+- Jaxb2RootElementHttpMessageConverter：注解方式 xml 处理的（只有导入了 xml 包才会添加）
 
-#### 3.响应JSON
+#### 3.响应JSON底层
 
-调用返回值处理器的`supportsReturnType()`方法查找支持的返回值处理器。
+- 执行完 handler 方法后，会调用返回值处理器的 `supportsReturnType()` 方法查找支持的返回值处理器
 
-当标注了`@ResponseBody`时，由`RequestResponseBodyMethodProcessor`来解析返回值。
+- 当标注了 `@ResponseBody` 时，由`RequestResponseBodyMethodProcessor` 来解析返回值
 
-然后遍历所有的`MessageConverter`的`canWrite()`方法，最终由`AbstractJackson2HttpMessageConverter`来负责写出操作。
+- 然后遍历所有的 `MessageConverter` 的 `canWrite()` 方法，最终由 `AbstractJackson2HttpMessageConverter` 来负责写出操作
 
-底层利用 jackon 的 objectMapper 转换。
+- 底层利用 jackon 的 objectMapper 转换
 
 ### 3.2 内容协商
 
@@ -244,77 +270,103 @@ final class WelcomePage {
 
 #### 1.开启支持xml内容协商
 
-**引入xml依赖**
+SpringBoot 默认只集成了 JSON 场景，需要手动引入 XML 场景依赖：
 
 ```xml
 <dependency>
-  <groupId>com.fasterxml.jackson.dataformat</groupId>
-  <artifactId>jackson-dataformat-xml</artifactId>
+    <groupId>com.fasterxml.jackson.dataformat</groupId>
+    <artifactId>jackson-dataformat-xml</artifactId>
 </dependency>
 ```
 
-#### 2.开启浏览器参数方式内容协商
+#### 2.为实体类添加xml注解
 
-浏览器默认使用基于请求头的策略`HeaderContentNegotiationStrategy`，获得`headers`中的`ACCEPT`参数。
+```java
+@Data
+@JacksonXmlRootElement
+public class Person {
+    ...
+}
+```
 
-添加参数方式策略`ParameterContentNegotiationStrategy`，但该策略仅支持`xml`和`json`。
+#### 3.开启浏览器参数方式内容协商
+
+浏览器默认使用基于请求头的策略 `HeaderContentNegotiationStrategy`，会基于请求头 `headers` 中的 `ACCEPT` 参数进行判断。
+
+也可以基于请求参数进行判断，但需要添加参数方式策略 `ParameterContentNegotiationStrategy`，但该策略仅支持 `xml` 和 `json`。
 
 ```yaml
 spring:
 	mvc:
     	contentnegotiation:
-      		favor-parameter: true  #会添加基于参数的内容协商策略
+      		favor-parameter: true  # 会添加基于参数的内容协商策略
+      		parameter-name: type   # 修改参数名，默认是 format
 ```
 
-此时发送请求：`http://localhost:8080/test/person?format=json`或者`http://localhost:8080/test/person?format=xml`即可。
+此时发送请求：`http://localhost:8080/test/person?type=json` 或者 `http://localhost:8080/test/person?type=xml` 即可。
 
 ### 3.3 原理
 
-- 执行`handler()`方法处理返回值时，会先获得浏览器传入的接受的媒体类型。默认使用基于请求头的内容协商策略，会获得`headers`中的`ACCEPT`参数
-- 然后获取可产生的媒体类型，遍历所有`messageConverter`，调用相应的`converter.canWrite()`方法查询支持写入相应的类型的`converter`
-- 匹配接受的媒体类型和产生的媒体类型，选择最合适的`mediaType`
-- 循环遍历所有`messageConverters`查找支持相应类型转换的`Converters`
-- 调用对应转换器的`write()`方法完成写入
+- 执行 `handler()` 方法处理返回值时，会先获得浏览器传入的接受的媒体类型。默认使用基于请求头的内容协商策略，会获得 `headers` 中的 `ACCEPT` 参数
+- 然后获取可产生的媒体类型，遍历所有 `messageConverter`，调用相应的 `converter.canWrite()` 方法查询支持写入相应的类型的 `converter`
+- 匹配接受的媒体类型和产生的媒体类型，选择最合适的 `mediaType`
+- 循环遍历所有 `messageConverters` 查找支持相应类型转换的 `Converters`
+- 调用对应转换器的 `write()` 方法完成写入
 
 ### 3.4 自定义MessageConverter
 
-方法1：直接向容器中注册一个`HttpMessageConverter`类型的组件
+**方法1**
+
+直接向容器中注册一个 `AbstractHttpMessageConverter` 类型的组件：
+
+```xml
+<!-- 引入 yaml 依赖 -->
+<dependency>
+    <groupId>com.fasterxml.jackson.dataformat</groupId>
+    <artifactId>jackson-dataformat-yaml</artifactId>
+</dependency>
+```
 
 ```java
 @Component
-public class MyConverter implements HttpMessageConverter<Bservice> {
-    @Override
-    public boolean canRead(Class<?> clazz, MediaType mediaType) {
-        return false;
+public class YamlMessageConverter extends AbstractHttpMessageConverter<Object> {
+
+    private ObjectMapper objectMapper;
+
+    protected YamlMessageConverter() {
+        super(new MediaType("application", "yaml", StandardCharsets.UTF_8));
+        // 传入一个 yaml 工厂，同时禁止在开头输出 ---
+        this.objectMapper = new ObjectMapper(new YAMLFactory().disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER));
     }
 
     @Override
-    public boolean canWrite(Class<?> clazz, MediaType mediaType) {
-        return clazz.isAssignableFrom(Bservice.class);
+    protected boolean supports(Class<?> clazz) {
+        return true;
     }
 
-    // 声明支持的 MediaType
+    // @RequestBody
     @Override
-    public List<MediaType> getSupportedMediaTypes() {
-        return MediaType.parseMediaTypes("application/youyi");
-    }
-
-
-    @Override
-    public Bservice read(Class<? extends Bservice> clazz, HttpInputMessage inputMessage) throws IOException, HttpMessageNotReadableException {
+    protected Object readInternal(Class<?> clazz, HttpInputMessage inputMessage) throws IOException, HttpMessageNotReadableException {
         return null;
     }
 
     @Override
-    public void write(Bservice bservice, MediaType contentType, HttpOutputMessage outputMessage) throws IOException, HttpMessageNotWritableException {
-        String data = bservice.getA() + bservice.getB();
-        OutputStream body = outputMessage.getBody();
-        body.write(data.getBytes());
+    protected void writeInternal(Object o, HttpOutputMessage outputMessage) throws IOException, HttpMessageNotWritableException {
+        try (OutputStream ops = outputMessage.getBody()) {
+            objectMapper.writeValue(ops, o);
+        }
     }
+
 }
 ```
 
-方法2：不使用`@Component`注解，在`WebMvcConfigurer`添加
+> **注意**
+>
+> 直接实现 `HttpMessageConverter` 时需要注意 `canWrite()` 在 `MediaType=null` 时要返回 true。
+
+**方法2**
+
+不使用 `@Component` 注解，在 `WebMvcConfigurer` 添加：
 
 ```java
 @Configuration
@@ -322,18 +374,14 @@ public class MyMapperConfiguration implements WebMvcConfigurer {
 
     @Override
     public void extendMessageConverters(List<HttpMessageConverter<?>> converters) {
-        converters.add(new MyConverter());
+        converters.add(new YamlMessageConverter());
     }
 }
 ```
 
-> **提示**
->
-> 也可以继承 `AbstractJackson2HttpMessageConverter`，仿照 `MappingJackon2GttoNessageConverter` 仅修改构造器传入希望支持的 `MediaType`。
-
 **设置支持基于参数的内容协商**
 
-需要使自定义的`MessageConverter`支持基于参数的内容协商时，需要配置内容协商策略。因为`ParameterContentNegotiationStrategy`策略仅支持`xml`和`json`。
+需要使自定义的 `MessageConverter` 支持基于参数的内容协商时，需要配置内容协商策略。因为 `ParameterContentNegotiationStrategy` 策略仅支持 `xml` 和 `json`。
 
 ```java
 @Configuration
@@ -353,7 +401,7 @@ public class MyMapperConfiguration implements WebMvcConfigurer {
 }
 ```
 
-但此时会覆盖原有的内容协商管理器，使基于请求头的策略也失效。此时若 mediaType 无法匹配，会默认为全匹配`*/*`，此时会与`json`的格式匹配上。
+但此时会覆盖原有的内容协商管理器，**使基于请求头的策略也失效**。此时若 mediaType 无法匹配，会默认为全匹配 `*/*`，此时会与 `json` 的格式匹配上。
 
 可以在新添加一个基于请求头的策略：
 
@@ -478,7 +526,7 @@ public class CSVParser implements Parser {
 
     > `response.sendRedirect(encodedURL)`
 
-  - string：默认没有解析器，可添加 thymeleaf 作为解析器
+  - string：**默认没有解析器**，可添加 thymeleaf 作为解析器
 
 - 调用对应 view 的`render()`方法进行渲染
 
@@ -490,17 +538,17 @@ Thymeleaf is a modern server-side Java template engine for both web and standalo
 
 ##### 1.1 表达式
 
-| 表达式名字 | 语法                                                    | 用途                           |
-| ---------- | ------------------------------------------------------- | ------------------------------ |
-| 变量取值   | ${...}                                                  | 获取请求域、session域、对象    |
-| 选择变量   | *{...}                                                  | 获取上下文对象值               |
-| 消息       | #{...}                                                  | 获取国际化等值                 |
-| 连接       | @{...}：自动加上当前路径<br />@{/...}：自动加上访问路径 | 生成链接                       |
-| 片段表达式 | ~{...}                                                  | jsp.include 作用，引入公共页面 |
+| 表达式名字 | 语法                                                         | 用途                                                         |
+| ---------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| 变量取值   | `${...}`                                                     | 获取请求域、session域、对象                                  |
+| 选择变量   | `*{...}`                                                     | 获取上下文对象值                                             |
+| 消息       | `#{...}`                                                     | 获取国际化等值                                               |
+| 连接       | `@{...}`：自动加上当前项目路径<br />`@{/...}`：自动加上访问路径 | 生成链接，例如`th:src="@{/static/1.jpg}"`、`th:src="@{${url}}"` |
+| 片段表达式 | `~{...}`                                                     | `jsp.include` 作用，引入公共页面                             |
 
 ##### 1.2 字面量
 
-文本值：'text'
+文本值用单引号：`'text'`
 
 数字：1
 
@@ -510,9 +558,10 @@ Thymeleaf is a modern server-side Java template engine for both web and standalo
 
 变量：x，y（变量名不能有空格）
 
-##### 1.3 文本操作
+##### 1.3 字符串拼接
 
-字符串拼接：+
+- `"${'前缀' + name + '后缀'}"`
+- `"|前缀 ${name} 后缀|"`
 
 ##### 1.4 数字运算
 
@@ -524,7 +573,8 @@ Thymeleaf is a modern server-side Java template engine for both web and standalo
 
 ##### 1.6 比较运算
 
-\>、<、>=、<=、==、!=
+- 比较：>、<、<=、>=（gt、lt、ge、le）
+- 等值运算：==、!=（eq、ne）
 
 ##### 1.7 条件运算
 
@@ -532,7 +582,7 @@ Thymeleaf is a modern server-side Java template engine for both web and standalo
 - (if) ? (then) : (else)
 - (value) ? (defaultvalue)
 
-##### 1.8无标签时的行内使用
+##### 1.8行内使用
 
 ```html
 <img src="1.png" />
@@ -540,7 +590,29 @@ Thymeleaf is a modern server-side Java template engine for both web and standalo
 <span class="create"></span>
 ```
 
-#### 2.设置属性值-th:attr
+##### 1.9变量选择
+
+```html
+<div th:object="${session.user}">
+    <p>Name: <span th:text="*{firstName}">Sebastian</span>.</p>
+    <p>Surname: <span th:text="*{lastName}">Pepper</span>.</p>
+    <p>Nationality: <span th:text="*{nationality}">Saturn</span>.</p>
+</div>
+```
+
+等同于
+
+```html
+<div>
+    <p>Name: <span th:text="${session.user.firstName}">Sebastian</span>.</p>
+    <p>Surname: <span th:text="${session.user.lastName}">Pepper</span>.</p>
+    <p>Nationality: <span th:text="${session.user.nationality}">Saturn</span>.</p>
+</div
+```
+
+#### 2.标签属性内容
+
+**（1）设置标签属性值-th:attr**
 
 ```html
 <form action="subscribe.html" th:attr="action=@{/subscribe}">
@@ -557,12 +629,18 @@ Thymeleaf is a modern server-side Java template engine for both web and standalo
 <img src="1.png" th:attr="src=@{2.png}, title=#{logo}" />
 ```
 
-替代写法：th:**
+**替代写法：th:属性值名称**
 
 ```html
 <form action="subscribe.html" th:action="@{/subscribe}">
 <input type="submit" value="Subscribe!" th:value="#{subscribe.submit}" />
 ```
+
+**（2）替换标签体内容-th:tex**
+
+- `<h1 th:text="{msg}"></>`：会转义 `msg` 中的 html 标签
+
+- `<h1 th:utext="{msg}"></>`：不会转移 html 标签，会原样显示
 
 #### 3.迭代
 
@@ -579,6 +657,16 @@ Thymeleaf is a modern server-side Java template engine for both web and standalo
     <td th:text="${prod.inStock} ? #{true} : #{false}">yes</td>
 </tr>
 ```
+
+`iterStat` 有以下属性：
+
+- `index`：当前遍历元素的索引，从 0 开始
+- `count`：当前遍历元素的索引，从 1 开始
+- `size`：需要遍历元素的总数量
+- `current`：当前正在遍历的元素对象，调用 `toString` 方法打印
+- `even/odd`：是否偶数/奇数行
+- `first`：是否第一个元素
+- `last`：是否最后一个元素
 
 #### 4.条件运算
 
@@ -614,6 +702,81 @@ Thymeleaf is a modern server-side Java template engine for both web and standalo
 | 8     | Fragment specification          | th:fragment                                      |
 | 9     | Fragment removal                | th:remove                                        |
 
+#### 6.内置工具
+
+[**详细文档**](https://www.thymeleaf.org/doc/tutorials/3.1/usingthymeleaf.html#appendix-a-expression-basic-objects)
+
+- `param`：请求参数对象
+
+- `session`：session 对象
+
+- `application`：application 对象
+
+- `#execInfo`：模板执行信息
+
+- `#messages`：国际化消息
+
+- `#uris`：uri/url 工具
+
+- `#conversions`：类型转换工具
+
+- `#dates`：日期工具，是 `java.util.Date` 对象的工具类
+
+- `#calendars`：类似 #dates，只不过是 `java.util.Calendar` 对象的工具类
+
+- `#temporals`： JDK8+ `java.time` API 工具类
+
+- `#numbers`：数字操作工具
+
+- `#strings`：字符串操作
+
+  ```html
+  <!-- 转大写 -->
+  <h1 th:text="${#string.toUpperCase(name)}"></h1>
+  ```
+
+- `#objects`：对象操作
+
+- `#bools`：bool 操作
+
+- `#arrays`：array 工具
+
+- `#lists`：list 工具
+
+- `#sets`：set 工具
+
+- `#maps`：map 工具
+
+- `#aggregates`：集合聚合工具（sum、avg）
+
+- `#ids`：id 生成工具
+
+#### 7.模板布局
+
+- 定义模板： `th:fragment`
+- 引用模板：`~{templateName::selector}`
+- 插入模板：`th:insert`、`th:replace`
+
+```html
+<footer th:fragment="copy">&copy; 2011 The Good Thymes Virtual Grocery</footer>
+
+<body>
+    <div th:insert="~{footer :: copy}"></div>
+    <div th:replace="~{footer :: copy}"></div>
+</body>
+```
+
+结果：
+
+```html
+<body>
+    <div>
+        <footer>&copy; 2011 The Good Thymes Virtual Grocery</footer>
+    </div>
+    <footer>&copy; 2011 The Good Thymes Virtual Grocery</footer>
+</body>
+```
+
 ### 4.3 thymeleaf使用
 
 #### 1.引入Starter
@@ -635,11 +798,13 @@ Thymeleaf is a modern server-side Java template engine for both web and standalo
 public class ThymeleafAutoConfiguration{}
 ```
 
-自动配置好的策略
+自动配置好的策略：
 
 - 所有 thymeleaf 的配置值都在 ThymeleafProperties
 - 配置好了 SpringTemplateEngine
 - 配置好了 ThymeleafViewResolver
+- 所有的模板页面在 `classpath:/templates/`
+- 后缀为 `.html`
 
 #### 2.页面开发
 
@@ -670,6 +835,17 @@ public String main(User user, HttpSession session, Model model) {
         return "login";
     }
 }
+```
+
+### 4.配置
+
+```properties
+spring.thymeleaf.prefix=classpath:/templates/
+spring.thymeleaf.suffix=.html
+# 是否使用缓存，默认 true，开发环境可以关闭
+spring.thymeleaf.cache=true
+# 检查模板是否存在，默认 true，生产环境可以关闭
+spring.thymeleaf.check-template=false
 ```
 
 ## 5.拦截器
@@ -1094,11 +1270,13 @@ public class DispatcherServletAutoConfiguration {
 
 ## 9.嵌入式servlet容器
 
-内嵌服务器，就是手动把启动服务器的代码调用
+内嵌服务器，就是手动调用启动服务器的代码。
 
 ### 9.1 切换嵌入式Servlet容器
 
-默认支持的 webServer 有：`Tomcat`、`Jetty`、`Undertow`，`ServletWebServerApplicationContext`容器启动寻找`ServletWebServerFactory`并引导创建服务器。
+默认支持的 webServer 有：`Tomcat`、`Jetty`、`Undertow`，`ServletWebServerApplicationContext` 容器启动会自动寻找 `ServletWebServerFactory` 并引导创建服务器。
+
+切换容器时需要排除掉 Tomcat 的依赖：
 
 ```xml
 <dependency>
@@ -1119,7 +1297,7 @@ public class DispatcherServletAutoConfiguration {
 
 **原理**
 
-- `ServletWebServerFactoryAutoConfiguration`配置类向容器中导入了`ServletWebServerFactoryConfiguration`
+- `ServletWebServerFactoryAutoConfiguration` 配置类向容器中导入了 `ServletWebServerFactoryConfiguration`
 
   ```java
   @Import({ ServletWebServerFactoryAutoConfiguration.BeanPostProcessorsRegistrar.class,
@@ -1129,7 +1307,9 @@ public class DispatcherServletAutoConfiguration {
   public class ServletWebServerFactoryAutoConfiguration {
   ```
 
-- `ServletWebServerFactoryConfiguration`导入对应的服务器（默认导入 tomcat 包）
+- `ServletWebServerFactoryConfiguration` 导入对应的服务器工厂
+
+  导入各个容器都有条件，而默认导入了 tomcat 的包，所以只有 Tomcat 容器是满足条件的。
 
   ```java
   @Configuration(proxyBeanMethods = false)
@@ -1161,12 +1341,26 @@ public class DispatcherServletAutoConfiguration {
   }
   ```
 
-- SpringApplication 执行 run() 时发现当前是 web 应用，会创建一个 web 版的 IOC 容器`ServletWebServerApplicationContext`
+- `SpringApplication` 执行 `run()` 时发现当前是 web 应用，会创建一个 web 版的 IOC 容器 `ServletWebServerApplicationContext`
 
-- `ServletWebServerApplicationContext`启动的时候寻找`ServletWebServerFactory`，并创建相应的 webServer
+- `SpringApplication` 启动的时候会创建程序上下文 `AnnotationConfigServletWebServerApplicationContext`，该类继承了 `ServletWebServerApplicationContext`
+
+- 然后执行 `refreshContext()`，会最终执行程序启动的 `12` 大步骤
+
+- 在执行 `onFresh()` 方法时会执行会调用 `createWebServer()` 方法
 
   ```java
   public class ServletWebServerApplicationContext {
+      
+      protected void onRefresh() {
+          super.onRefresh();
+          try {
+              this.createWebServer();
+          } catch (Throwable var2) {
+              throw new ApplicationContextException("Unable to start web server", var2);
+          }
+      }
+      
       private void createWebServer() {
   		WebServer webServer = this.webServer;
   		ServletContext servletContext = getServletContext();
@@ -1176,7 +1370,7 @@ public class DispatcherServletAutoConfiguration {
               // JettyServletWebServerFactory、TomcatServletWebServerFactory、UndertowServletWebServerFactory
   			ServletWebServerFactory factory = getWebServerFactory();
   			createWebServer.tag("factory", factory.getClass().toString());
-              // 获得 webServer
+              // 调用服务器工厂的 getWebServer() 方法创建 webServer
   			this.webServer = factory.getWebServer(getSelfInitializer());
   			createWebServer.end();
   			getBeanFactory().registerSingleton("webServerGracefulShutdown",
@@ -1186,16 +1380,17 @@ public class DispatcherServletAutoConfiguration {
   		}
   		initPropertySources();
   	}
+      
   }
   ```
 
 ### 9.2 定制Servlet容器
 
-有以下两种方式：
+有以下三种方式：
 
-- 修改配置文件`server.xxx`
+- 修改配置文件`server.xxx.xxx`，例如 `server.tomcat.xxx`
 
-- 实现`WebServerFactoryCustomizer<ConfigurableServletWebServerFactory>`，自定义`ConfigurableServletWebServerFactory`
+- 实现 `WebServerFactoryCustomizer<ConfigurableServletWebServerFactory>`，自定义 `ConfigurableServletWebServerFactory`
 
   ```java
   @Component
@@ -1206,58 +1401,105 @@ public class DispatcherServletAutoConfiguration {
       }
   }
   ```
+  
+- 完全自定义时可以实现 `ServletWebServerFactory` 来自定义嵌入服务器
 
 ## 10.定制化原理
 
 ### 10.1 定制化的常见方式
 
-- 修改配置文件
+#### 1.修改配置文件
 
-- 使用 `XXXXCustomizer`
+#### 2.使用XXXXCustomizer
 
-- 编写自定义的配置类 `@Configuration` + `@Bean` 替换或者增加组件
+#### 3.编写自定义的配置类
 
-- 实现 `WebMvcConfigurer` 可定制化大部分 web 功能
-  - 添加 `MessageConverter/Formatter`
-  - 配置参数解析器/返回值处理器
-  - 配置拦截器
-  - 配置跨域访问
-  - 配置视图控制器/视图解析器
-  - 配置内容协商
-  - 配置/添加异常解析器
-  - 添加内容协商策略
-  
-- 如果需要保持默认配置，但需要自定义核心组件，例如 `RequestMappingHandlerMapping`、`ExceptionHandlerExceptionResolver`，则可以注册一个 `WebMvcRegistrations` 组件
+`@Configuration` + `@Bean` 替换或者增加组件。
 
-- `@EnableWebMvc` + `WebMvcConfigurer` 全面接管 SpringMVC，所有规则全部重新配置
+#### 4.实现WebMvcConfigurer
 
-  **原理**
+定义扩展 SpringMVC 底层功能。
 
-  `@EnableWebMvc` 会引入 `DelegatingWebMvcConfiguration`
+| 提供方法                             | 核心参数                                | 功能                                                         | 默认                                                         |
+| ------------------------------------ | --------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| `addFormatters`                      | FormatterRegistry                       | **格式化器**：支持属性上 `@NumberFormat` 和 `@DatetimeFormat` 的数据类型转换 | GenericConversionService                                     |
+| `getValidator`                       | 无                                      | **数据校验**：校验 Controller 上使用 `@Valid` 标注的参数合法性。需要导入 starter-validator 依赖 | 无                                                           |
+| `addInterceptors`                    | InterceptorRegistry                     | **拦截器**：拦截收到的所有请求                               | 无                                                           |
+| `configureContentNegotiation`        | ContentNegotiationConfigurer            | **内容协商**：支持多种数据格式返回。需要配合支持这种类型的 `HttpMessageConverter` | 支持 json                                                    |
+| `configureMessageConverters`         | `List<HttpMessageConverter<?>>`         | **消息转换器**：标注 `@ResponseBody` 的返回值会利用 `MessageConverter` 直接写出去 | 8 个，支持 byte，string,multipart,resource，json             |
+| `addViewControllers`                 | ViewControllerRegistry                  | **视图映射**：直接将请求路径与物理视图映射。用于无 java 业务逻辑的直接视图页渲染 | 无 `<mvc:view-controller>`                                   |
+| `configureViewResolvers`             | ViewResolverRegistry                    | **视图解析器**：逻辑视图转为物理视图                         | ViewResolverComposite                                        |
+| `addResourceHandlers`                | ResourceHandlerRegistry                 | **静态资源处理**：静态资源路径映射、缓存控制                 | ResourceHandlerRegistry                                      |
+| `configureDefaultServletHandling`    | DefaultServletHandlerConfigurer         | **默认 Servlet**：可以覆盖 Tomcat 的 DefaultServlet。让 DispatcherServlet 拦截 `/` | 无                                                           |
+| `configurePathMatch`                 | PathMatchConfigurer                     | **路径匹配**：自定义 URL 路径匹配。可以自动为所有路径加上指定前缀，比如 `/api` | 无                                                           |
+| `configureAsyncSupport`              | AsyncSupportConfigurer                  | **异步支持**                                                 | TaskExecutionAutoConfiguration                               |
+| `addCorsMappings`                    | CorsRegistry                            | **跨域**                                                     | 无                                                           |
+| `addArgumentResolvers`               | `List<HandlerMethodArgumentResolver>`   | **参数解析器**                                               | mvc 默认提供                                                 |
+| `addReturnValueHandlers`             | `List<HandlerMethodReturnValueHandler>` | **返回值解析器**                                             | mvc 默认提供                                                 |
+| `configureHandlerExceptionResolvers` | `List<HandlerExceptionResolver>`        | **异常处理器**                                               | 默认 3 个 ExceptionHandlerExceptionResolver ResponseStatusExceptionResolver DefaultHandlerExceptionResolver |
+| `getMessageCodesResolver`            | 无                                      | **消息码解析器**：国际化使用                                 | 无                                                           |
 
-  ```java
-  @Import(DelegatingWebMvcConfiguration.class)
-  public @interface EnableWebMvc {
-  }
-  ```
+**原理**
 
-  `DelegatingWebMvcConfiguration`只保证 SpringMVC 最基本的应用
+- `WebMvcAutoConfiguration` 向容器中注入了一个 `EnableWebMvcConfiguration`，该类继承 `DelegatingWebMvcConfiguration`
+- `DelegatingWebMvcConfiguration` 会中将容器中所有的 `WebMvcConfigurer` 注入进来
 
-  - 会加载所有的 `WebMvcConfigurer`，所有功能都由`WebMvcConfigurer`配置
+```java
+public class WebMvcAutoConfiguration {
+    @Configuration(proxyBeanMethods = false)
+    @EnableConfigurationProperties({WebProperties.class})
+    public static class EnableWebMvcConfiguration extends DelegatingWebMvcConfiguration implements ResourceLoaderAware {
+        ...
+    }
+    ...
+}
 
-  - 其父类`WebMvcConfigurationSupport`会向容器中导入基本组件，例如`RequestMappingHandlerMapping`、`mvcContentNegotiationManager`等
+@Configuration(
+    proxyBeanMethods = false
+)
+public class DelegatingWebMvcConfiguration extends WebMvcConfigurationSupport {
+    @Autowired(required = false)
+    public void setConfigurers(List<WebMvcConfigurer> configurers) {
+        if (!CollectionUtils.isEmpty(configurers)) {
+            this.configurers.addWebMvcConfigurers(configurers);
+        }
+    }
+    ...
+}
+```
 
-  而`WebMvcAutoConfiguration`只会在容器中没有`WebMvcConfigurationSupport`时才会被加载
+#### 5.自定义核心组件
 
-  ```java
-  @ConditionalOnMissingBean(WebMvcConfigurationSupport.class)
-  @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE + 10)
-  @AutoConfigureAfter({ DispatcherServletAutoConfiguration.class, TaskExecutionAutoConfiguration.class,
-  		ValidationAutoConfiguration.class })
-  public class WebMvcAutoConfiguration {
-  ```
+如果需要保持默认配置，但需要自定义核心组件，例如 `RequestMappingHandlerMapping`、`ExceptionHandlerExceptionResolver`，则可以注册一个 `WebMvcRegistrations` 组件
 
-  所以，`@EnableWebMvc` 会导致默认的 `WebMvcAutoConfiguration` 失效。
+#### 6.全面接管配置
+
+`@EnableWebMvc` + `WebMvcConfigurer` 全面接管 SpringMVC，所有规则都需要重新自己配置
+
+**原理**
+
+`@EnableWebMvc` 会引入 `DelegatingWebMvcConfiguration`
+
+```java
+@Import(DelegatingWebMvcConfiguration.class)
+public @interface EnableWebMvc {
+}
+```
+
+`DelegatingWebMvcConfiguration` 只保证 SpringMVC 最基本的应用：
+
+- 会加载所有的 `WebMvcConfigurer`，所有功能都由 `WebMvcConfigurer` 配置
+
+- 其父类 `WebMvcConfigurationSupport` 会向容器中导入基本组件，例如 `RequestMappingHandlerMapping`、`mvcContentNegotiationManager` 等
+
+而 `WebMvcAutoConfiguration` 只会在容器中没有 `WebMvcConfigurationSupport` 时才会被加载：
+
+```java
+@ConditionalOnMissingBean(WebMvcConfigurationSupport.class)
+public class WebMvcAutoConfiguration {
+```
+
+所以，`@EnableWebMvc` 会导致默认的 `WebMvcAutoConfiguration` 失效。
 
 ### 10.2 WebMvcAutoConfiguration原理
 
@@ -1272,7 +1514,7 @@ public class DispatcherServletAutoConfiguration {
 public class WebMvcAutoConfiguration {
     
     /**
-     * 处理页面表单提交 Rest 请求
+     * 支持 Restful 的 filter
      */
     @Bean
     ...
@@ -1281,7 +1523,7 @@ public class WebMvcAutoConfiguration {
     }
 
     /**
-     * 表单内容 Filter，GET、POST 请求可以携带数据，PUT 和 DELETE 请求体数据会被忽略
+     * 支持表单内容 Filter，GET、POST 请求可以携带数据，PUT 和 DELETE 请求体数据会被忽略
      */
     @Bean
     ...
@@ -1289,10 +1531,17 @@ public class WebMvcAutoConfiguration {
         return new OrderedFormContentFilter();
     }
     
-    ...
+    /**
+     * 新特性，用于配置错误详情处理器，处理 SpringMVC 内部场景异常
+     */
+    @Configuration(proxyBeanMethods = false)
+    static class ProblemDetailsErrorHandlingConfiguration {
+    	...
+    }
+    
     
     /**
-     * 注册一个 WebConfigurer
+     * 注册一个 WebConfigurer 定义默认行为，还添加了一些 Bean
      */
     @Configuration(
         proxyBeanMethods = false
@@ -1302,10 +1551,364 @@ public class WebMvcAutoConfiguration {
     // WebProperties：prefix = "spring.web"
     @EnableConfigurationProperties({WebMvcProperties.class, WebProperties.class})
     public static class WebMvcAutoConfigurationAdapter implements WebMvcConfigurer, ServletContextAware {
+        
     	...
+        
+        // 添加一个视图解析器：InternalResourceViewResolver
+        @Bean
+        public InternalResourceViewResolver defaultViewResolver() {
+            ...
+        }
+
+        // 添加一个视图解析器：BeanNameViewResolver
+        @Bean
+        public BeanNameViewResolver beanNameViewResolver() {
+            ...
+        }
+        
+        // 添加一个内容协商视图解析器
+        @Bean
+        public ContentNegotiatingViewResolver viewResolver(BeanFactory beanFactory) {
+            ...
+        }
+        
+        // 添加一个请求上下文过滤器，可以在任意位置使用 (ServletRequestAttributes) RequestContextHolder.getRequestAttributes() 获取当前请求和响应信息
+        @Bean
+        public static RequestContextFilter requestContextFilter() {
+            return new OrderedRequestContextFilter();
+        }
+        
+        // 定义了一系列静态资源规则
+    }
+    
+    /**
+     * 注册一个 EnableWebMvcConfiguration
+     */
+    @Configuration(
+        proxyBeanMethods = false
+    )
+    @EnableConfigurationProperties({WebProperties.class})
+    public static class EnableWebMvcConfiguration extends DelegatingWebMvcConfiguration implements ResourceLoaderAware {
+        
+        /**
+         * 注册一个 RequestMappingHandlerAdapter
+         */
+        protected RequestMappingHandlerAdapter createRequestMappingHandlerAdapter() {
+            ...
+        }
+        
+        /**
+         * 注册 ExceptionHandlerExceptionResolver
+         */
+        protected ExceptionHandlerExceptionResolver createExceptionHandlerExceptionResolver() {
+            ...
+        }
+        
+        /**
+         * 提供数据校验功能
+         */
+        @Bean
+        public Validator mvcValidator() {
+            return !ClassUtils.isPresent("jakarta.validation.Validator", this.getClass().getClassLoader()) ? super.mvcValidator() : ValidatorAdapter.get(this.getApplicationContext(), this.getValidator());
+        }
+        
+        /**
+         * 注册内容协商管理器
+         */
+        @Bean
+        public ContentNegotiationManager mvcContentNegotiationManager() {
+            ...
+        }
+        
+        /**
+         * 注册一个欢迎页处理器映射
+         */
+        @Bean
+        public WelcomePageHandlerMapping welcomePageHandlerMapping(ApplicationContext applicationContext, FormattingConversionService mvcConversionService, ResourceUrlProvider mvcResourceUrlProvider) {
+            ...
+        }
+        
+        /**
+         * 注册一个国际化解析器
+         */
+        @Bean
+        @ConditionalOnMissingBean(name = {"localeResolver"})
+        public LocaleResolver localeResolver() {
+            ...
+        }
+        
+        /**
+         * 注册一个服务用于处理日期转换
+         */
+        @Bean
+        public FormattingConversionService mvcConversionService() {
+            ...
+        }
+        
+        ...
     }
     
     ...
 }
 ```
+
+## 11.路径匹配
+
+Spring5.3 之后加入了更多的请求路径匹配的实现策略：以前只支持 `AntPathMatcher` 策略, 现在提供了 `PathPatternParser` 策略，并且可以让我们指定到底使用那种策略。
+
+### 11.1 Ant风格路径用法
+
+Ant 风格的路径模式语法具有以下规则：
+
+- `*`：表示**任意数量**的字符
+- `?`：表示任意**一个字符**
+- `**`：表示**任意数量的目录**
+- `{}`：表示一个命名的模式**占位符**
+- `[]`：表示**字符集合**，例如 [a-z] 表示小写字母
+
+例如：
+
+- `*.html` 匹配任意名称，扩展名为 .html 的文件
+
+- `/folder1/*/*.java` 匹配在 folder1 目录下的任意两级目录下的 .java 文件
+
+- `/folder2/**/*.jsp` 匹配在 folder2 目录下任意目录深度的 .jsp 文件
+
+- `/{type}/{id}.html` 匹配任意文件名为 {id}.html，在任意命名的 {type} 目录下的文件
+
+- `/a*/b?/{p1:[a-f]+}`，匹配 a 开头的字符 + b 和其后任意一个字符 + a 到 f 的任意 0 至多个字符（占位符名称为 p1）
+
+  ```java
+  @GetMapping("/a*/b?/{p1:[a-f]+}")
+  public String hello(HttpServletRequest request, @PathVariable("p1") String path) {
+      log.info("路径变量p1： {}", path);
+      //获取请求路径
+      String uri = request.getRequestURI();
+      return uri;
+  }
+  ```
+
+注意：Ant 风格的路径模式语法中的特殊字符需要转义，如：
+
+- 要匹配文件路径中的星号，则需要转义为 `\\*`
+- 要匹配文件路径中的问号，则需要转义为 `\\?`
+
+### 11.2 模式切换
+
+- PathPatternParser 在 jmh 基准测试下，有 6~8 倍吞吐量提升，降低 30%~40% 空间分配率
+- PathPatternParser 兼容 AntPathMatcher 语法，并支持更多类型的路径模式
+- PathPatternParser 的  `**` 多段匹配的支持**仅允许在模式末尾使用**
+
+总结： 
+
+- 默认的路径匹配规则是 PathPatternParser
+
+- 如果路径中间需要有 `**`，需要替换成 ant 风格路径
+
+  ```properties
+  # 改变路径匹配策略：
+  # ant_path_matcher 老版策略
+  # path_pattern_parser 新版策略
+  spring.mvc.pathmatch.matching-strategy=ant_path_matcher
+  ```
+
+## 12.国际化
+
+国际化的自动配置参照 `MessageSourceAutoConfiguration`。
+
+- **配置**（可选）
+
+  默认需要将国际化文件放在 `resources` 目录下，可以手动更改。
+
+  配置类
+
+  ```java
+  @Configuration
+  public class MessageI18NConfig {
+      @Bean
+      public ResourceBundleMessageSource resourceBundleMessageSource() {
+          ResourceBundleMessageSource resourceBundleMessageSource = new ResourceBundleMessageSource();
+          // 从 resources/messages 下查找以 messages 开头的文件
+          resourceBundleMessageSource.setBasename("messages/messages");
+          resourceBundleMessageSource.setDefaultLocale(Locale.CHINA);
+          resourceBundleMessageSource.setDefaultEncoding("UTF-8");
+          return resourceBundleMessageSource;
+      }
+  }
+  ```
+
+  配置文件
+
+  ```properties
+  spring.messages.basename=messages.messages
+  spring.messages.encoding=UTF-8
+  ```
+
+- **添加 properties 文件**
+
+  ```properties
+  # messages_en_US.properties
+  E001={0} Hello!
+  
+  # messages_zh_CN.properties
+  E001={0} 你好！
+  ```
+
+- **代码中获取值**
+
+  ```java
+  @Autowired
+  ResourceBundleMessageSource resourceBundleMessageSource;
+  
+  @GetMapping("/inter")
+  public String inter(HttpServletRequest request) {
+      return resourceBundleMessageSource.getMessage("E001", new String[]{"zhang3"}, request.getLocale());
+  }
+  ```
+
+
+## 13.新特性
+
+### 1.ProblemDetails
+
+[RFC 7807](https://www.rfc-editor.org/rfc/rfc7807)
+
+默认响应错误的 json：
+
+```json
+{
+    "timestamp": "2023-04-18T11:13:05.515+00:00",
+    "status": 405,
+    "error": "Method Not Allowed",
+    "trace": "org.springframework.web.HttpRequestMethodNotSupportedException: Request method 'POST' is not supported\r\n\tat...",
+    "message": "Method 'POST' is not supported.",
+    "path": "/list"
+}
+```
+
+开启 ProblemDetails 后返回，使用新的 MediaType：`application/problem+json`
+
+```json
+{
+    "type": "about:blank",
+    "title": "Method Not Allowed",
+    "status": 405,
+    "detail": "Method 'POST' is not supported.",
+    "instance": "/list"
+}
+```
+
+**原理**
+
+`WebMvcAutoConfiguration` 注册了一个 `ProblemDetailsErrorHandlingConfiguration` 组件。
+
+```java
+@Configuration(proxyBeanMethods = false)
+// 需要配置一个属性 spring.mvc.problemdetails.enabled=true
+@ConditionalOnProperty(prefix = "spring.mvc.problemdetails", name = "enabled", havingValue = "true")
+static class ProblemDetailsErrorHandlingConfiguration {
+
+    @Bean
+    @ConditionalOnMissingBean(ResponseEntityExceptionHandler.class)
+    ProblemDetailsExceptionHandler problemDetailsExceptionHandler() {
+        return new ProblemDetailsExceptionHandler();
+    }
+
+}
+```
+
+1. `ProblemDetailsExceptionHandler` 是一个 `@ControllerAdvice` 用于集中处理系统异常
+
+2. 如果系统出现以下异常，会被 SpringBoot 支持以 `RFC 7807` 规范方式返回错误数据
+
+   ```java
+   @ExceptionHandler({
+       HttpRequestMethodNotSupportedException.class, //请求方式不支持
+       HttpMediaTypeNotSupportedException.class,
+       HttpMediaTypeNotAcceptableException.class,
+       MissingPathVariableException.class,
+       MissingServletRequestParameterException.class,
+       MissingServletRequestPartException.class,
+       ServletRequestBindingException.class,
+       MethodArgumentNotValidException.class,
+       NoHandlerFoundException.class,
+       AsyncRequestTimeoutException.class,
+       ErrorResponseException.class,
+       ConversionNotSupportedException.class,
+       TypeMismatchException.class,
+       HttpMessageNotReadableException.class,
+       HttpMessageNotWritableException.class,
+       BindException.class
+           })
+   ```
+
+### 2.函数式Web
+
+SpringMVC 5.2 以后 允许我们使用**函数式**的方式定义 Web 的请求处理流程。
+
+Web请求处理的方式：
+
+1. `@Controller + @RequestMapping`：**耦合式** （**路由**、**业务**耦合）
+2. **函数式Web**：分离式（路由、业务分离）
+
+核心类
+
+- `RouterFunction`：定义路由信息，发什么请求，谁来处理
+- `RequestPredicate`：请求方式（GET、POST）、请求参数
+- `ServerRequest`：封装请求数据
+- `ServerResponse`：封装响应数据
+
+配置类
+
+```java
+@Configuration(proxyBeanMethods = false)
+public class MyRoutingConfiguration {
+
+    // 定义请求规则
+    private static final RequestPredicate ACCEPT_JSON = RequestPredicates.accept(MediaType.APPLICATION_JSON);
+
+    @Bean
+    public RouterFunction<ServerResponse> routerFunction(MyUserHandler userHandler) {
+        return RouterFunctions.route()
+                .GET("/{user}", ACCEPT_JSON, userHandler::getUser)
+                .GET("/{user}/customers", ACCEPT_JSON, userHandler::getUserCustomers)
+                .DELETE("/user", ACCEPT_JSON, userHandler::deleteUser)
+                .build();
+    }
+
+}
+```
+
+处理器类
+
+```java
+@Component
+public class MyUserHandler {
+
+    public ServerResponse getUser(ServerRequest request) {
+        // 业务处理
+        // 获取路径参数
+        String user = request.pathVariable("user");
+        ...
+        return ServerResponse.ok().body(xxx);
+    }
+
+    public ServerResponse getUserCustomers(ServerRequest request) {
+        // 业务处理
+        ...
+        return ServerResponse.ok().body(xxx);
+    }
+
+    public ServerResponse deleteUser(ServerRequest request) {
+        // 业务处理
+        // 获取请求体
+        Person body = request.body(Person.class);
+        ...
+        return ServerResponse.ok().build();
+    }
+
+}
+```
+
+`.body()` 跟之前的 `@ResponseBody` 原理相同。
 
