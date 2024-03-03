@@ -2,6 +2,8 @@
 
 在多线程并发执行过程中，为了保证多个线程对变量的安全访问，可以将变量放到 `ThreadLocal` 类型的对象中，使变量在每个线程间独立。
 
+<img src="img/ThreadLocal/image-20220525224019756-394004747a056767951740f09d9845a7-aa6090.png" alt="image-20220525224019756" style="zoom:80%;" />
+
 ## 1.基本使用
 
 `ThreadLocal` 位于 JDK 的 java.lang 核心包。如果程序创建了一个 `ThreadLocal` 实例，那么在访问这个变量值时，每个线程都会拥有一个独立的、自己的本地值，避免了线程安全问题。当线程结束后，每个线程拥有的本地值会被释放。
@@ -148,6 +150,12 @@ void createMap(Thread t, T firstValue) {
     t.threadLocals = new ThreadLocalMap(this, firstValue);
 }
 ```
+`set(T value)` 方法的执行流程大致如下：
+
+1. 获得当前线程，然后获得当前线程的 `TheadLocalMap` 成员，暂存于 map 变量
+2. 如果 map 不为空，就将 Value 设置到 map 中，当前的 ThreadLocal 作为 key
+3. 如果 map 为空， 则为该线程创建 map，然后设置第一个 Key-Value 键值对，Key 为当前的 `ThreadLocal` 实例，Value 为 `set()` 方法的参数值
+
 ###  4.2 get()
 
 ```java
@@ -188,35 +196,115 @@ private T setInitialValue() {
 }
 ```
 
+`T get()` 方法的执行流程大致如下：
+
+1. 先尝试获取当前线程，然后获得当前线程的 `ThreadLocalMap` 成员，暂存于 map 变量
+2. 如果获得的 map 不为空，则以当前 ThreadLocal 实例为 Key 尝试获得 map 中的 Entry
+3. 如果 Entry 不为空，就返回 Entry 中的 value
+4. 如果 Entry 为空，就调用 `initialValue` 初始化钩子函数获得 ThreadLocal 初始值，并设置在 map 中。如果 map 不存在，还会给当前线程创建新的 `ThreadLocalMap` 成员，并绑定第一个 Key-Value 键值对。
+
 ### 4.3 remove()
 
-
+```java
+public void remove() {
+    ThreadLocalMap m = getMap(Thread.currentThread());
+    if (m != null)
+        m.remove(this);
+}
+```
 
 ### 4.4 initialValue()
 
+```java
+protected T initialValue() {
+    return null;
+}
+```
+
+如果没有调用 `set()` 而直接调用 `get()` 就会调用该方法，该方法只会被调用一次。默认情况下，`initialValue()` 方法返回 null，JDK 定义了一个 `ThreadLocal` 的内部 `SuppliedThreadLocal` 静态类，并提供了 `ThreadLocal.withInitial(...)` 静态工厂方法，用来设置初始回调函数。
+
+```java
+ThreadLocal<Foo> LOCAL_FOO = ThreadLocal.withInitial(() -> new Foo());
+```
+
+JDK 定义的 `ThreadLocal.withInitial(...)` 静态工厂方法及其内部子类 `SUppliedThreadLocal` 的源码如下：
+
+```java
+public static <S> ThreadLocal<S> withInitial(Supplier<? extends S> supplier) {
+    return new SuppliedThreadLocal<>(supplier);
+}
+
+// 内部静态子类
+// 继承了 ThreadLocal，重写了 initialValue() 方法，返回钩子函数的值作为初始值
+static final class SuppliedThreadLocal<T> extends ThreadLocal<T> {
+
+    private final Supplier<? extends T> supplier;
+
+    SuppliedThreadLocal(Supplier<? extends T> supplier) {
+        this.supplier = Objects.requireNonNull(supplier);
+    }
+
+    @Override
+    protected T initialValue() {
+        return supplier.get();
+    }
+}
+```
+
 ## 5.ThreadLocalMap源码分析
+
+`ThreadLocal` 的操作都是基于 `ThreadLocalMap` 展开的，而 `ThreadLocalMap` 是 `ThreadLocal` 的一个静态内部类，实现了一套简单的 Map 结构。
+
+### 5.1 主要成员变量
+
+```java
+static class ThreadLocalMap {
+    
+    // Map 的条目类型
+    // Entry 继承 WeakReference，Key 为 ThreadLocal 实例
+    static class Entry extends WeakReference<ThreadLocal<?>> {
+
+        Object value;
+
+        Entry(ThreadLocal<?> k, Object v) {
+            super(k);
+            value = v;
+        }
+    }
+
+    // Map 的条目初始容量 16
+    private static final int INITIAL_CAPACITY = 16;
+
+    // Map 的条目数组
+    private Entry[] table;
+
+    // Map 的条目数量
+    private int size = 0;
+
+    // 达到该容量时进行扩容
+    private int threshold;
+    
+    // 在调用 ThreadLocalMap 构造方法时会调用该方法
+    // 设置下次扩容时的临界容量为当前容量的 2/3
+    private void setThreshold(int len) {
+        threshold = len * 2 / 3;
+    }
+}
+```
+
+### 5.2 常用方法
 
 ```java
 // ThreadLocal 的静态内部类
 static class ThreadLocalMap {
 
-    // Entry 继承了弱引用
-    static class Entry extends WeakReference<ThreadLocal<?>> {
-        /** The value associated with this ThreadLocal. */
-        Object value;
-
-        Entry(ThreadLocal<?> k, Object v) {
-            // 相当于 new WeakReference<ThreadLocal<?>>(k);
-            super(k);
-            value = v;
-        }
-    }
     // ----------------------------- 存入 -----------------------------
 
     // ThreadLocal.ThreadLocalMap 的 set() 方法，最终存储到了继承了弱引用的 Entry 数组
     private void set(ThreadLocal<?> key, Object value) {
         Entry[] tab = table;
         int len = tab.length;
+        // 计算 key 在数组上的槽点 i
         int i = key.threadLocalHashCode & (len-1);
         // 先看数组中是否已经存储了该键值对
         // ThreadLocalMap 的存放策略为：当出现键冲突时，会依次向后查找第一个为 null 的键然后存入
@@ -238,9 +326,11 @@ static class ThreadLocalMap {
         }
         // 如果数组中没有该键值对，将 entry 存放到 tab（Entry数组）
         tab[i] = new Entry (key, value);
-
+        // 增加条目数量
         int sz = ++size;
-        // 如果长度大于 threshold（默认 Entry 数组长度的 2/3），进行扩容
+        
+        // 清理 Key 为 null 的无效 Entry
+        // 如果没有可清理的 Entry，并且线程条目数量大于 threshold（默认是 Entry 数组长度的 2/3），进行扩容
         if (!cleanSomeSlots(i, sz) && sz >= threshold)
             rehash();
     }
@@ -252,6 +342,7 @@ static class ThreadLocalMap {
         if (size >= threshold - threshold / 4)
             resize();
     }
+    
     // ----------------------------- 查找 -----------------------------
 
     // 查找 key 对应的 Entry
@@ -285,12 +376,50 @@ static class ThreadLocalMap {
     }
 }
 ```
-## 2.为什么要用弱引用？
-如果使用了强引用作为 key 去创建一个线程私有的变量，那么这个私有变量的生命周期就与`ThreadLocals`这个 map 绑定了，也就是与该线程绑定了，直到线程结束前都不会被回收。如果是个弱引用，一旦`tl`与`new`出来的`ThreadLocal`切断了联系，当下次 GC 时该`ThreadLocal`对象就会被回收。
-<img src="img/ThreadLocal/image-20220525224019756-394004747a056767951740f09d9845a7-aa6090.png" alt="image-20220525224019756" style="zoom:80%;" />
 
-## 3.内存泄漏
-但是此时只有`key`被回收了，`Entry`对象中的`value`却永远被保存下来了，这就是内存泄漏的问题。设想如果这发生在**线程池**中：一个线程被使用并创建了`ThreadLocal`变量，但是发生了内存泄露并返回给了线程池。甚者`key`也没有被回收并回到了线程池中。
-所以线程池在回收线程后，会首先清理`threadLocals`。
+## 6.常见问题
 
-> 调用`get()`方法和`set()`方法都会重复利用 key 为 null 的 Entry。
+### 6.1 为什么要用弱引用？
+
+假设有一个方法 `funcA()` 创建了一个 `threadLocal`:
+
+```java
+public void funcA() {
+    ThreadLocal local = new ThreadLocal<Interger>();
+    local.set(100);
+    local.get();
+}
+```
+
+当线程 tn 执行 `funcA()` 方法到其末尾时，线程 tn 相关的 JVM 栈内存以及内部 `ThreadLocalMap` 成员的结构大致如下图所示：
+
+<img src="img/ThreadLocal/image-20240304000629005.png" alt="image-20240304000629005" style="zoom: 50%;" />
+
+线程 tn 调用 `funcA()` 方法新建了一个 `ThreadLocal` 实例，使用 `local` 局部变量指向这个实例，并且此 `local` 是强引用；在调用 `local.set(100)` 之后，线程 tn 的 `ThreadLocalMap` 成员内部会新建一个 `Entry` 实例，其 Key 以弱引用包装的方式指向 `ThreadLocal` 实例。
+
+当线程 tn 执行完 `funcA()` 方法后，`funcA()` 的方法栈桢将被销毁，强引用 `local` 的值也就没有了，但此时线程的 `ThreadLocalMap` 中对应的 `Entry` 的 Key 引用还指向 `ThreadLocal` 实例。如果 `Entry` 的 Key 引用是强引用，就会导致 Key 引用指向的 `ThreadLocal` 实例及其 Value 都不能被 GC 回收，这将造成严重的内存泄漏问题。如下图所示：
+
+<img src="img/ThreadLocal/image-20240304000652617.png" alt="image-20240304000652617" style="zoom:50%;" />
+
+> **补充：内存泄漏**
+>
+> 不再用到的内存没有及时释放就叫做内存泄漏。对于持续运行的服务进程必须及时释放内存，否则内存占用率越来越高，轻则影响系统性能，重则导致进程崩溃甚至系统崩溃。
+
+由于 `ThreadLocalMap` 中 `Entry` 的 Key 使用了弱引用，在下次 GC 发生时，就可以使那些没有被其他强引用指向、仅被 `Entry` 的 Key 所指向的 `ThreadLocal` 实例能被顺利回收。并且，在 `Entry` 的 Key 引用被回收之后，其 `Entry` 的 Key 值变为 null。后续当 `ThreadLocal` 的 `get()`、`set()` 或 `remove()` 被调用时，`ThreadLocalMap` 的内部代码会清除这些 Key 为 null 的 `Entry`，从而完成相应的内存释放。
+
+使用 ThreadLocal 会发生内存泄漏的前提条件如下：
+
+1. 线程长时间运行而没有被销毁。线程池中的 `Thread` 实例很容易满足此条件。
+3. `ThreadLocal` 引用被设置为 null，且后续在同一 `Thread` 实例执行期间，没有发生对其他 `ThreadLocal` 实例的 `get()`、`set()` 或 `remove()` 操作。只要存在一个针对任何 `ThreadLocal` 实例的 `get()`、`set()` 或 `remove()` 操作，就**有可能会触发** `Thread` 实例拥有的 `ThreadLocalMap` 的 Key 为 null 的 `Entry` 清理工作，释放掉 `ThreadLocal` 弱引用为 null 的 `Entry`。
+
+### 6.2 使用static final修饰ThreadLocal
+
+`ThreadLocal` 实例作为 `ThreadLocalMap` 的 Key，针对一个线程内的所有操作是共享的，所以建议设置 `static` 修饰符，以便被所有的对象共享。由于静态变量会在类第一次被加载时装载，只会分配一次存储空间，此类的所有实例都会共享这个存储空间，所以使用 `static` 修饰 `ThreadLocal` 就会节约内存空间。另外，为了确保 `ThreadLocal` 实例的唯一性，除了使用 `static` 修饰之外，还会使用 `final` 进行加强修饰，以防止其在使用过程中发生动态变更：
+
+```java
+private static final ThreadLocal<Foo> LOCAL_FOO = new ThreadLocal<>();
+```
+
+使用 `static final` 修饰 `ThreadLocal` 实例也会带来副作用，使得 `Thread` 实例内部的 `ThreadLocalMap` 中 `Entry` 的 Key 在 `Thread` 实例的生命期内将始终保持为非 null，从而导致 Key 所在的 Entry 不会被自动清空，这就会让 `Entry` 中的 Value 指向的对象一直存在强引用，于是 Value 指向的对象在线程生命期内不会被释放，最终导致内存泄漏。所以在使用完 `static final` 修饰的 `ThreadLocal` 实例后，必须调用 `remove()` 来进行显示的释放操作。
+
+如果使用线程池，可以定制线程池的 `afterExecute()` 方法，在任务执行完成后，调用 `ThreadLocal` 实例的 `remove()` 方法对其进行释放，从而使得其线程内部的 Entry 得以释放。

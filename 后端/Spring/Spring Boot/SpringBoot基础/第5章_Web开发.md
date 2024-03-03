@@ -27,7 +27,7 @@
 
 静态资源放在类路径下：`classpath:/static`、`classpath:/public`、`classpath:/resources`、`classpath:/META-INF/resources`。
 
-访问时需要访问：当前项目根路径 + / + 静态资源名。
+访问时需要访问：当前项目根路径 + `/` + 静态资源名。
 
 > **原理**
 >
@@ -244,15 +244,15 @@ public class MyConfig implements WebMvcConfigurer {
 
 在 `WebMvcConfigurationSupport` 的 `addDefaultHttpMessageConverters` 中会判断系统中是否加载了相应的类，从而加载默认的 `MessageConverter`。
 
-- ByteArrayHttpMessageConverter：Byte
-- StringHttpMessageConverter：String（UTF-8）
-- StringHttpMessageConverter：String（ISO-8859-1）
-- ResourceRegionHttpMessageConverter：ResourceRegion
-- ResourceSourceHttpMessageConverter：Resource
-- AllEncompassingFormHttpMessageConverter：MultiValueMap
-- MappingJackson2HttpMessageConverter：所有类型
-- MappingJackson2HttpMessageConverter：所有类型
-- Jaxb2RootElementHttpMessageConverter：注解方式 xml 处理的（只有导入了 xml 包才会添加）
+- `ByteArrayHttpMessageConverter`：Byte
+- `StringHttpMessageConverter`：String（UTF-8）
+- `StringHttpMessageConverter`：String（ISO-8859-1）
+- `ResourceRegionHttpMessageConverter`：ResourceRegion
+- `ResourceSourceHttpMessageConverter`：Resource
+- `AllEncompassingFormHttpMessageConverter`：MultiValueMap
+- `MappingJackson2HttpMessageConverter`：所有类型
+- `MappingJackson2HttpMessageConverter`：所有类型
+- `Jaxb2RootElementHttpMessageConverter`：注解方式 xml 处理的（只有导入了 xml 包才会添加）
 
 #### 3.响应JSON底层
 
@@ -426,9 +426,9 @@ public class MyMapperConfiguration implements WebMvcConfigurer {
 
 ### 3.5 ResponseBodyAdvice
 
-允许在执行`@ResponseBody`或`ResponseEntity`控制器方法之后但在使用`HttpMessageConverter`编写正文之前自定义响应。
+允许在执行 `@ResponseBody` 或 `ResponseEntity` 控制器方法之后但在使用 `HttpMessageConverter` 编写正文之前自定义响应。
 
-实现可以直接使用`RequestMappingHandlerAdapter`和`ExceptionHandlerExceptionResolver`进行注册，或者使用`@ControllerAdvice`进行注释，在这种情况下它们将被两者自动检测到。
+实现可以直接使用 `RequestMappingHandlerAdapter` 和 `ExceptionHandlerExceptionResolver` 进行注册，或者使用 `@ControllerAdvice` 进行注释，在这种情况下它们将被两者自动检测到。
 
 可用于记录 log。
 
@@ -528,7 +528,7 @@ public class CSVParser implements Parser {
 
   - string：**默认没有解析器**，可添加 thymeleaf 作为解析器
 
-- 调用对应 view 的`render()`方法进行渲染
+- 调用对应 view 的 `render()` 方法进行渲染
 
 ### 4.2 模板解析-thymeleaf
 
