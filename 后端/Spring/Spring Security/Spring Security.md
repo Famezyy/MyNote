@@ -14,6 +14,8 @@ Spring Security 是一个基于 Spring 的安全框架，其他类似的框架�
 
 ### 1.2 原理
 
+自动配置类：`SecurityAutoConfiguration`，导入了 `SpringBootWebSecurityConfiguration`，其中注册了默认的 `SecurityFilterChain`，同时开启了 `@EnableWebSecutity`。而 `@EnableWebSecurity` 导入了 `WebSecurityConfiguration` 用于 web 安全配置、`HttpSecurityConfiguration` 用于 http 安全规则、`EnableGlobalAuthentication` 用于全局认证。
+
 #### 1.核心组件
 
 Spring Security 核心组件有 `Authentication`（认证/身份验证）、`AuthenticationProvider`（认证提供者）、`AuthenticationManager`（认证管理者）等。
@@ -685,7 +687,7 @@ public class SecurityConfig {
 
   用户具有某个角色才可以访问。
 
-  （1）开启注解
+  （1）开启注解功能
 
   ```java
   @Configuration
@@ -2100,7 +2102,10 @@ CSRF 攻击攻击原理及过程如下：
 
 ### 6.3 RBAC
 
-大体上有两种方案：Role Based Access Control，基于角色的访问控制；Resource Based Access Control，基于资源的访问控制。
+与 ACL（Access Control List，只有用户和权限概念）相对应，大体上有两种方案：
+
+- Role Based Access Control，基于角色的访问控制
+- Resource Based Access Control，基于资源的访问控制
 
 基于角色的访问控制说的是将权限分配和管理与角色相关联，然后对每个用户指定特定的角色。常用的表结构如下：
 

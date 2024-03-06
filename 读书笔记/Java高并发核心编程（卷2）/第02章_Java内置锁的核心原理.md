@@ -227,6 +227,41 @@ public static syncrhonized void selfPlus() {
 
 #### 1.Producer实现
 
+```java
+public class Producer implements Runnable {
+    // 总次数
+    static final AtomicInteger TURN = new AtomicInteger(0);
+    // 生产者编号
+    static final AtomicInteger PRODUCER_NO = new AtomicInteger(1);
+    // 生产者名称
+    String name;
+    // 生产的动作
+    Callable action;
+    // 每次生产的间隔时间
+    int gap;
+    public Producer(Callable action, int gap) {
+        this.action = action;
+        this.gap = gap;
+        name = "生产者-" + PRODUCER_NO.incrementAndGet();
+    }
+    
+    @Override
+    public void run() {
+        while (true) {
+            try {
+                Object out = action.call();
+                if (out != null) {
+                    System.out.println("第" + TURN.incrementAndGet() + "轮生产：" + out);
+                    Thread.sleep(gap);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+}
+```
+
 #### 2.Consumer实现
 
 

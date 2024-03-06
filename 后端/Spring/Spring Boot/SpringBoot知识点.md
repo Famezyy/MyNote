@@ -783,3 +783,9 @@ server:
 默认值保存在`spring-configuration-metadata.json`中。
 
 同时需要注意配置 linux 的最大文件句柄数。
+
+## 13.API和SDK
+
+API：接口（Application Programming Interface），远程提供功能
+
+SDK：工具包（Software Development Kit），导入jar包，直接调用功能即可
