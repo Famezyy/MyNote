@@ -226,13 +226,13 @@ public class HelloController {
 - 异常结束：发生任何异常后返回 `FAILED`
 - 手动结束：手动结束后返回 `STOPPED`
 
-接下来模拟一个手动结束的场景：设计两个步骤，step1 用于叠加 readCount 模拟从数据库中读取资源，step2 用于执行逻辑：当 totalCount = readCount 时正常结束，不等式不执行 step2，直接手动结束。
+接下来模拟一个手动结束的场景：设计两个步骤，step1 用于叠加 readCount 模拟从数据库中读取资源，step2 用于执行逻辑：当 totalCount = 100 时正常结束，不等式不执行 step2，直接手动结束。
 
 有两种实现方式：
 
 #### 1.Step监听器方式
 
-监听器
+**监听器**
 
 ```java
 @Component
@@ -246,14 +246,13 @@ public class StopStepListener implements StepExecutionListener {
     public ExitStatus afterStep(StepExecution stepExecution) {
         final ExecutionContext executionContext = stepExecution.getJobExecution().getExecutionContext();
         final int readCount = (int) executionContext.get("readCount");
-        final int totalCount = (int) executionContext.get("totalCount");
-        if (readCount != totalCount) return ExitStatus.STOPPED;
+        if (readCount != 100) return ExitStatus.STOPPED;
         return stepExecution.getExitStatus();
     }
 }
 ```
 
-任务
+**任务**
 
 ```java
 @SpringBootApplication
@@ -265,7 +264,6 @@ public class HelloJob {
             System.out.println("---------- tasklet1 ----------");
             final ExecutionContext executionContext = chunkContext.getStepContext().getStepExecution().getJobExecution().getExecutionContext();
             executionContext.put("readCount", 50);
-            executionContext.put("totalCount", 100);
             return RepeatStatus.FINISHED;
         };
     }
@@ -283,7 +281,8 @@ public class HelloJob {
         return new StepBuilder("step1", jobRepository)
             .tasklet(tasklet1(), transactionManager)
             .listener(stopStepListener)
-            // 当 status 为 complete 时，即使同一 Job 也允许从 step1 重新执行
+            // 此时 step1 的 status 是 COMPLETED，因此需要开启 allowStartIfComplete
+            // 否则再次执行时会无限循环
             .allowStartIfComplete(true)
             .build();
     }
@@ -319,10 +318,1054 @@ public class HelloJob {
 
 #### 2.停止标记方式
 
-### 2.3 作业重启
+这种方式第一次 STOP 后的 `EXIST_CODE` 也是 `STOPPED`。
+
+```java
+@SpringBootApplication
+public class HelloJob {
+
+    @Bean
+    public Tasklet tasklet1() {
+        return (contribution, chunkContext) -> {
+            System.out.println("---------- tasklet1 ----------");
+            int readCount = 50;
+            if (readCount != 100) {
+                // 设置停止标记
+                // // 此时 step1 的 status 是 STOPPED，因此不需要开启 allowStartIfComplete
+                chunkContext.getStepContext().getStepExecution().setTerminateOnly();
+            }
+            return RepeatStatus.FINISHED;
+        };
+    }
+
+    @Bean
+    public Tasklet tasklet2() {
+        return (contribution, chunkContext) -> {
+            System.out.println("---------- tasklet2 ----------");
+            return RepeatStatus.FINISHED;
+        };
+    }
+
+    @Bean
+    public Step step1(StepExecutionListener stopStepListener, JobRepository jobRepository, PlatformTransactionManager transactionManager) {
+        return new StepBuilder("step1", jobRepository)
+            .tasklet(tasklet1(), transactionManager)
+            .build();
+    }
+
+    @Bean
+    public Step step2(JobRepository jobRepository, PlatformTransactionManager transactionManager) {
+        return new StepBuilder("step2", jobRepository)
+            .tasklet(tasklet2(), transactionManager)
+            .build();
+    }
+
+
+    @Bean
+    public Job job(JobRepository jobRepository, Step step1, Step step2) {
+        return new JobBuilder("manual-stopped-job-2", jobRepository)
+			// 正常设置步骤即可
+            .start(step1)
+            .next(step2)
+            .build();
+    }
+
+    public static void main(String[] args) {
+        SpringApplication.run(HelloJob.class, args);
+    }
+}
+```
+
+### 2.3 作业步骤重启
+
+表示允许作业步骤重新执行，默认情况下，只允许异常或终止状态的步骤重启，但有时存在特殊场景，要求需要其他状态步骤重启。Spring Batch 提供 3 种操作来控制重启。
+
+#### 1.禁止作业重启
+
+执行失败后不允许重复执行。
+
+在 `Job` 中使用 `preventRestart()` 禁止重启。
+
+```java
+@SpringBootApplication
+public class HelloJob {
+
+    @Bean
+    public Tasklet tasklet1() {
+        return (contribution, chunkContext) -> {
+            System.out.println("---------- tasklet1 ----------");
+            // 设置停止标记
+            chunkContext.getStepContext().getStepExecution().setTerminateOnly();
+            return RepeatStatus.FINISHED;
+        };
+    }
+
+    @Bean
+    public Tasklet tasklet2() {
+        return (contribution, chunkContext) -> {
+            System.out.println("---------- tasklet2 ----------");
+            return RepeatStatus.FINISHED;
+        };
+    }
+
+    @Bean
+    public Step step1(StepExecutionListener stopStepListener, JobRepository jobRepository, PlatformTransactionManager transactionManager) {
+        return new StepBuilder("step1", jobRepository)
+            .tasklet(tasklet1(), transactionManager)
+            .build();
+    }
+
+    @Bean
+    public Step step2(JobRepository jobRepository, PlatformTransactionManager transactionManager) {
+        return new StepBuilder("step2", jobRepository)
+            .tasklet(tasklet2(), transactionManager)
+            .build();
+    }
+
+
+    @Bean
+    public Job job(JobRepository jobRepository, Step step1, Step step2) {
+        return new JobBuilder("restart-job-1", jobRepository)
+            // 默认情况下执行失败后可以再从 step1 开始执行，开启 preventRestart 后再次执行会报错
+            .preventRestart()
+            .start(step1)
+            .next(step2)
+            .build();
+    }
+
+    public static void main(String[] args) {
+        SpringApplication.run(HelloJob.class, args);
+    }
+}
+```
+
+#### 2.限制步骤执行次数
+
+在 `Step` 中使用 `startLimit(limit)` 设置执行次数。
+
+```java
+@SpringBootApplication
+public class HelloJob {
+
+    @Bean
+    public Tasklet tasklet1() {
+        return (contribution, chunkContext) -> {
+            System.out.println("---------- tasklet1 ----------");
+            // 设置停止标记
+            chunkContext.getStepContext().getStepExecution().setTerminateOnly();
+            return RepeatStatus.FINISHED;
+        };
+    }
+
+    @Bean
+    public Tasklet tasklet2() {
+        return (contribution, chunkContext) -> {
+            System.out.println("---------- tasklet2 ----------");
+            return RepeatStatus.FINISHED;
+        };
+    }
+
+    @Bean
+    public Step step1(StepExecutionListener stopStepListener, JobRepository jobRepository, PlatformTransactionManager transactionManager) {
+        return new StepBuilder("step1", jobRepository)
+                // 设置只能执行 2 次，重起执行 1 次
+                .startLimit(2)
+                .tasklet(tasklet1(), transactionManager)
+                .build();
+    }
+
+    @Bean
+    public Step step2(JobRepository jobRepository, PlatformTransactionManager transactionManager) {
+        return new StepBuilder("step2", jobRepository)
+                .tasklet(tasklet2(), transactionManager)
+                .build();
+    }
+
+
+    @Bean
+    public Job job(JobRepository jobRepository, Step step1, Step step2) {
+        return new JobBuilder("restart-limit-job-1", jobRepository)
+                .start(step1)
+                .next(step2)
+                .build();
+    }
+
+    public static void main(String[] args) {
+        SpringApplication.run(HelloJob.class, args);
+    }
+}
+```
+
+#### 3.无限重启步骤
+
+Spring Batch 限制同 Job 名和标识参数作业只能成功执行一次，但是对于步骤可以通过 `allowStartIfComplete(true)` 开启对 `COMPLETED` 状态步骤的无限执行。
+
+默认情况下下面的 `Job` 只能成功执行一次，再次执行时会显示 `Step already complete or not restartable, so no action to execute` 而不执行步骤。
+
+开启 `allowStartIfComplete(true)` 后发现再次执行时 tasklet1 成功执行了。
+
+```java
+@SpringBootApplication
+public class HelloJob {
+
+    @Bean
+    public Tasklet tasklet1() {
+        return (contribution, chunkContext) -> {
+            System.out.println("---------- tasklet1 ----------");
+            return RepeatStatus.FINISHED;
+        };
+    }
+
+    @Bean
+    public Tasklet tasklet2() {
+        return (contribution, chunkContext) -> {
+            System.out.println("---------- tasklet2 ----------");
+            return RepeatStatus.FINISHED;
+        };
+    }
+
+    @Bean
+    public Step step1(StepExecutionListener stopStepListener, JobRepository jobRepository, PlatformTransactionManager transactionManager) {
+        return new StepBuilder("step1", jobRepository)
+            .tasklet(tasklet1(), transactionManager)
+			// 开启重复执行
+            .allowStartIfComplete(true)
+            .build();
+    }
+
+    @Bean
+    public Step step2(JobRepository jobRepository, PlatformTransactionManager transactionManager) {
+        return new StepBuilder("step2", jobRepository)
+            .tasklet(tasklet2(), transactionManager)
+            .build();
+    }
+
+
+    @Bean
+    public Job job(JobRepository jobRepository, Step step1, Step step2) {
+        return new JobBuilder("step-unlimit-job", jobRepository)
+            .start(step1)
+            .next(step2)
+            .build();
+    }
+
+    public static void main(String[] args) {
+        SpringApplication.run(HelloJob.class, args);
+    }
+}
+```
 
 ## 3.ItemReader
 
+`ItemRaeder` 是 Spring Batch 提供的输入组件，规范接口是 `ItemReader<T>`，里面有个 `read()` 方法，用来定义输入逻辑。
+
+```java
+@FunctionalInterface
+public interface ItemReader<T> {
+    @Nullable
+    T read() throws Exception, UnexpectedInputException, ParseException, NonTransientResourceException;
+}
+```
+
+Spring Batch 根据常用的输入类型，提供了许多默认的实现，包括：平面文件、数据库、JMS 资源和其他输入源等。
+
+### 3.1 读取平面文件
+
+平面文件一般指简单行/多行结构的纯文本文件，比如记事本记录文件。与 XML 这种区别在于没有结构，没有标签的限制。Spring Batch 默认使用 `FlatFileItemReader` 实现平面文件的输入。
+
+#### 1.delimited
+
+字符串截取。
+
+例如对于下面的文件：
+
+```bash
+1#zhang3#15
+2#li4#13
+3#wang5#18
+```
+
+创建一个实体类：
+
+```java
+@Data
+public class User {
+    private Long id;
+    private String name;
+    private int age;
+}
+```
+
+创建任务：
+
+```java
+@SpringBootApplication
+public class HelloJob {
+
+    @Bean
+    public ItemWriter<User> itemWriter() {
+        // 打印各个对象
+        return chunk -> chunk.getItems().forEach(System.out::println);
+    }
+
+    @Bean
+    public FlatFileItemReader<User> flatFileItemReader() {
+        return new FlatFileItemReaderBuilder<User>()
+            .name("userItemReader")
+            // 指定来源
+            .resource(new ClassPathResource("user.txt"))
+            // 指定解析器，默认使用 , 分割，这里使用 # 分割，并对各个项目进行命名
+            .delimited().delimiter("#").names("id", "name", "age")
+            // 将读取的数据封装为 User 类型
+            .targetType(User.class)
+            .build();
+    }
+
+    @Bean
+    public Step step(JobRepository jobRepository, PlatformTransactionManager manager) {
+        return new StepBuilder("step", jobRepository)
+            // 使用 chunk，指定加载 1 次
+            .<User, User>chunk(1, manager)
+            .reader(flatFileItemReader())
+            .writer(itemWriter())
+            .build();
+    }
+
+    @Bean
+    public Job job(JobRepository jobRepository, Step step) {
+        return new JobBuilder("read-source-job", jobRepository)
+            .start(step)
+            .build();
+    }
+
+    public static void main(String[] args) {
+        SpringApplication.run(HelloJob.class, args);
+    }
+}
+```
+
+#### 2.FieldSetMapper
+
+如果数据源和目标对象的字段不是一一对应的，则可以使用 `FieldSetMapper` 进行字段映射处理。
+
+```java
+public interface FieldSetMapper<T> {
+    T mapFieldSet(FieldSet fieldSet) throws BindException;
+}
+```
+
+例如对于下面的文件：
+
+```bash
+1#zhang3#15#广东#广州#天河区
+2#li4#13#四川#成都#武侯区
+3#wang5#18#广西#贵林#雁山区
+```
+
+用户对象：
+
+```java
+@Data
+public class User {
+    private Long id;
+    private String name;
+    private int age;
+    private String address;
+}
+```
+
+创建映射器：
+
+```java
+public class UserFieldMapper implements FieldSetMapper<User> {
+    @Override
+    public User mapFieldSet(FieldSet fieldSet) throws BindException {
+        User user = new User();
+        user.setId(fieldSet.readLong("id"));
+        user.setName(fieldSet.readString("name"));
+        user.setAge(fieldSet.readInt("age"));
+        user.setAddress(fieldSet.readString("province") + fieldSet.readString("city") + fieldSet.readString("area"));
+        return user;
+    }
+}
+```
+
+创建任务：
+
+```java
+@SpringBootApplication
+public class HelloJob {
+
+    @Bean
+    public ItemWriter<User> itemWriter() {
+        // 打印各个对象
+        return chunk -> chunk.getItems().forEach(System.out::println);
+    }
+
+    @Bean
+    public FlatFileItemReader<User> flatFileItemReader() {
+        return new FlatFileItemReaderBuilder<User>()
+                .name("userItemReader")
+                // 指定来源
+                .resource(new ClassPathResource("user.txt"))
+                // 指定解析器，默认使用 , 分割，这里使用 # 分割，并对各个项目进行命名
+                .delimited().delimiter("#").names("id", "name", "age", "province", "city", "area")
+                // 使用自定义的 FieldSetMapper 封装对象
+                .fieldSetMapper(new UserFieldMapper())
+                .build();
+    }
+
+    @Bean
+    public Step step(JobRepository jobRepository, PlatformTransactionManager manager) {
+        return new StepBuilder("step", jobRepository)
+                .<User, User>chunk(1, manager)
+                .reader(flatFileItemReader())
+                .writer(itemWriter())
+                .build();
+    }
+
+    @Bean
+    public Job job(JobRepository jobRepository, Step step) {
+        return new JobBuilder("read-source-job", jobRepository)
+                .start(step)
+                .build();
+    }
+
+    public static void main(String[] args) {
+        SpringApplication.run(HelloJob.class, args);
+    }
+}
+```
+
+### 3.2 读取JSON文件
+
+Spring Batch 提供了专门操作 JSON 文档的 API：`JsonItemReader`。
+
+对于下面的 JSON 文件：
+
+```json
+[
+  {"id": 1, "name": "zhang3", "age":  15},
+  {"id": 1, "name": "li4", "age":  5},
+  {"id": 1, "name": "wang5", "age":  11}
+]
+```
+
+创建任务：
+
+```java
+@SpringBootApplication
+public class HelloJob {
+
+    @Bean
+    public ItemWriter<User> itemWriter() {
+        // 打印各个对象
+        return chunk -> chunk.getItems().forEach(System.out::println);
+    }
+
+    @Bean
+    public JsonItemReader<User> jsonItemReader() {
+        // 创建 jsonObjectReader
+        JacksonJsonObjectReader<User> jsonObjectReader = new JacksonJsonObjectReader<>(User.class);
+        // 设置 Mapper
+        jsonObjectReader.setMapper(new ObjectMapper());
+        return new JsonItemReaderBuilder<User>()
+                .name("userJsonItemReader")
+                .resource(new ClassPathResource("user.json"))
+                .jsonObjectReader(jsonObjectReader)
+                .build();
+    }
+
+    @Bean
+    public Step step(JobRepository jobRepository, PlatformTransactionManager manager) {
+        return new StepBuilder("step", jobRepository)
+                .<User, User>chunk(1, manager)
+                .reader(jsonItemReader())
+                .writer(itemWriter())
+                .build();
+    }
+
+    @Bean
+    public Job job(JobRepository jobRepository, Step step) {
+        return new JobBuilder("json-source-job", jobRepository)
+                .start(step)
+                .build();
+    }
+
+    public static void main(String[] args) {
+        SpringApplication.run(HelloJob.class, args);
+    }
+}
+```
+
+### 3.3 读取数据库
+
+ 对于下面的数据库结构：
+
+```sql
+CREATE TABLE `user` (
+	`id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+	`name` VARCHAR(255) DEFAULT NULL COMMENT '用户名',
+	`age` INT DEFAULT NULL COMMENT '年龄',
+	PRIMARY KEY (`id`)
+) ENGINE=INNODB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb3;
+```
+
+```sql
+INSERT INTO `user` VALUES (1, 'zhang3', 11);
+INSERT INTO `user` VALUES (2, 'li4', 12);
+INSERT INTO `user` VALUES (3, 'wang5', 13);
+```
+
+Spring Batch 提供 2 中读取方式。
+
+#### 1.游标方式
+
+游标遍历时，获取数据表中某一条数据，如果使用 JDBC 操作，游标指向的那条数据会被封装到 `ResultSet` 中，之后使用 `RowMapper` 实现表数据与实体对象的映射。
+
+实体类
+
+```java
+@Data
+public class User {
+    private Long id;
+    private String name;
+    private int age;
+}
+```
+
+`RowMapper`
+
+```java
+public class UserRowMapper implements RowMapper<User> {
+    @Override
+    public User mapRow(ResultSet rs, int rowNum) throws SQLException {
+        User user = new User();
+        user.setId(rs.getLong("id"));
+        user.setName(rs.getString("name"));
+        user.setAge(rs.getInt("age"));
+        return user;
+    }
+}
+```
+
+任务
+
+```java
+@SpringBootApplication
+public class HelloJob {
+
+
+    @Bean
+    public ItemWriter<User> itemWriter() {
+        return chunk -> chunk.getItems().forEach(System.out::println);
+    }
+
+    @Bean
+    public JdbcCursorItemReader<User> itemReader(DataSource dataSource) {
+        return new JdbcCursorItemReaderBuilder()
+                .name("jdbcCursorItemReader")
+                .dataSource(dataSource)
+                // 执行 SQL，逐行读取返回的数据
+                .sql("select * from user")
+                // 映射数据
+                .rowMapper(new UserRowMapper())
+                .build();
+    }
+
+
+    @Bean
+    public Step step(JobRepository jobRepository, PlatformTransactionManager manager) {
+        return new StepBuilder("step", jobRepository)
+                .<User, User>chunk(1, manager)
+                .reader(itemReader(null))
+                .writer(itemWriter())
+                .build();
+    }
+
+    @Bean
+    public Job job(JobRepository jobRepository, Step step) {
+        return new JobBuilder("cursor-db-job", jobRepository)
+                .start(step)
+                .build();
+    }
+
+    public static void main(String[] args) {
+        SpringApplication.run(HelloJob.class, args);
+    }
+}
+```
+
+如果希望动态拼接参数，则需要使用 `preparedStatementSetter()`：
+
+```java
+@Bean
+public JdbcCursorItemReader<User> itemReader(DataSource dataSource) {
+    return new JdbcCursorItemReaderBuilder<User>()
+        .name("jdbcCursorItemReader")
+        .dataSource(dataSource)
+        // 执行 SQL，逐行读取返回的数据
+        .sql("select * from user where age = ?")
+        // 映射数据
+        .rowMapper(new UserRowMapper())
+        // 拼接参数
+        .preparedStatementSetter(new ArgumentPreparedStatementSetter(new Object[]{11}))
+        .build();
+}
+```
+
+#### 2.分页方式
+
+游标的方式是查询出所有满足条件的数据，然后一条一条读取，分页则是按照指定的 pageSize 数，一次性读取。
+
+```java
+@SpringBootApplication
+public class HelloJob {
+
+
+    @Bean
+    public ItemWriter<User> itemWriter() {
+        return chunk -> chunk.getItems().forEach(System.out::println);
+    }
+
+    // 创建 pagingQueryProvider
+    @Bean
+    @SneakyThrows
+    public PagingQueryProvider pagingQueryProvider(DataSource dataSource) {
+        final SqlPagingQueryProviderFactoryBean factoryBean = new SqlPagingQueryProviderFactoryBean();
+        factoryBean.setDataSource(dataSource);
+        factoryBean.setSelectClause("select *");
+        factoryBean.setFromClause("from user");
+        // :age 表示占位符
+        factoryBean.setWhereClause("where age >= :age");
+        factoryBean.setSortKey("id");
+        return factoryBean.getObject();
+    }
+
+    @Bean
+    public JdbcPagingItemReader<User> itemReader(DataSource dataSource) {
+        return new JdbcPagingItemReaderBuilder<User>()
+            .name("jdbcPagingItemReader")
+            .dataSource(dataSource)
+            .pageSize(10)
+            // 使用 pagingQueryProvider
+            .queryProvider(pagingQueryProvider(null))
+            // SQL 的参数
+            .parameterValues(Map.of("age", 12))
+            .rowMapper(new UserRowMapper())
+            .build();
+    }
+
+    @Bean
+    public Step step(JobRepository jobRepository, PlatformTransactionManager manager) {
+        return new StepBuilder("step", jobRepository)
+            .<User, User>chunk(1, manager)
+            .reader(itemReader(null))
+            .writer(itemWriter())
+            .build();
+    }
+
+    @Bean
+    public Job job(JobRepository jobRepository, Step step) {
+        return new JobBuilder("page-db-job", jobRepository)
+            .start(step)
+            .build();
+    }
+
+    public static void main(String[] args) {
+        SpringApplication.run(HelloJob.class, args);
+    }
+}
+```
+
+### 3.4 读取异常
+
+#### 1.跳过异常
+
+`ItemReader` 可以按照约定跳过指定的异常，也可以限制跳过次数。
+
+```java
+@Bean
+public Step step(JobRepository jobRepository, PlatformTransactionManager manager) {
+    return new StepBuilder("step", jobRepository)
+        .<User, User>chunk(1, manager)
+        .reader(itemReader(null))
+        .writer(itemWriter())
+        // 容错
+        .faultTolerant()
+        // 跳过的异常
+        .skip(Exception.class)
+        // 不应该跳过的异常
+        .noSkip(RuntimeException.class)
+        // 跳过异常的上限
+        .skipLimit(3)
+        .skipPolicy(new SkipPolicy() {
+            @Override
+            public boolean shouldSkip(Throwable t, long skipCount) throws SkipLimitExceededException {
+                // 定制跳过异常的逻辑
+                return false;
+            }
+        })
+        .build();
+}
+```
+
+#### 2.记录异常日志
+
+使用 `ItemReadListener` 可以在 `itemReader` 读取数据抛出异常时将数据信息记录下来。
+
+```java
+public interface ItemReadListener<T> extends StepListener {
+
+	default void beforeRead() {}
+
+	default void afterRead(T item) {}
+
+	default void onReadError(Exception ex) {}
+
+}
+```
+
 ## 4.ItemProcessor
+
+使用 `ItemReader` 读取数据后，既可以直接通过 `ItemWriter` 输出数据，也可以通过 `ItemProcessor` 加工数据后再输出。
+
+### 4.1 默认实现
+
+Spring Batch 提供了 4 种实现。
+
+#### 1.ValidatingItemProcessor：检验处理器
+
+例如对于下面的数据：
+
+```bash
+1#li4#18
+2##19
+3#zhang3#24
+```
+
+第 2 个数据的 name 缺失，默认情况下依然会创建相应的对象，如果不想创建，则可以通过 `ValidatingItemProcessor` 来对数据进行校验。
+
+**（1）导入依赖**
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-validation</artifactId>
+</dependency>
+```
+
+**（2）定义实体类**
+
+在相应字段添加校验注解：
+
+```java
+@Data
+public class User {
+    private Long id;
+    @NotBlank(message = "用户名不能为空")
+    private String name;
+    private int age;
+}
+```
+
+**（3）创建 Job**
+
+Spring Bath 提供了 `BeanValidatingItemProcessor` 作为默认的实现类，此处创建 `BeanValidatingItemProcessor` 后在 step 中添加处理器即可。
+
+```java
+@SpringBootApplication
+public class HelloJob {
+
+    @Bean
+    public ItemWriter<User> itemWriter() {
+        // 打印各个对象
+        return chunk -> chunk.getItems().forEach(System.out::println);
+    }
+
+    @Bean
+    public FlatFileItemReader<User> flatFileItemReader() {
+        return new FlatFileItemReaderBuilder<User>()
+                .name("userItemReader")
+                .resource(new ClassPathResource("user.txt"))
+                .delimited().delimiter("#").names("id", "name", "age")
+                .targetType(User.class)
+                .build();
+    }
+
+    // 创建 BeanValidatingItemProcessor
+    @Bean
+    public BeanValidatingItemProcessor<User> validatingItemProcessor() {
+        BeanValidatingItemProcessor<User> validatingItemProcessor = new BeanValidatingItemProcessor<>();
+        // 不满足条件则丢弃数据
+        validatingItemProcessor.setFilter(true);
+        return validatingItemProcessor;
+    }
+
+    @Bean
+    public Step step(JobRepository jobRepository, PlatformTransactionManager manager) {
+        return new StepBuilder("step", jobRepository)
+                // 使用 chunk，指定加载 1 次
+                .<User, User>chunk(1, manager)
+                .reader(flatFileItemReader())
+                .processor(validatingItemProcessor())
+                .writer(itemWriter())
+                .build();
+    }
+
+    @Bean
+    public Job job(JobRepository jobRepository, Step step) {
+        return new JobBuilder("validate-source-job", jobRepository)
+                .start(step)
+                .build();
+    }
+
+    public static void main(String[] args) {
+        SpringApplication.run(HelloJob.class, args);
+    }
+}
+```
+
+#### 2.ItemProcessorAdapter：适配器处理器
+
+可以通过 `ItemProcessorAdapter` 对已有的校验方法进行适配。
+
+例如我们已经定义了一个转换 name 大小写的 util：
+
+```java
+public class ValidationUtils {
+    // 一定要有返回值
+    public User toUppercase(User user) {
+        user.setName(user.getName().toUpperCase());
+        return user;
+    }
+}
+```
+
+对这个方法进行适配：
+
+```java
+@SpringBootApplication
+public class HelloJob {
+
+    @Bean
+    public ItemWriter<User> itemWriter() {
+        // 打印各个对象
+        return chunk -> chunk.getItems().forEach(System.out::println);
+    }
+
+    @Bean
+    public FlatFileItemReader<User> flatFileItemReader() {
+        return new FlatFileItemReaderBuilder<User>()
+            .name("userItemReader")
+            .resource(new ClassPathResource("user.txt"))
+            .delimited().delimiter("#").names("id", "name", "age")
+            .targetType(User.class)
+            .build();
+    }
+
+    // 创建适配器
+    @Bean
+    public ItemProcessorAdapter<User, User> itemProcessorAdapter() {
+        ItemProcessorAdapter<User, User> adapter = new ItemProcessorAdapter<>();
+        // 设置适配对象
+        adapter.setTargetObject(new ValidationUtils());
+        // 设置适配方法
+        adapter.setTargetMethod("toUppercase");
+        return adapter;
+    }
+
+    @Bean
+    public Step step(JobRepository jobRepository, PlatformTransactionManager manager) {
+        return new StepBuilder("step", jobRepository)
+            // 使用 chunk，指定加载 1 次
+            .<User, User>chunk(1, manager)
+            .reader(flatFileItemReader())
+			// 添加适配器
+            .processor(itemProcessorAdapter())
+            .writer(itemWriter())
+            .build();
+    }
+
+    @Bean
+    public Job job(JobRepository jobRepository, Step step) {
+        return new JobBuilder("validate-source-job-3", jobRepository)
+            .start(step)
+            .build();
+    }
+
+    public static void main(String[] args) {
+        SpringApplication.run(HelloJob.class, args);
+    }
+}
+```
+
+#### 3.ScriptItemProcessor：脚本处理器
+
+Spring Batch 提供 JS 脚本的形式，将一些操作逻辑定义在 JS 文件中进行加载。
+
+**（1）引入 JS 脚本引擎**
+
+```xml
+<dependency>
+   <groupId>org.openjdk.nashorn</groupId>
+   <artifactId>nashorn-core</artifactId>
+   <version>15.3</version> <!-- latest -->
+</dependency>
+```
+
+**（2）定义 userScript.js**
+
+```javascript
+item.setName(item.getName().toUpperCase());
+item;
+```
+
+> **注意**
+>
+> `item` 是约定的单词，表示 `ItemReader` 读取的每个条目
+
+**（3）使用 JS 脚本校验**
+
+```java
+@SpringBootApplication
+public class HelloJob {
+
+    @Bean
+    public ItemWriter<User> itemWriter() {
+        // 打印各个对象
+        return chunk -> chunk.getItems().forEach(System.out::println);
+    }
+
+    @Bean
+    public FlatFileItemReader<User> flatFileItemReader() {
+        return new FlatFileItemReaderBuilder<User>()
+            .name("userItemReader")
+            .resource(new ClassPathResource("user.txt"))
+            .delimited().delimiter("#").names("id", "name", "age")
+            .targetType(User.class)
+            .build();
+    }
+
+    // 创建脚本处理器
+    @Bean
+    public ScriptItemProcessor<User, User> itemProcessor() {
+        return new ScriptItemProcessorBuilder<User, User>()
+            // 指定文件源
+            .scriptResource(new ClassPathResource("userScript.js"))
+            .build();
+    }
+
+    @Bean
+    public Step step(JobRepository jobRepository, PlatformTransactionManager manager) {
+        return new StepBuilder("step", jobRepository)
+            .<User, User>chunk(1, manager)
+            .reader(flatFileItemReader())
+            .processor(itemProcessor())
+            .writer(itemWriter())
+            .build();
+    }
+
+    @Bean
+    public Job job(JobRepository jobRepository, Step step) {
+        return new JobBuilder("script-validation-job", jobRepository)
+            .start(step)
+            .build();
+    }
+
+    public static void main(String[] args) {
+        SpringApplication.run(HelloJob.class, args);
+    }
+}
+```
+
+#### 4.CompositeItemProcessor：组合处理器
+
+ 组合处理器类似于过滤器链，数据先经过第一个处理器，然后再经过第二个处理器，直到最后。
+
+需求：先对 name 进行非空判断，再将 name 转换为大写。
+
+```java
+@SpringBootApplication
+public class HelloJob {
+
+    @Bean
+    public ItemWriter<User> itemWriter() {
+        // 打印各个对象
+        return chunk -> chunk.getItems().forEach(System.out::println);
+    }
+
+    @Bean
+    public FlatFileItemReader<User> flatFileItemReader() {
+        return new FlatFileItemReaderBuilder<User>()
+                .name("userItemReader")
+                .resource(new ClassPathResource("user.txt"))
+                .delimited().delimiter("#").names("id", "name", "age")
+                .targetType(User.class)
+                .build();
+    }
+
+    // 参数校验
+    @Bean
+    public BeanValidatingItemProcessor<User> validatingItemProcessor() {
+        BeanValidatingItemProcessor<User> processor = new BeanValidatingItemProcessor<>();
+        processor.setFilter(true);
+        return processor;
+    }
+
+    // 转换大写
+    @Bean
+    public ScriptItemProcessor<User, User> itemProcessor() {
+        return new ScriptItemProcessorBuilder<User, User>()
+                .scriptResource(new ClassPathResource("userScript.js"))
+                .build();
+    }
+
+    // 组装
+    @Bean
+    public CompositeItemProcessor<User, User> compositeItemProcessor() {
+        final CompositeItemProcessor<User, User> processor = new CompositeItemProcessor<>();
+        // 组合多个处理器
+        processor.setDelegates(List.of(validatingItemProcessor(), itemProcessor()));
+        return processor;
+    }
+
+    @Bean
+    public Step step(JobRepository jobRepository, PlatformTransactionManager manager) {
+        return new StepBuilder("step", jobRepository)
+                // 使用 chunk，指定加载 1 次
+                .<User, User>chunk(1, manager)
+                .reader(flatFileItemReader())
+                .processor(compositeItemProcessor())
+                .writer(itemWriter())
+                .build();
+    }
+
+    @Bean
+    public Job job(JobRepository jobRepository, Step step) {
+        return new JobBuilder("composite-validation-job", jobRepository)
+                .start(step)
+                .build();
+    }
+
+    public static void main(String[] args) {
+        SpringApplication.run(HelloJob.class, args);
+    }
+}
+```
+
+### 4.2 自定义实现
+
+ 只需要实现 `ItemProcessor` 接口即可。
+
+```java
+public class MyItemProcessor implements ItemProcessor<User, User> {
+    @Override
+    public User process(User item) throws Exception {
+        // 筛选出年龄为基数的 user，放弃则返回 null
+        return item.getAge() % 2 != 0 ? item : null;
+    }
+}
+```
 
 ## 5.ItemWriter
