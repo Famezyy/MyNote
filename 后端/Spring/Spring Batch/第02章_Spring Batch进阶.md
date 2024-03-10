@@ -817,7 +817,7 @@ INSERT INTO `user` VALUES (2, 'li4', 12);
 INSERT INTO `user` VALUES (3, 'wang5', 13);
 ```
 
-Spring Batch 提供 2 中读取方式。
+Spring Batch 提供 2 种读取方式。
 
 #### 1.游标方式
 
@@ -975,6 +975,57 @@ public class HelloJob {
     public static void main(String[] args) {
         SpringApplication.run(HelloJob.class, args);
     }
+}
+```
+
+#### 3.扩展：Mybatis-plus
+
+Mybatis-plus 也提供了上面介绍的两种方式，这里演示 `Paging` 方式。
+
+**（1）引入依赖**
+
+```xml
+<dependency>
+    <groupId>com.baomidou</groupId>
+    <artifactId>mybatis-plus-boot-starter</artifactId>
+    <version>3.5.5</version>
+</dependency>
+```
+
+**（2）`Mapper.xml`**
+
+```xml
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.hello.UserMapper">
+    <select id="select" resultType="com.example.hello.User" >
+        select * from user where id between #{from} and #{to} limit #{_pagesize} offset #{_skiprows}
+    </select>
+</mapper>
+```
+
+**（3）配置文件**
+
+声明使用 batch 处理。
+
+```yaml
+mybatis:
+	configuration:
+		default-executor-type: batch
+```
+
+**（4）`ItemReader`**
+
+```java
+@Bean
+public MyBatisPagingItemReader<User> myBatisPagingItemReader(SqlSessionFactory sqlSessionFactory) {
+    return new MyBatisPagingItemReaderBuilder<User>()
+        .sqlSessionFactory(sqlSessionFactory)
+        .queryId("com.example.hello.UserMapper.select")
+        // 每次传 5 条给 writer，并且会自动注入到 SQL 的 _pageSize 中，并计算 _skiprows
+        .pageSize(5)
+        .parameterValues(Map.of("from", "10", "to", "50"))
+        .build();
 }
 ```
 
@@ -1369,3 +1420,179 @@ public class MyItemProcessor implements ItemProcessor<User, User> {
 ```
 
 ## 5.ItemWriter
+
+### 5.1 输出平面文件
+
+可以通过 `FlatFileItemWriter` 输出器实现。
+
+```java
+@SpringBootApplication
+public class HelloJob {
+
+    @Bean
+    public FlatFileItemWriter<User> flatFileItemWriter() {
+        return new FlatFileItemWriterBuilder<User>()
+            .name("userItemWriter")
+            // 设置输出流
+            .resource(new PathResource("H:\\project\\spring-batch-demo\\src\\main\\resources\\user-new.txt"))
+            // 设置输出格式
+            .formatted()
+            .format("id: %s, 姓名: %s, 年龄: %s")
+            .names("id", "name", "age")
+            // 如果输入数据为空，输出时不创建文件
+            // 默认为 false，即输入数据为空时也会创建一个空的输出文件
+			.shouldDeleteIfEmpty(true)
+            // 如果输出文件已经存在则直接删除
+            .shouldDeleteIfExists(true)
+            // 如果输出文件已经存在则追加写入
+            .append(true)
+            .build();
+    }
+
+    @Bean
+    public FlatFileItemReader<User> flatFileItemReader() {
+        return new FlatFileItemReaderBuilder<User>()
+            .name("userItemReader")
+            .resource(new ClassPathResource("user.txt"))
+            .delimited().delimiter("#").names("id", "name", "age")
+            .targetType(User.class)
+            .build();
+    }
+
+    @Bean
+    public Step step(JobRepository jobRepository, PlatformTransactionManager manager) {
+        return new StepBuilder("step", jobRepository)
+            .<User, User>chunk(1, manager)
+            .reader(flatFileItemReader())
+            .writer(flatFileItemWriter())
+            .build();
+    }
+
+    @Bean
+    public Job job(JobRepository jobRepository, Step step) {
+        return new JobBuilder("writer-job", jobRepository)
+            .start(step)
+            .build();
+    }
+
+    public static void main(String[] args) {
+        SpringApplication.run(HelloJob.class, args);
+    }
+}
+```
+
+### 5.2 输出JSON
+
+可以通过 `JsonFileItemWriter` 输出器实现。
+
+```java
+@Bean
+public JsonFileItemWriter<User> jsonFileItemWriter() {
+    // 创建 JSON 对象调度器
+    final JacksonJsonObjectMarshaller<User> objectMarshaller = new JacksonJsonObjectMarshaller<>();
+    objectMarshaller.setObjectMapper(new ObjectMapper());
+    return new JsonFileItemWriterBuilder<User>()
+        .name("userItemWriter")
+        // 设置输出流
+        .resource(new PathResource("H:\\project\\spring-batch-demo\\src\\main\\resources\\user-new.json"))
+        // 设置 JSON 对象调度器
+        .jsonObjectMarshaller(objectMarshaller)
+        .build();
+}
+```
+
+### 5.3 输出数据库
+
+#### 1.JdbcBatchitemWriter
+
+先定义一个 SQL 占位符参数设置器：
+
+```java
+public class MySetter implements ItemPreparedStatementSetter<User> {
+    @Override
+    public void setValues(User item, PreparedStatement ps) throws SQLException {
+        ps.setLong(1, item.getId());
+        ps.setString(2, item.getName());
+        ps.setInt(3, item.getAge());
+    }
+}
+```
+
+`JdbcBatchItemWriter`
+
+```java
+@Bean
+public JdbcBatchItemWriter<User> jdbcBatchItemWriter(DataSource dataSource) {
+    return new JdbcBatchItemWriterBuilder<User>()
+        .dataSource(dataSource)
+        .sql("insert into user(id,name,age) values(?,?,?)")
+        // 设置 SQL 中的占位符参数
+        .itemPreparedStatementSetter(new MySetter())
+        .build();
+}
+```
+
+#### 2.Mybatis-plus
+
+**（1）引入依赖**
+
+```xml
+<dependency>
+    <groupId>com.baomidou</groupId>
+    <artifactId>mybatis-plus-boot-starter</artifactId>
+    <version>3.5.5</version>
+</dependency>
+```
+
+**（2）`Mapper.xml`**
+
+```xml
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.hello.UserMapper">
+    <insert id="save" keyColumn="id" useGeneratedKeys="true" keyProperty="id">
+        insert into user(id, name, age) values(#{id}, #{name}, #{age})
+    </insert>
+</mapper>
+```
+
+**（3）配置文件**
+
+声明使用 batch 处理。
+
+```yaml
+mybatis:
+	configuration:
+		default-executor-type: batch
+```
+
+**（4）`ItemWriter`**
+
+```java
+@Bean
+public MyBatisBatchItemWriter<User> batisBatchItemWriter(SqlSessionFactory sqlSessionFactory) {
+    return new MyBatisBatchItemWriterBuilder<User>()
+        .sqlSessionFactory(sqlSessionFactory)
+        // 设置 mapper 文件中需要执行的语句的 namespace + id
+        .statementId("com.example.hello.UserMapper.save")
+        .build();
+}
+```
+
+> **注意**
+>
+> 采用这种方式时不需要对应的接口。
+
+### 5.4 输出多终端
+
+可以通过 `CompositeItemWriter` 输出器实现。
+
+```java
+@Bean
+public CompositeItemWriter<User> compositeItemWriter() {
+    return new CompositeItemWriterBuilder<User>()
+        .delegates(List.of(jsonFileItemWriter(), jdbcBatchItemWriter(null)))
+        .build();
+}
+```
+

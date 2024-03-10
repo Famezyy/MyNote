@@ -837,6 +837,12 @@ public class HelloJob {
 
 最后由 `Writer` 全部写入。
 
+> **补充**
+>
+> Chunk 的主要目的就是为了告诉 Spring 一次执行几条记录。
+>
+> 我们如果设置 Chunk 为 1 的话，那么 Spring Batch 每次读取一条记录，处理一条记录，写入一条记录，然后将这个事务进行提交。这样的话，可以有效的避免事务堆积导致的锁表。
+
 ### 3.3 步骤监听器
 
 步骤监听器有 2 个：`StepExecutionListener`  和 `ChunkListener`。

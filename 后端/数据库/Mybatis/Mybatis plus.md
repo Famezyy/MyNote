@@ -100,27 +100,27 @@ mybatis-plus.configuration.log-impl=org.apache.ibatis.logging.stdout.StdOutImpl
 >       */
 >       @Component
 >       public class MyMetaObjectHandler implements MetaObjectHandler {
->       
+>             
 >           // 插入时的填充策略
 >           @Override
 >           public void insertFill(MetaObject metaObject) {
 >               this.setFieldValByName("createTime", new Date(), metaObject);
 >               this.setFieldValByName("updateTime", new Date(), metaObject);
 >           }
->       
+>             
 >           // 更新时的填充策略
 >           @Override
 >           public void updateFill(MetaObject metaObject) {
 >               this.setFieldValByName("updateTime", new Date(), metaObject);
 >           }
 >       }
->       
+>             
 >       /**
 >       * 新版
 >       */
 >       @Component
 >       public class MyMetaObjectHandler implements MetaObjectHandler {
->       
+>             
 >           @Override
 >           public void insertFill(MetaObject metaObject) {
 >               log.info("start insert fill ....");
@@ -130,7 +130,7 @@ mybatis-plus.configuration.log-impl=org.apache.ibatis.logging.stdout.StdOutImpl
 >               // 或者
 >               this.fillStrategy(metaObject, "createTime", LocalDateTime.now()); // 也可以使用(3.3.0 该方法有bug)
 >           }
->       
+>             
 >           @Override
 >           public void updateFill(MetaObject metaObject) {
 >               log.info("start update fill ....");
@@ -178,7 +178,7 @@ mybatis-plus.configuration.log-impl=org.apache.ibatis.logging.stdout.StdOutImpl
 >          public OptimisticLockerInterceptor optimisticLockerInterceptor() {
 >              return new OptimisticLockerInterceptor();
 >          }
->                     
+>                          
 >          /**
 >           * 新版
 >           */
@@ -468,38 +468,38 @@ public class CodeGenerator {
     public static void main(String[] args) {
         String property = System.getProperty("user.dir");
         FastAutoGenerator.create("jdbc:mysql://localhost:3306/mybatis?useSSL=false&userUnicode=true&characterEncoding=utf-8&serverTimezone=GMT%2B8"
-                        , "root"
-                        , "root")
-                .globalConfig(builder -> {
-                    builder.author("youyi zhao") // 设置作者
-                            .enableSwagger() // 开启 swagger 模式
-                            .fileOverride() // 覆盖已生成文件
-                            .dateType(DateType.TIME_PACK) // 日期格式
-                            .outputDir(property + "/src/main/java"); // 指定输出目录
-                })
-                .packageConfig(builder -> {
-                    builder.parent("com.example.mybatisplus") // 设置父包名
-                            .moduleName("codeGeneration") // 设置父包模块名
-                            .pathInfo(Collections.singletonMap(OutputFile.mapperXml, property + "/src/main/java/mapper")); // 设置mapperXml生成路径
-                })
-                .strategyConfig(builder -> {
-                    builder.addInclude("user") // 设置需要生成的表名
-                            .addTablePrefix("tbl_", "c_") // 设置过滤表前缀
-                            // 实体类策略
-                            .entityBuilder()
-                            .versionColumnName("version") // 乐观锁
-                            .logicDeleteColumnName("deleted") // 逻辑删除
-                            // 自动填充配置
-                            .addTableFills(new Column("create_time", FieldFill.INSERT))
-                            .addTableFills(new Property("updateTime", FieldFill.INSERT_UPDATE))
-                            .idType(IdType.AUTO)
-                            // Controller 策略
-                            .controllerBuilder()
-                            .enableHyphenStyle()
-                            .enableRestStyle();
-                })
-                .templateEngine(new FreemarkerTemplateEngine()) // 使用Freemarker引擎模板，默认的是Velocity引擎模板
-                .execute();
+                                 , "root"
+                                 , "root")
+            .globalConfig(builder -> {
+                builder.author("youyi zhao") // 设置作者
+                    .enableSwagger() // 开启 swagger 模式
+                    .fileOverride() // 覆盖已生成文件
+                    .dateType(DateType.TIME_PACK) // 日期格式
+                    .outputDir(property + "/src/main/java"); // 指定输出目录
+            })
+            .packageConfig(builder -> {
+                builder.parent("com.example.mybatisplus") // 设置父包名
+                    .moduleName("codeGeneration") // 设置父包模块名
+                    .pathInfo(Collections.singletonMap(OutputFile.mapperXml, property + "/src/main/java/mapper")); // 设置mapperXml生成路径
+            })
+            .strategyConfig(builder -> {
+                builder.addInclude("user") // 设置需要生成的表名
+                    .addTablePrefix("tbl_", "c_") // 设置过滤表前缀
+                    // 实体类策略
+                    .entityBuilder()
+                    .versionColumnName("version") // 乐观锁
+                    .logicDeleteColumnName("deleted") // 逻辑删除
+                    // 自动填充配置
+                    .addTableFills(new Column("create_time", FieldFill.INSERT))
+                    .addTableFills(new Property("updateTime", FieldFill.INSERT_UPDATE))
+                    .idType(IdType.AUTO)
+                    // Controller 策略
+                    .controllerBuilder()
+                    .enableHyphenStyle()
+                    .enableRestStyle();
+            })
+            .templateEngine(new FreemarkerTemplateEngine()) // 使用Freemarker引擎模板，默认的是Velocity引擎模板
+            .execute();
     }
 }
 ```
