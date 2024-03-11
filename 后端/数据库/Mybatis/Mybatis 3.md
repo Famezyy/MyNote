@@ -774,7 +774,7 @@ jdbc.password=root
 >        <result column="last_name" property="lastName"></result>
 >        <!-- 其他不指定的列会自动封装，推荐写 resultMap 的话就把全部的映射规则都写上 -->
 >    </resultMap>
->                                                                
+>                                                                   
 >    <!-- resultMap：自定义结果集映射规则 -->
 >    <select id="getEmpById" resultMap="myEmp">
 >        select * from tbl_employee where id = #{id}
@@ -975,7 +975,7 @@ jdbc.password=root
 >       <result column="last_name" property="lastName"></result>
 >       <result column="email" property="email"></result>
 >       <result column="gender" property="gender"></result>
->                                           
+>                                             
 >       <!--
 >           - column：指定判定的列名
 >           - javaType：列值对应的 java 类型
@@ -988,12 +988,12 @@ jdbc.password=root
 >                            column="d_id"
 >                            />
 >           </case>
->                                           
+>                                             
 >           <case value="1" resultType="com.mybatis.bean.Employee">
 >               <result column="last_name" property="email"></result>
 >           </case>
 >       </discriminator>
->                                           
+>                                             
 >   </resultMap>
 >   <select id="getEmpDis" resultMap="MyEmpDis">
 >       select * from tbl_employee where id=#{id}
@@ -1791,7 +1791,7 @@ class IntegrateMybatisApplicationTests {
 > **1. 获取 sqlSessionFactory 对象**
 >
 > - MybatisAutoConfiguration.class - sqlSessionFactory() - factory.getObject() -> SqlSessionFactoryBean.class - buildSqlSessionFactory() - sqlSessionFactoryBuilder.build(targetConfiguration)
-> - 把配置文件的信息jie解析并保存到 Configuration 对象中，返回包含了 Configuration 的 DefaultSqlSession 对象
+> - 把配置文件的信息解析并保存到 Configuration 对象中，返回包含了 Configuration 的 DefaultSqlSession 对象
 >
 > - 注意：MapperStatement 代表一个增删改查的详细信息
 >
@@ -1838,19 +1838,16 @@ class IntegrateMybatisApplicationTests {
 > 	StatementHandler ->> StatementHandler: 查出数据使用 ResultSetHandler 处理结果：使用 TypeHandler 获取 value 值
 > 	StatementHandler ->> DefaultSqlSession: 连接关闭等操作
 > 	DefaultSqlSession ->> MapperMethod: 返回 list 第一个
-> 	
-> ```
->
+> 	```
 > 
->
-> - StatementHandler：处理 sql 语句预编译，设置参数等相关工作
+>- StatementHandler：处理 sql 语句预编译，设置参数等相关工作
 > - ParameterHandler：设置预编译参数
-> - ResultHandler：处理结果集
+>- ResultHandler：处理结果集
 > - TypeHandler：在整个过程中，进行数据库类型和 javaBean 类型的映射
->
+> 
 > ```mermaid
 > graph TB
-> 	代理对象 --> DefaultSqlSession
+>	代理对象 --> DefaultSqlSession
 > 	DefaultSqlSession --> Executor
 > 	Executor --> StatementHandler
 > 	StatementHandler --设置参数--> ParameterHandler
@@ -1860,23 +1857,23 @@ class IntegrateMybatisApplicationTests {
 > 	TypeHandler --> JDBC:Statument:PreparedStatement
 > 
 > ```
->
+> 
 > ==总结==
->
-> 1. 根据配置文件（全局，sql 映射）初始化出 Configuration 对象
-> 2. 创建一个 DefaultSqlSession 对象，厘米那包含 Configuration 和 Executor（根据全局配置文件中的 defaultExecutorType 创建出对应的 Executor）
-> 3. DefaultSqlSession.getMapper()：拿到 Mapper 接口对应的 MapperProxy（包含 DefaultSqlSession）
+> 
+>1. 根据配置文件（全局，sql 映射）初始化出 Configuration 对象
+> 2. 创建一个 DefaultSqlSession 对象，包含 Configuration 和 Executor（根据全局配置文件中的 defaultExecutorType 创建出对应的 Executor）
+>3. DefaultSqlSession.getMapper()：拿到 Mapper 接口对应的 MapperProxy（包含 DefaultSqlSession）
 > 4. 执行增删改查方法：
 >    1. 调用 DefaultSqlSession 的增删改查（Executor）
->    2. 创建一个 StatementHandler 对象同时也会创建出 ParameterHandler 和 ResultSetHandler
+>    2. 创建一个 StatementHandler 对象，同时也会创建出 ParameterHandler 和 ResultSetHandler
 >    3. 调用 StatementHandler 的预编译参数以及设置参数值
 >       - 调用 ParameterHandler 给 sql 设置参数
 >    4. 调用 StatementHandler 的增删改查方法
 >    5. 使用 ResultSetHandler 封装结果
->
+> 
 > ==注意==
->
-> - 四大对象每个创建的时候都有会调用 interceptorChain.pluginAll() 方法
+> 
+>- 四大对象每个创建的时候都有会调用 interceptorChain.pluginAll() 方法
 
 ---
 
@@ -2165,23 +2162,23 @@ class IntegrateMybatisApplicationTests {
 >        public void setParameter(PreparedStatement ps, int i, EmpStatus parameter, JdbcType jdbcType) throws SQLException {
 >            ps.setString(i, parameter.getCode().toString());
 >        }
->       
+>          
 >        @Override
 >        public EmpStatus getResult(ResultSet rs, String columnName) throws SQLException {
 >            // 需要根据从数据库中拿到的枚举的状态码返回一个枚举对象
 >            int code = rs.getInt(columnName);
 >            EmpStatus empStatus = Employee.getEmpStatus(code);
 >            return empStatus;
->       
+>          
 >        }
->       
+>          
 >        @Override
 >        public EmpStatus getResult(ResultSet rs, int columnIndex) throws SQLException {
 >            int code = rs.getInt(columnIndex);
 >            EmpStatus empStatus = Employee.getEmpStatus(code);
 >            return empStatus;
 >        }
->       
+>          
 >        @Override
 >        public EmpStatus getResult(CallableStatement cs, int columnIndex) throws SQLException {
 >            int code = cs.getInt(columnIndex);
@@ -2196,28 +2193,28 @@ class IntegrateMybatisApplicationTests {
 >     * 希望数据库保存的是100， 200状态码
 >     */
 >    public enum EmpStatus {
->       
+>          
 >        LOGIN(100,"用户登录"),LOGOUT(200, "用户登出"),REMOVE(300, "用户移除");
->       
+>          
 >        private Integer code;
 >        private String message;
 >        private EmpStatus(Integer code, String message) {
 >            this.code = code;
 >            this.message = message;
 >        }
->       
+>          
 >        public Integer getCode() {
 >            return code;
 >        }
->       
+>          
 >        public void setCode(Integer code) {
 >            this.code = code;
 >        }
->       
+>          
 >        public String getMessage() {
 >            return message;
 >        }
->       
+>          
 >        public void setMessage(String message) {
 >            this.message = message;
 >        }
@@ -2226,17 +2223,17 @@ class IntegrateMybatisApplicationTests {
 >
 >    ```java
 >    Employee.class
->       
+>          
 >    public EmpStatus empStatus;
->       
+>          
 >    public EmpStatus getEmpStatus() {
 >        return empStatus;
 >    }
->       
+>          
 >    public void setEmpStatus(EmpStatus empStatus) {
 >        this.empStatus = empStatus;
 >    }
->       
+>          
 >    /**
 >         * 根据状态码返回枚举对象
 >         */

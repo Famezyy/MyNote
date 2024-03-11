@@ -999,7 +999,8 @@ Mybatis-plus 也提供了上面介绍的两种方式，这里演示 `Paging` 方
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.example.hello.UserMapper">
     <select id="select" resultType="com.example.hello.User" >
-        select * from user where id between #{from} and #{to} limit #{_pagesize} offset #{_skiprows}
+        <!-- 必须要指定 limit，否则可能会出现无限循环 -->
+        select * from user where id between #{from} and #{to} limit #{_skiprows}, #{_pagesize}
     </select>
 </mapper>
 ```
@@ -1009,9 +1010,9 @@ Mybatis-plus 也提供了上面介绍的两种方式，这里演示 `Paging` 方
 声明使用 batch 处理。
 
 ```yaml
-mybatis:
-	configuration:
-		default-executor-type: batch
+mybatis-plus:
+  configuration:
+    default-executor-type: batch
 ```
 
 **（4）`ItemReader`**
@@ -1022,9 +1023,10 @@ public MyBatisPagingItemReader<User> myBatisPagingItemReader(SqlSessionFactory s
     return new MyBatisPagingItemReaderBuilder<User>()
         .sqlSessionFactory(sqlSessionFactory)
         .queryId("com.example.hello.UserMapper.select")
-        // 每次传 5 条给 writer，并且会自动注入到 SQL 的 _pageSize 中，并计算 _skiprows
-        .pageSize(5)
-        .parameterValues(Map.of("from", "10", "to", "50"))
+        // 指定 pageSize，会自动注入到 SQL 的 _pageSize 中，并计算 _skiprows
+        // 可以大于 chunk，因为是从数据库，chunk 控制的是每次传给 writer 的数量
+        .pageSize(4)
+        .parameterValues(Map.of("from", "10", "to", "100"))
         .build();
 }
 ```
