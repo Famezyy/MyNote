@@ -7,7 +7,7 @@
 - **[官网地址](http://elastic.co/)**
 - **[官方文档](https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html)**
 - **[官方下载](https://www.elastic.co/cn/downloads/past-releases#elasticsearch)**
-- **[中文社区](https://www.elastic.org.cn/archives/chapter1)**
+- **[中文社区](https://www.elastic.org.cn/categories/docs)**
 
 直到 ES 8.0 之前，JDK 1.8 支持所有的 ES 版本，但是在 ES 8.0 之后，对于 ES 8.0 而言，JDK版本只有一个选择，即 JDK 17；对于ES 8.1 及以上版本而言，支持 JDK 17、JDK 18。
 

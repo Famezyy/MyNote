@@ -10,7 +10,7 @@
 
 | 类型             | 类型举例                                                     |
 | ---------------- | ------------------------------------------------------------ |
-| 整数类型         | TINYINT、SMALLINT、MEDIUMINT、INT(或INTEGER)、BIGINT         |
+| 整数类型         | TINYINT、SMALLINT、MEDIUMINT、INT（或 INTEGER）、BIGINT      |
 | 浮点类型         | FLOAT、DOUBLE                                                |
 | 定点数类型       | DECIMAL                                                      |
 | 位类型           | BIT                                                          |
@@ -964,10 +964,10 @@ s SET ('A', 'B', 'C')
 ```mysql
 INSERT INTO test_set (s) VALUES ('A'), ('A,B');
 
-#插入重复的SET类型成员时，MySQL会自动删除重复的成员
+#插入重复的 SET 类型成员时，MySQL 会自动删除重复的成员
 INSERT INTO test_set (s) VALUES ('A,B,C,A');
 
-#向SET类型的字段插入SET成员中不存在的值时，MySQL会抛出错误。
+#向 SET 类型的字段插入 SET 成员中不存在的值时，MySQL 会抛出错误
 INSERT INTO test_set (s) VALUES ('A,B,C,D');
 
 SELECT *
