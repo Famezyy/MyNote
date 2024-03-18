@@ -232,13 +232,14 @@ public class Producer implements Runnable {
     // 总次数
     static final AtomicInteger TURN = new AtomicInteger(0);
     // 生产者编号
-    static final AtomicInteger PRODUCER_NO = new AtomicInteger(1);
+    static final AtomicInteger PRODUCER_NO = new AtomicInteger(0);
     // 生产者名称
     String name;
     // 生产的动作
     Callable action;
     // 每次生产的间隔时间
     int gap;
+    
     public Producer(Callable action, int gap) {
         this.action = action;
         this.gap = gap;
@@ -252,8 +253,8 @@ public class Producer implements Runnable {
                 Object out = action.call();
                 if (out != null) {
                     System.out.println("第" + TURN.incrementAndGet() + "轮生产：" + out);
-                    Thread.sleep(gap);
                 }
+                Thread.sleep(gap);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -264,7 +265,51 @@ public class Producer implements Runnable {
 
 #### 2.Consumer实现
 
+```java
+public class Consumer implements Runnable {
+    // 总次数
+    static final AtomicInteger TURN = new AtomicInteger(0);
+    // 消费者编号
+    static final AtomicInteger CONSUMER_NO = new AtomicInteger(0);
+    // 消费者名称
+    String name;
+    // 消费的动作
+    Callable action;
+    // 每次消费的间隔时间
+    int gap;
+    
+    public Consumer(Callable action, int gap) {
+        this.action = action;
+        this.gap = gap;
+        name = "消费者-" + CONSUMER_NO.incrementAndGet();
+    }
+    
+    @Override
+    public void run() {
+        while (true) {
+            try {
+                // 执行消费动作
+                Object out = action.call();
+                if (out != null) {
+                    System.out.println("第" + TURN.incrementAndGet() + "轮消费：" + out);
+                }
+                Thread.sleep(gap);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+}
+```
 
+#### 3.数据缓存区类
+
+```java
+```
+
+
+
+#### 4.主类
 
 ## 4.Java对象结构与内置锁
 
