@@ -305,13 +305,107 @@ public class Consumer implements Runnable {
 #### 3.数据缓存区类
 
 ```java
+public class SafeDataBuffer<T> {
+    public static final int MAX_AMOUNT = 10;
+    private BlockingQueue<T> dataList = new LinkedBlockingQueue<>(MAX_AMOUNT);
+
+    public void add(T element) throws InterruptedException {
+        // 阻塞添加元素
+		dataList.put(element);
+    }
+
+    public T fetch() throws InterruptedException {
+        // 阻塞获取元素
+		return dataList.take();
+    }
+}
 ```
-
-
 
 #### 4.主类
 
+```java
+public class SafeStore {
+    private static SafeDataBuffer<Integer> safeDataBuffer = new SafeDataBuffer<>();
+
+    // 生产者动作
+    static Callable<Integer> produceAction = () -> {
+        int n = new Random().nextInt(10);
+        safeDataBuffer.add(n);
+        return n;
+    };
+
+    // 消费者动作
+    static Callable<Integer> consumerAction = () -> {
+		return safeDataBuffer.fetch();
+    };
+
+    public static void main(String[] args) throws InterruptedException {
+        // 并发数
+        final int THREAD_TOTAL = 20;
+        ExecutorService threadPool = Executors.newFixedThreadPool(THREAD_TOTAL);
+        for (int i = 0; i < 5; i++) {
+            // 生产者每隔 500 毫秒生产一个商品
+            threadPool.submit(new Producer(produceAction, 500));
+            // 消费者每隔 1500 毫秒消费一个商品
+            threadPool.submit(new Consumer(consumerAction, 1500));
+        }
+    }
+}
+```
+
 ## 4.Java对象结构与内置锁
+
+### 4.1 Java对象结构
+
+Java 对象结构包括三部分：对象头、对象体和对齐字节：
+
+<img src="img/第02章_Java内置锁的核心原理/image-20240320114744111.png" alt="image-20240320114744111" style="zoom:67%;" />
+
+#### 1.对象三部分
+
+**（1）对象头**
+
+对象头包括三个字段，第一个字段叫做 **Mark Word**（标记字），用于存储自身运行时数据，例如 GC 标志位、哈希码、锁状态等信息。
+
+第二个字段叫做 **Class Pointer**（类对象指针），用于存放方法区 Class 对象的地址，虚拟机通过这个指针来确定这个对象是哪个类的实例。
+
+第三个字段叫做 **Array Length**（数组长度）。可选字段，如果对象是一个 Java 数组，那么此字段必须有，用于记录数据长度的数据；如果对象不是一个 Java 数据，则此次段不存在。
+
+**（2）对象体**
+
+对象体包含对象的实例变量，用于成员属性值，包括父类的成员属性。这部分内存按 4 字节对齐，占用大小取决于对象的属性数量和类型。
+
+**（3）对齐字节**
+
+也叫做填充字节，用来保证 Java 对象所占内存字节数为 8 的倍数。HotSpot VM 的内存管理要求对象起始地址必须是 8 字节的整数倍。对象头本身是 8 的倍数，当对象的实例变量数据不是 8 的倍数时，便需要填充数据来保证 8 字节的对齐。
+
+#### 2.字段长度
+
+Mark Word、Class Pointer、Array Length 等字段的长度都与 JVM 的位数有关。它们的长度都是 JVM 的一个 Word 大小，即 32 位 JVM 的占 32 位，64 位 JVM 为 64 位。
+
+对于 Class Pointer 而言，如果 JVM 中的对象数量过多，使用 64 位的指针将浪费大量内存，通常 64 位 JVM 将会比 32 位 JVM 多耗费 50% 内存。为了节约内存可以使用选项 `+UseCompressedOops` 开启指针压缩（`Oop` 是 Ordinary object pointer 的缩写，表示普通对象指针）。
+
+如果开启 `UseCompressedOops`，则以下类型的指针将从 64 位压缩至 32 位：
+
+- Class 对象的属性指针（静态变量）
+- Object 对象的属性指针（成员变量）
+- 普通对象数组的元素指针
+
+当然也不是所有的指针都会压缩，一些特殊类型的指针不会压缩，如指向永久代的 Class 对象指针（JDK 8 中指向元空间）、本地变量、堆栈元素、入参、返回值和 NULL 指针等。
+
+> **说明**
+>
+> 在堆内存小于 32GB 的情况下，64 位虚拟机的 `UseCompressedOops` 是默认开启的。
+
+### 4.2 Mark Word结构信息
+
+
+
+### 4.3 使用JOL工具查看对象布局
+
+### 4.4 大小端问题
+
+### 4.5 锁的类型
 
 ## 5.偏向锁原理与实战
 
