@@ -61,7 +61,7 @@ get my_index/_source/1
 
   > **注意**
   >
-  > 使用 `excludes` 时不返回的 field 不代表不能通过该字段进行检索，因为源数据不存在不代表索引不存在。
+  > 使用 `excludes` 时不返回的 field 不代表不能通过该字段进行检索，因为索引已经被创建了。
 
 - **在查询中过滤**
 
@@ -79,7 +79,7 @@ get my_index/_source/1
     }
     ```
 
-  - 只看以 `obj.` 开头的字段
+  - 只看 `obj.` 的所有内嵌字段
 
     ```json
     get product/_search
@@ -93,7 +93,7 @@ get my_index/_source/1
     }
     ```
 
-  - 查看以 `obj.` 或者 `obj2.` 开头的字段
+  - 查看 `obj` 或者 `obj2` 的所有内嵌字段
 
     ```json
     get product/_search
@@ -231,7 +231,8 @@ GET /goods/_search
 
 **带参数查询**
 
-```json
+```bash
+# 查询 name 中包含 xiaomi 的文档
 GET /goods/_search?q=name:xiaomi
 ```
 
@@ -247,7 +248,7 @@ GET /goods/_search?from=0&size=2&sort=price:asc
 GET /goods/_search?q=date:2040-07-27
 ```
 
-如果不指定参数名称，即 `_all` 搜索，相当于在索引的所有字段中检索，会被进行分词
+如果不指定参数名称，即 `_all` 搜索，相当于在索引的所有字段中检索，**会被进行分词**
 
 ```json
 GET /goods/_search?q=2040-07-27
@@ -277,7 +278,7 @@ GET /goods/_search?q=2040-07-27
 - 搜索结果可能会受到数据质量和相关度计算算法的影响
 - 全文检索不适直接用于非文本数据，例如图像、音频、视频等
 
-### 3.1 Match
+### 3.1 match
 
 匹配包含某个词项的文档。
 
@@ -309,7 +310,7 @@ GET product/_search
 
 假设 `小米手机` 被分成了 `小米` 和 `手机`，则只要匹配上其中一个词项就会被返回作为结果。
 
-### 3.2 Match All
+### 3.2 match_all
 
 匹配所有结果的子句，并给定所有文档的 `_source` 为 `1.0`。
 
@@ -322,7 +323,7 @@ GET <index>/_search
 }
 ```
 
-可以指定一个 `boost` 参数主动设置分数：
+可以指定一个 `boost` 参数统一设置返回结果的分数：
 
 ```json
 GET <index>/_search
@@ -335,7 +336,7 @@ GET <index>/_search
 
 类似的，ES 还提供了 `match_none`。
 
-### 3.3 Match Phrase
+### 3.3 match_phrase
 
 `match_phrase` 查询是一种短语查询，它用于匹配包含指定短语的文档。与 `Match` 查询不同，`match_phrase` 查询只匹配包含短语的文档，而不会匹配单个词条。
 
@@ -356,7 +357,7 @@ GET <index>/_search
 
 - **必须全部匹配且顺序必须相同**：被检索字段必须包含 `match_phrase`  短语中的所有词项，并且顺序必须是相同的。比如查询短语是`elastic org cn`，那么只有字段中的词项必须包含 "elastic"、"org" 和 "cn" 这三个短语，切顺序不能颠倒
 
-- **可以设置 Slop 距离**：默认情况下被检索字段包含的 `match_phrase` 中的词项之间不能有其他词项，即 `slop` 默认为 0，如果人为将 `slop` 设置为其他数值，则多个词项将允许有 `slop` 规定的距离
+- **可以设置 slop 距离**：默认情况下被检索字段包含的 `match_phrase` 中的词项之间不能有其他词项，即 `slop` 默认为 0，如果人为将 `slop` 设置为其他数值，则多个词项将允许有 `slop` 规定的距离
 
   ```json
   get product/_search
@@ -380,6 +381,22 @@ GET <index>/_search
   >
   > - `slop` 参数只适用于 `match_phrase` 查询，不适用于 `match_phrase_prefix` 查询
   > - `slop` 参数的值越大，匹配的文档数就越多，同时查询的性能也会下降，相关度也可能会下降
+
+### 3.4 multi_match
+
+支持在查询时指定多个需要匹配的字段。
+
+```json
+GET <index>/_search
+{
+    "query": {
+        "multi_match": {
+            "query": "<query>",
+            "fields": ["<field1>", "<field2>"]
+        }
+    }
+}
+```
 
 ## 4.精准查询：term
 
@@ -411,7 +428,7 @@ GET product/_search
 }
 ```
 
-如果这里使用的是 `name` 则会查询 `name` 分词后的索引。
+如果这里使用的是本来的字段 `name` 则会查询 `name` 分词后的索引。
 
 ### 4.2 与match对比
 
@@ -500,7 +517,7 @@ get product/_search
 }
 ```
 
-### 4.3 匹配多个词项
+### 4.3 匹配多个值
 
 匹配多个词项时可以使用 `terms`，匹配任意一个则返回结果：
 
@@ -552,9 +569,66 @@ GET <index>/_search
 
 默认返回的所有文档的 `_score` 为 `1.0`，可以通过 `boost` 指定返回的分数。
 
-## 6.布尔查询：boolean
+对于日期类型的数据可以使用 `now` 来表示现在，同时支持使用数学符号来计算：
 
-### 6.1 简介
+```json
+get test/_search
+{
+    "query": {
+        "range": {
+            "date": {
+               	// 大于等于 4 年前的今天
+                "gte": "now-4y",
+                // 小于等于今天
+                "lte": "now"
+            }
+        }
+    }
+}
+```
+
+还可以使用 `time_zone` 来修改文档数据的时区：
+
+```json
+get test/_search
+{
+    "query": {
+        "range": {
+            "date": {
+                // 表示文档数据要加上 8 小时
+                "time_zone": "+08:00", 
+                "gte": "2020-03-25T08:00:00",
+                "lte": "now"
+            }
+        }
+    }
+}
+```
+
+## 6.固定分数查询
+
+使用 `constant_score` 可以不计算分数进行查询：
+
+```json
+get test/_search
+{
+    "query": {
+        "constant_score": {
+            "filter": {
+                "term": {
+                    "FIELD": "VALUE"
+                }
+            },
+            // 指定返回的分数
+            "boost": 1.2
+        }
+    }
+}
+```
+
+## 7.布尔查询：boolean
+
+### 7.1 简介
 
 布尔查询可以组合多个查询条件，采用 `more_matches_is_better` 的机制，因此满足 `must` 和 `should` 子句的文档将会合并起来计算分值，多用于多条件组合查询。
 
@@ -651,9 +725,9 @@ PUT /goods_en/_doc/5
 
 ```
 
-### 6.2 查询子句
+### 7.2 查询子句
 
-#### 1.Must
+#### 1.must
 
 用于计算相关度得分，多个条件必须同时满足。
 
@@ -684,7 +758,7 @@ GET goods_en/_search
 }
 ```
 
-#### 2.Filter
+#### 2.filter
 
 和 `must` 作用相同，返回的文档必须同时满足字句的条件。但是不像 `must` 会计算评分，使用 `filter` 查询的评分将被忽略，只是根据过滤标准来排除或包含文档，并且结果会被缓存。
 
@@ -716,7 +790,7 @@ GET goods_en/_search
 }
 ```
 
-#### 3.Should
+#### 3.should
 
 如果满足这些语句中的任意语句，将增加 `_score`，否则无任何影响。它们主要用于修正每个文档的相关性得分。
 
@@ -818,7 +892,7 @@ GET goods_en/_search
 }
 ```
 
-#### 4.Must_not
+#### 4.must_not
 
 文档必须不匹配这些条件才能被包含进来，并且不计算相关度评分。
 
@@ -960,3 +1034,4 @@ GET goods_en/_search
 }
 ```
 
+## 
