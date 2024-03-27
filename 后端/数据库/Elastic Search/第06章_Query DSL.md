@@ -1033,5 +1033,3 @@ GET goods_en/_search
     }
 }
 ```
-
-## 
